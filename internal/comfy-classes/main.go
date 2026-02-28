@@ -27,6 +27,7 @@ import (
 
 var (
 	forceUpdate = flag.Bool("f", false, "force update the classes")
+	hostname    = flag.String("host", "", "hostname of ComfyUI")
 )
 
 func main() {
@@ -50,33 +51,41 @@ func getClasses(ctx context.Context) ([]byte, error) {
 			return nil, err
 		}
 	}
-	slog.Info("connecting to Docker")
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		return nil, fmt.Errorf("could not construct pool: %w", err)
-	}
-	if err = pool.Client.Ping(); err != nil {
-		return nil, fmt.Errorf("could not connect to Docker: %w", err)
-	}
-	slog.Info("starting ComfyUI")
-	cont, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Name:       "comfyui-tmp",
-		Repository: "ghcr.io/oxc/comfyui", Tag: "latest-cpu",
-		ExposedPorts: []string{"8188/tcp"},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("could not start ComfyUI: %w", err)
-	}
-	defer pool.Purge(cont)
-	addr := cont.GetHostPort("8188/tcp")
+	addr := *hostname
+	stop := func() {}
 	if addr == "" {
-		return nil, fmt.Errorf("no address for container")
+		slog.Info("connecting to Docker")
+		pool, err := dockertest.NewPool("")
+		if err != nil {
+			return nil, fmt.Errorf("could not construct pool: %w", err)
+		}
+		if err = pool.Client.Ping(); err != nil {
+			return nil, fmt.Errorf("could not connect to Docker: %w", err)
+		}
+		slog.Info("starting ComfyUI")
+		cont, err := pool.RunWithOptions(&dockertest.RunOptions{
+			Name:       "comfyui-tmp",
+			Repository: "ghcr.io/radiatingreverberations/comfyui-base", Tag: "latest",
+			ExposedPorts: []string{"8188/tcp"},
+			Cmd:          []string{"--cpu"},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("could not start ComfyUI: %w", err)
+		}
+		defer pool.Purge(cont)
+		addr = cont.GetHostPort("8188/tcp")
+		if err := waitTCPPort(pool, addr); err != nil {
+			return nil, err
+		}
+		time.Sleep(30 * time.Second)
+		stop = func() {
+			_ = pool.Purge(cont)
+		}
+	}
+	if addr == "" {
+		return nil, fmt.Errorf("no address for ComfyUI")
 	}
 	slog.Info("connecting to ComfyUI", "addr", addr)
-	if err = waitTCPPort(pool, addr); err != nil {
-		return nil, err
-	}
-	time.Sleep(5 * time.Second)
 	cli, err := gocomfy.NewClient(ctx, addr, gocomfy.WithoutWebsocket())
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to ComfyUI: %w", err)
@@ -92,7 +101,7 @@ func getClasses(ctx context.Context) ([]byte, error) {
 
 	raw, err := io.ReadAll(rc)
 	_ = rc.Close()
-	_ = pool.Purge(cont)
+	stop()
 	if err != nil {
 		return nil, fmt.Errorf("could not read object info: %w", err)
 	}
@@ -178,50 +187,82 @@ func exportedName(name string) string {
 
 var nameReplacer = strings.NewReplacer(
 	".", "_",
+	":", "_",
+	" ", "_",
+	"(", "",
+	")", "",
+	"+", "Plus",
 )
+
+func formatName(name string) string {
+	name = nameReplacer.Replace(name)
+	if len(name) != 0 {
+		if unicode.IsDigit(rune(name[0])) {
+			name = "_" + name
+		}
+	}
+	return name
+}
 
 func argName(name string) string {
 	name = strings.ToLower(name)
 	switch name {
 	case "type":
 		return "typ"
+	case "switch":
+		return "sw"
+	case "string":
+		return "str"
 	}
-	name = nameReplacer.Replace(name)
+	name = formatName(name)
 	return name
 }
 
+func nodeType(name string) string {
+	return formatName(name)
+}
+
 func linkType(name string) string {
-	return name
+	return formatName(name)
 }
 
 func generateGraphLinks(buf *bytes.Buffer, all map[types.NodeClass]*classes.Class) {
 	types := make(map[types.TypeName]struct{})
 	for _, c := range all {
 		for _, p := range c.Inputs {
-			if p.Kind == classes.InputHidden || p.Type.IsScalar() {
+			if p.Kind == classes.InputHidden {
 				continue
 			}
 			types[p.Type] = struct{}{}
 		}
 		for _, p := range c.Outputs {
-			if p.Type.IsScalar() {
-				continue
-			}
 			types[p.Type] = struct{}{}
 		}
 	}
 	names := maps.Keys(types)
 	slices.Sort(names)
+	seenLinks := make(map[string]struct{})
 	for _, name := range names {
-		buf.WriteString("type ")
-		buf.WriteString(linkType(string(name)))
-		buf.WriteString(" Link\n")
+		switch name {
+		case "", "*":
+			continue
+		}
+		sub := strings.Split(string(name), ",")
+		for _, name := range sub {
+			if _, ok := seenLinks[name]; ok {
+				continue
+			}
+			seenLinks[name] = struct{}{}
+			buf.WriteString("type ")
+			buf.WriteString(linkType(name))
+			buf.WriteString(" Link\n")
+		}
 	}
 	buf.WriteString("\n")
 }
 
 func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
-	cname := exportedName(string(c.Name))
+	cname := exportedName(nodeType(string(c.Name)))
 	if c.Title != "" && c.Title != cname {
 		buf.WriteString("// ")
 		buf.WriteString(cname)
@@ -233,7 +274,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 	buf.WriteString(cname)
 	// arguments
 	argNames := make(map[string]struct{})
-	buf.WriteString("(g *Graph")
+	buf.WriteString("(gr *Graph")
 	// input links
 	for _, p := range c.Inputs {
 		if p.Kind == classes.InputHidden || p.Type.IsScalar() {
@@ -244,7 +285,12 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		buf.WriteString(", ")
 		buf.WriteString(name)
 		buf.WriteString(" ")
-		buf.WriteString(linkType(string(p.Type)))
+		switch p.Type {
+		case "", "*":
+			buf.WriteString("Link")
+		default:
+			buf.WriteString(linkType(string(p.Type)))
+		}
 	}
 	// input scalars
 	for i, p := range c.Inputs {
@@ -284,16 +330,25 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		if _, ok := argNames[name]; ok {
 			name = "out_" + name
 		}
+		switch name {
+		case "", "*":
+			name = "_"
+		}
 		buf.WriteString(name)
 		buf.WriteString(" ")
-		buf.WriteString(linkType(string(p.Type)))
+		switch p.Type {
+		case "", "*":
+			buf.WriteString("Link")
+		default:
+			buf.WriteString(linkType(string(p.Type)))
+		}
 	}
 	buf.WriteString(") ")
 	// body
 	buf.WriteString("{\n")
 	defer buf.WriteString("}\n\n")
 
-	fmt.Fprintf(buf, `	n := &Node{
+	fmt.Fprintf(buf, `	nd := &Node{
 		Class: %q,
 		Inputs: map[string]Value{
 `, c.Name)
@@ -323,15 +378,20 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 	}
 	buf.WriteString("\t\t},\n\t}\n")
 	if len(c.Outputs) == 0 {
-		buf.WriteString("\tg.Add(n)\n")
-		buf.WriteString("\treturn n")
+		buf.WriteString("\tgr.Add(nd)\n")
+		buf.WriteString("\treturn nd")
 		return
 	}
-	buf.WriteString("\tid := g.Add(n)\n")
-	buf.WriteString("\treturn n")
+	buf.WriteString("\tid := gr.Add(nd)\n")
+	buf.WriteString("\treturn nd")
 	for i, p := range c.Outputs {
 		buf.WriteString(", ")
-		buf.WriteString(linkType(string(p.Type)))
+		switch p.Type {
+		case "", "*":
+			buf.WriteString("Link")
+		default:
+			buf.WriteString(linkType(string(p.Type)))
+		}
 		fmt.Fprintf(buf, "{NodeID: id, OutPort: %d}", i)
 	}
 	buf.WriteString("\n")

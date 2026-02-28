@@ -3,28 +3,87 @@
 package apinodes
 
 type AUDIO Link
+type AUDIO_ENCODER Link
+type AUDIO_ENCODER_OUTPUT Link
+type AUDIO_RECORD Link
+type BOOLEAN Link
+type CAMERA_CONTROL Link
 type CLIP Link
 type CLIP_VISION Link
 type CLIP_VISION_OUTPUT Link
+type COMBO Link
+type COMFY_AUTOGROW_V3 Link
+type COMFY_DYNAMICCOMBO_V3 Link
+type COMFY_MATCHTYPE_V3 Link
 type CONDITIONING Link
 type CONTROL_NET Link
+type FLOAT Link
+type FLOATS Link
+type GEMINI_INPUT_FILES Link
 type GLIGEN Link
 type GUIDER Link
+type HOOKS Link
+type HOOK_KEYFRAMES Link
 type IMAGE Link
+type IMAGECOMPARE Link
+type INT Link
 type LATENT Link
+type LATENT_OPERATION Link
+type LATENT_UPSCALE_MODEL Link
+type LOAD3D_CAMERA Link
+type LOAD_3D Link
+type LORA_MODEL Link
+type LOSS_MAP Link
+type LUMA_CONCEPTS Link
+type LUMA_REF Link
 type MASK Link
+type MESH Link
+type MESHY_RIGGED_TASK_ID Link
+type MESHY_TASK_ID Link
 type MODEL Link
+type MODEL_PATCH Link
+type MODEL_TASK_ID Link
+type RIG_TASK_ID Link
+type RETARGET_TASK_ID Link
 type NOISE Link
+type OPENAI_CHAT_CONFIG Link
+type OPENAI_INPUT_FILES Link
 type PHOTOMAKER Link
+type PIXVERSE_TEMPLATE Link
+type RECRAFT_COLOR Link
+type RECRAFT_CONTROLS Link
+type RECRAFT_V3_STYLE Link
 type SAMPLER Link
 type SIGMAS Link
+type STRING Link
 type STYLE_MODEL Link
+type SVG Link
+type TIMESTEPS_RANGE Link
+type TRACKS Link
 type UPSCALE_MODEL Link
 type VAE Link
+type VIDEO Link
+type VOXEL Link
+type WAN_CAMERA_EMBEDDING Link
 type WEBCAM Link
 
-func AddNoise(g *Graph, model MODEL, noise NOISE, sigmas SIGMAS, latent_image LATENT) (_ *Node, latent LATENT) {
-	n := &Node{
+// APG - Adaptive Projected Guidance
+func APG(gr *Graph, model MODEL, eta, norm_threshold, momentum float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "APG",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"eta":            Float(eta),
+			"norm_threshold": Float(norm_threshold),
+			"momentum":       Float(momentum),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func AddNoise(gr *Graph, model MODEL, noise NOISE, sigmas SIGMAS, latent_image LATENT) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "AddNoise",
 		Inputs: map[string]Value{
 			"model":        Link(model),
@@ -33,51 +92,329 @@ func AddNoise(g *Graph, model MODEL, noise NOISE, sigmas SIGMAS, latent_image LA
 			"latent_image": Link(latent_image),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func AlignYourStepsScheduler(g *Graph, model_type string, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+// AddTextPrefix - Add Text Prefix
+func AddTextPrefix(gr *Graph, texts, prefix string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "AddTextPrefix",
+		Inputs: map[string]Value{
+			"texts":  String(texts),
+			"prefix": String(prefix),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// AddTextSuffix - Add Text Suffix
+func AddTextSuffix(gr *Graph, texts, suffix string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "AddTextSuffix",
+		Inputs: map[string]Value{
+			"texts":  String(texts),
+			"suffix": String(suffix),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// AdjustBrightness - Adjust Brightness
+func AdjustBrightness(gr *Graph, images IMAGE, factor float64) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "AdjustBrightness",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"factor": Float(factor),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// AdjustContrast - Adjust Contrast
+func AdjustContrast(gr *Graph, images IMAGE, factor float64) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "AdjustContrast",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"factor": Float(factor),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func AlignYourStepsScheduler(gr *Graph, model_type COMBO, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "AlignYourStepsScheduler",
 		Inputs: map[string]Value{
-			"model_type": String(model_type),
+			"model_type": Link(model_type),
 			"steps":      Int(steps),
 			"denoise":    Float(denoise),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func BasicGuider(g *Graph, model MODEL, conditioning CONDITIONING) (_ *Node, guider GUIDER) {
-	n := &Node{
+// AudioAdjustVolume - Audio Adjust Volume
+func AudioAdjustVolume(gr *Graph, audio AUDIO, volume int) (_ *Node, out_audio AUDIO) {
+	nd := &Node{
+		Class: "AudioAdjustVolume",
+		Inputs: map[string]Value{
+			"audio":  Link(audio),
+			"volume": Int(volume),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+// AudioConcat - Audio Concat
+func AudioConcat(gr *Graph, audio1 AUDIO, audio2 AUDIO, direction COMBO) (_ *Node, audio AUDIO) {
+	nd := &Node{
+		Class: "AudioConcat",
+		Inputs: map[string]Value{
+			"audio1":    Link(audio1),
+			"audio2":    Link(audio2),
+			"direction": Link(direction),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+func AudioEncoderEncode(gr *Graph, audio_encoder AUDIO_ENCODER, audio AUDIO) (_ *Node, audio_encoder_output AUDIO_ENCODER_OUTPUT) {
+	nd := &Node{
+		Class: "AudioEncoderEncode",
+		Inputs: map[string]Value{
+			"audio_encoder": Link(audio_encoder),
+			"audio":         Link(audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO_ENCODER_OUTPUT{NodeID: id, OutPort: 0}
+}
+
+func AudioEncoderLoader(gr *Graph, audio_encoder_name COMBO) (_ *Node, audio_encoder AUDIO_ENCODER) {
+	nd := &Node{
+		Class: "AudioEncoderLoader",
+		Inputs: map[string]Value{
+			"audio_encoder_name": Link(audio_encoder_name),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO_ENCODER{NodeID: id, OutPort: 0}
+}
+
+// AudioMerge - Audio Merge
+func AudioMerge(gr *Graph, audio1 AUDIO, audio2 AUDIO, merge_method COMBO) (_ *Node, audio AUDIO) {
+	nd := &Node{
+		Class: "AudioMerge",
+		Inputs: map[string]Value{
+			"audio1":       Link(audio1),
+			"audio2":       Link(audio2),
+			"merge_method": Link(merge_method),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+func BasicGuider(gr *Graph, model MODEL, conditioning CONDITIONING) (_ *Node, guider GUIDER) {
+	nd := &Node{
 		Class: "BasicGuider",
 		Inputs: map[string]Value{
 			"model":        Link(model),
 			"conditioning": Link(conditioning),
 		},
 	}
-	id := g.Add(n)
-	return n, GUIDER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, GUIDER{NodeID: id, OutPort: 0}
 }
 
-func BasicScheduler(g *Graph, model MODEL, scheduler string, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+func BasicScheduler(gr *Graph, model MODEL, scheduler COMBO, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "BasicScheduler",
 		Inputs: map[string]Value{
 			"model":     Link(model),
-			"scheduler": String(scheduler),
+			"scheduler": Link(scheduler),
 			"steps":     Int(steps),
 			"denoise":   Float(denoise),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func CFGGuider(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, cfg float64) (_ *Node, guider GUIDER) {
-	n := &Node{
+// BatchImagesNode - Batch Images
+func BatchImagesNode(gr *Graph, images COMFY_AUTOGROW_V3) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "BatchImagesNode",
+		Inputs: map[string]Value{
+			"images": Link(images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// BatchLatentsNode - Batch Latents
+func BatchLatentsNode(gr *Graph, latents COMFY_AUTOGROW_V3) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "BatchLatentsNode",
+		Inputs: map[string]Value{
+			"latents": Link(latents),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// BatchMasksNode - Batch Masks
+func BatchMasksNode(gr *Graph, masks COMFY_AUTOGROW_V3) (_ *Node, mask MASK) {
+	nd := &Node{
+		Class: "BatchMasksNode",
+		Inputs: map[string]Value{
+			"masks": Link(masks),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
+}
+
+func BetaSamplingScheduler(gr *Graph, model MODEL, steps int, alpha, beta float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
+		Class: "BetaSamplingScheduler",
+		Inputs: map[string]Value{
+			"model": Link(model),
+			"steps": Int(steps),
+			"alpha": Float(alpha),
+			"beta":  Float(beta),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceFirstLastFrameNode - ByteDance First-Last-Frame to Video
+func ByteDanceFirstLastFrameNode(gr *Graph, model COMBO, first_frame IMAGE, last_frame IMAGE, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ByteDanceFirstLastFrameNode",
+		Inputs: map[string]Value{
+			"model":        Link(model),
+			"prompt":       String(prompt),
+			"first_frame":  Link(first_frame),
+			"last_frame":   Link(last_frame),
+			"resolution":   Link(resolution),
+			"aspect_ratio": Link(aspect_ratio),
+			"duration":     Int(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceImageEditNode - ByteDance Image Edit
+func ByteDanceImageEditNode(gr *Graph, model COMBO, image IMAGE, prompt string, seed int, guidance_scale float64, watermark bool) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ByteDanceImageEditNode",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"image":  Link(image),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceImageNode - ByteDance Image
+func ByteDanceImageNode(gr *Graph, model COMBO, size_preset COMBO, prompt string, width, height, seed int, guidance_scale float64, watermark bool) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "ByteDanceImageNode",
+		Inputs: map[string]Value{
+			"model":       Link(model),
+			"prompt":      String(prompt),
+			"size_preset": Link(size_preset),
+			"width":       Int(width),
+			"height":      Int(height),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceImageReferenceNode - ByteDance Reference Images to Video
+func ByteDanceImageReferenceNode(gr *Graph, model COMBO, images IMAGE, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ByteDanceImageReferenceNode",
+		Inputs: map[string]Value{
+			"model":        Link(model),
+			"prompt":       String(prompt),
+			"images":       Link(images),
+			"resolution":   Link(resolution),
+			"aspect_ratio": Link(aspect_ratio),
+			"duration":     Int(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceImageToVideoNode - ByteDance Image to Video
+func ByteDanceImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ByteDanceImageToVideoNode",
+		Inputs: map[string]Value{
+			"model":        Link(model),
+			"prompt":       String(prompt),
+			"image":        Link(image),
+			"resolution":   Link(resolution),
+			"aspect_ratio": Link(aspect_ratio),
+			"duration":     Int(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceSeedreamNode - ByteDance Seedream 4.5
+func ByteDanceSeedreamNode(gr *Graph, model COMBO, size_preset COMBO, image IMAGE, sequential_image_generation COMBO, prompt string, width, height int, max_images, seed int, watermark, fail_on_partial bool) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ByteDanceSeedreamNode",
+		Inputs: map[string]Value{
+			"model":       Link(model),
+			"prompt":      String(prompt),
+			"size_preset": Link(size_preset),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ByteDanceTextToVideoNode - ByteDance Text to Video
+func ByteDanceTextToVideoNode(gr *Graph, model COMBO, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ByteDanceTextToVideoNode",
+		Inputs: map[string]Value{
+			"model":        Link(model),
+			"prompt":       String(prompt),
+			"resolution":   Link(resolution),
+			"aspect_ratio": Link(aspect_ratio),
+			"duration":     Int(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func CFGGuider(gr *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, cfg float64) (_ *Node, guider GUIDER) {
+	nd := &Node{
 		Class: "CFGGuider",
 		Inputs: map[string]Value{
 			"model":    Link(model),
@@ -86,12 +423,35 @@ func CFGGuider(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONI
 			"cfg":      Float(cfg),
 		},
 	}
-	id := g.Add(n)
-	return n, GUIDER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, GUIDER{NodeID: id, OutPort: 0}
 }
 
-func CLIPAttentionMultiply(g *Graph, clip CLIP, q, k, v, out float64) (_ *Node, out_clip CLIP) {
-	n := &Node{
+func CFGNorm(gr *Graph, model MODEL, strength float64) (_ *Node, patched_model MODEL) {
+	nd := &Node{
+		Class: "CFGNorm",
+		Inputs: map[string]Value{
+			"model":    Link(model),
+			"strength": Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func CFGZeroStar(gr *Graph, model MODEL) (_ *Node, patched_model MODEL) {
+	nd := &Node{
+		Class: "CFGZeroStar",
+		Inputs: map[string]Value{
+			"model": Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func CLIPAttentionMultiply(gr *Graph, clip CLIP, q, k, v, out float64) (_ *Node, out_clip CLIP) {
+	nd := &Node{
 		Class: "CLIPAttentionMultiply",
 		Inputs: map[string]Value{
 			"clip": Link(clip),
@@ -101,37 +461,37 @@ func CLIPAttentionMultiply(g *Graph, clip CLIP, q, k, v, out float64) (_ *Node, 
 			"out":  Float(out),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
 // CLIPLoader - Load CLIP
-func CLIPLoader(g *Graph, clip_name, typ string) (_ *Node, clip CLIP) {
-	n := &Node{
+func CLIPLoader(gr *Graph, clip_name, typ, device string) (_ *Node, clip CLIP) {
+	nd := &Node{
 		Class: "CLIPLoader",
 		Inputs: map[string]Value{
 			"clip_name": String(clip_name),
 			"type":      String(typ),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
-func CLIPMergeAdd(g *Graph, clip1 CLIP, clip2 CLIP) (_ *Node, clip CLIP) {
-	n := &Node{
+func CLIPMergeAdd(gr *Graph, clip1 CLIP, clip2 CLIP) (_ *Node, clip CLIP) {
+	nd := &Node{
 		Class: "CLIPMergeAdd",
 		Inputs: map[string]Value{
 			"clip1": Link(clip1),
 			"clip2": Link(clip2),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
-func CLIPMergeSimple(g *Graph, clip1 CLIP, clip2 CLIP, ratio float64) (_ *Node, clip CLIP) {
-	n := &Node{
+func CLIPMergeSimple(gr *Graph, clip1 CLIP, clip2 CLIP, ratio float64) (_ *Node, clip CLIP) {
+	nd := &Node{
 		Class: "CLIPMergeSimple",
 		Inputs: map[string]Value{
 			"clip1": Link(clip1),
@@ -139,12 +499,12 @@ func CLIPMergeSimple(g *Graph, clip1 CLIP, clip2 CLIP, ratio float64) (_ *Node, 
 			"ratio": Float(ratio),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
-func CLIPMergeSubtract(g *Graph, clip1 CLIP, clip2 CLIP, multiplier float64) (_ *Node, clip CLIP) {
-	n := &Node{
+func CLIPMergeSubtract(gr *Graph, clip1 CLIP, clip2 CLIP, multiplier float64) (_ *Node, clip CLIP) {
+	nd := &Node{
 		Class: "CLIPMergeSubtract",
 		Inputs: map[string]Value{
 			"clip1":      Link(clip1),
@@ -152,50 +512,50 @@ func CLIPMergeSubtract(g *Graph, clip1 CLIP, clip2 CLIP, multiplier float64) (_ 
 			"multiplier": Float(multiplier),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
-func CLIPSave(g *Graph, clip CLIP, filename_prefix string) (_ *Node) {
-	n := &Node{
+func CLIPSave(gr *Graph, clip CLIP, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "CLIPSave",
 		Inputs: map[string]Value{
 			"clip":            Link(clip),
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
 // CLIPSetLastLayer - CLIP Set Last Layer
-func CLIPSetLastLayer(g *Graph, clip CLIP, stop_at_clip_layer int) (_ *Node, out_clip CLIP) {
-	n := &Node{
+func CLIPSetLastLayer(gr *Graph, clip CLIP, stop_at_clip_layer int) (_ *Node, out_clip CLIP) {
+	nd := &Node{
 		Class: "CLIPSetLastLayer",
 		Inputs: map[string]Value{
 			"clip":               Link(clip),
 			"stop_at_clip_layer": Int(stop_at_clip_layer),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
 // CLIPTextEncode - CLIP Text Encode (Prompt)
-func CLIPTextEncode(g *Graph, clip CLIP, text string) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func CLIPTextEncode(gr *Graph, clip CLIP, text string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "CLIPTextEncode",
 		Inputs: map[string]Value{
 			"text": String(text),
 			"clip": Link(clip),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func CLIPTextEncodeControlnet(g *Graph, clip CLIP, conditioning CONDITIONING, text string) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func CLIPTextEncodeControlnet(gr *Graph, clip CLIP, conditioning CONDITIONING, text string) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "CLIPTextEncodeControlnet",
 		Inputs: map[string]Value{
 			"clip":         Link(clip),
@@ -203,29 +563,113 @@ func CLIPTextEncodeControlnet(g *Graph, clip CLIP, conditioning CONDITIONING, te
 			"text":         String(text),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func CLIPTextEncodeSD3(g *Graph, clip CLIP, clip_l, clip_g, t5xxl, empty_padding string) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func CLIPTextEncodeFlux(gr *Graph, clip CLIP, clip_l, t5xxl string, guidance float64) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "CLIPTextEncodeFlux",
+		Inputs: map[string]Value{
+			"clip":     Link(clip),
+			"clip_l":   String(clip_l),
+			"t5xxl":    String(t5xxl),
+			"guidance": Float(guidance),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func CLIPTextEncodeHiDream(gr *Graph, clip CLIP, clip_l, clip_g, t5xxl, llama string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "CLIPTextEncodeHiDream",
+		Inputs: map[string]Value{
+			"clip":   Link(clip),
+			"clip_l": String(clip_l),
+			"clip_g": String(clip_g),
+			"t5xxl":  String(t5xxl),
+			"llama":  String(llama),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func CLIPTextEncodeHunyuanDiT(gr *Graph, clip CLIP, bert, mt5xl string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "CLIPTextEncodeHunyuanDiT",
+		Inputs: map[string]Value{
+			"clip":  Link(clip),
+			"bert":  String(bert),
+			"mt5xl": String(mt5xl),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func CLIPTextEncodeKandinsky5(gr *Graph, clip CLIP, clip_l, qwen25_7b string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "CLIPTextEncodeKandinsky5",
+		Inputs: map[string]Value{
+			"clip":      Link(clip),
+			"clip_l":    String(clip_l),
+			"qwen25_7b": String(qwen25_7b),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// CLIPTextEncodeLumina2 - CLIP Text Encode for Lumina2
+func CLIPTextEncodeLumina2(gr *Graph, system_prompt COMBO, clip CLIP, user_prompt string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "CLIPTextEncodeLumina2",
+		Inputs: map[string]Value{
+			"system_prompt": Link(system_prompt),
+			"user_prompt":   String(user_prompt),
+			"clip":          Link(clip),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func CLIPTextEncodePixArtAlpha(gr *Graph, clip CLIP, width, height int, text string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "CLIPTextEncodePixArtAlpha",
+		Inputs: map[string]Value{
+			"width":  Int(width),
+			"height": Int(height),
+			"text":   String(text),
+			"clip":   Link(clip),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func CLIPTextEncodeSD3(gr *Graph, clip CLIP, empty_padding COMBO, clip_l, clip_g, t5xxl string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "CLIPTextEncodeSD3",
 		Inputs: map[string]Value{
 			"clip":          Link(clip),
 			"clip_l":        String(clip_l),
 			"clip_g":        String(clip_g),
 			"t5xxl":         String(t5xxl),
-			"empty_padding": String(empty_padding),
+			"empty_padding": Link(empty_padding),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func CLIPTextEncodeSDXL(g *Graph, clip CLIP, width, height, crop_w, crop_h, target_width, target_height int, text_g string, text_l string) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func CLIPTextEncodeSDXL(gr *Graph, clip CLIP, width, height, crop_w, crop_h, target_width, target_height int, text_g, text_l string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "CLIPTextEncodeSDXL",
 		Inputs: map[string]Value{
+			"clip":          Link(clip),
 			"width":         Int(width),
 			"height":        Int(height),
 			"crop_w":        Int(crop_w),
@@ -233,16 +677,15 @@ func CLIPTextEncodeSDXL(g *Graph, clip CLIP, width, height, crop_w, crop_h, targ
 			"target_width":  Int(target_width),
 			"target_height": Int(target_height),
 			"text_g":        String(text_g),
-			"clip":          Link(clip),
 			"text_l":        String(text_l),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func CLIPTextEncodeSDXLRefiner(g *Graph, clip CLIP, ascore float64, width, height int, text string) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func CLIPTextEncodeSDXLRefiner(gr *Graph, clip CLIP, ascore float64, width, height int, text string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "CLIPTextEncodeSDXLRefiner",
 		Inputs: map[string]Value{
 			"ascore": Float(ascore),
@@ -252,37 +695,38 @@ func CLIPTextEncodeSDXLRefiner(g *Graph, clip CLIP, ascore float64, width, heigh
 			"clip":   Link(clip),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // CLIPVisionEncode - CLIP Vision Encode
-func CLIPVisionEncode(g *Graph, clip_vision CLIP_VISION, image IMAGE) (_ *Node, clip_vision_output CLIP_VISION_OUTPUT) {
-	n := &Node{
+func CLIPVisionEncode(gr *Graph, clip_vision CLIP_VISION, image IMAGE, crop string) (_ *Node, clip_vision_output CLIP_VISION_OUTPUT) {
+	nd := &Node{
 		Class: "CLIPVisionEncode",
 		Inputs: map[string]Value{
 			"clip_vision": Link(clip_vision),
 			"image":       Link(image),
+			"crop":        String(crop),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP_VISION_OUTPUT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP_VISION_OUTPUT{NodeID: id, OutPort: 0}
 }
 
 // CLIPVisionLoader - Load CLIP Vision
-func CLIPVisionLoader(g *Graph, clip_name string) (_ *Node, clip_vision CLIP_VISION) {
-	n := &Node{
+func CLIPVisionLoader(gr *Graph, clip_name string) (_ *Node, clip_vision CLIP_VISION) {
+	nd := &Node{
 		Class: "CLIPVisionLoader",
 		Inputs: map[string]Value{
 			"clip_name": String(clip_name),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP_VISION{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP_VISION{NodeID: id, OutPort: 0}
 }
 
-func Canny(g *Graph, image IMAGE, low_threshold, high_threshold float64) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func Canny(gr *Graph, image IMAGE, low_threshold, high_threshold float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "Canny",
 		Inputs: map[string]Value{
 			"image":          Link(image),
@@ -290,37 +734,65 @@ func Canny(g *Graph, image IMAGE, low_threshold, high_threshold float64) (_ *Nod
 			"high_threshold": Float(high_threshold),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// CaseConverter - Case Converter
+func CaseConverter(gr *Graph, mode COMBO, str string) (_ *Node, out_str STRING) {
+	nd := &Node{
+		Class: "CaseConverter",
+		Inputs: map[string]Value{
+			"string": String(str),
+			"mode":   Link(mode),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// CenterCropImages - Center Crop Images
+func CenterCropImages(gr *Graph, images IMAGE, width, height int) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "CenterCropImages",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"width":  Int(width),
+			"height": Int(height),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // CheckpointLoader - Load Checkpoint With Config (DEPRECATED)
-func CheckpointLoader(g *Graph, config_name, ckpt_name string) (_ *Node, model MODEL, clip CLIP, vae VAE) {
-	n := &Node{
+func CheckpointLoader(gr *Graph, config_name, ckpt_name string) (_ *Node, model MODEL, clip CLIP, vae VAE) {
+	nd := &Node{
 		Class: "CheckpointLoader",
 		Inputs: map[string]Value{
 			"config_name": String(config_name),
 			"ckpt_name":   String(ckpt_name),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
 }
 
 // CheckpointLoaderSimple - Load Checkpoint
-func CheckpointLoaderSimple(g *Graph, ckpt_name string) (_ *Node, model MODEL, clip CLIP, vae VAE) {
-	n := &Node{
+func CheckpointLoaderSimple(gr *Graph, ckpt_name string) (_ *Node, model MODEL, clip CLIP, vae VAE) {
+	nd := &Node{
 		Class: "CheckpointLoaderSimple",
 		Inputs: map[string]Value{
 			"ckpt_name": String(ckpt_name),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
 }
 
-func CheckpointSave(g *Graph, model MODEL, clip CLIP, vae VAE, filename_prefix string) (_ *Node) {
-	n := &Node{
+// CheckpointSave - Save Checkpoint
+func CheckpointSave(gr *Graph, model MODEL, clip CLIP, vae VAE, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "CheckpointSave",
 		Inputs: map[string]Value{
 			"model":           Link(model),
@@ -329,12 +801,71 @@ func CheckpointSave(g *Graph, model MODEL, clip CLIP, vae VAE, filename_prefix s
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func ConditioningAverage(g *Graph, conditioning_to CONDITIONING, conditioning_from CONDITIONING, conditioning_to_strength float64) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func ChromaRadianceOptions(gr *Graph, model MODEL, preserve_wrapper bool, start_sigma, end_sigma float64, nerf_tile_size int) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ChromaRadianceOptions",
+		Inputs: map[string]Value{
+			"model":            Link(model),
+			"preserve_wrapper": Bool(preserve_wrapper),
+			"start_sigma":      Float(start_sigma),
+			"end_sigma":        Float(end_sigma),
+			"nerf_tile_size":   Int(nerf_tile_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// CombineHooks2 - Combine Hooks [2]
+func CombineHooks2(gr *Graph, hooks_a HOOKS, hooks_b HOOKS) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class:  "CombineHooks2",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// CombineHooks4 - Combine Hooks [4]
+func CombineHooks4(gr *Graph, hooks_a HOOKS, hooks_b HOOKS, hooks_c HOOKS, hooks_d HOOKS) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class:  "CombineHooks4",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// CombineHooks8 - Combine Hooks [8]
+func CombineHooks8(gr *Graph, hooks_a HOOKS, hooks_b HOOKS, hooks_c HOOKS, hooks_d HOOKS, hooks_e HOOKS, hooks_f HOOKS, hooks_g HOOKS, hooks_h HOOKS) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class:  "CombineHooks8",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// ComfySwitchNode - Switch
+func ComfySwitchNode(gr *Graph, on_false COMFY_MATCHTYPE_V3, on_true COMFY_MATCHTYPE_V3, sw bool) (_ *Node, output COMFY_MATCHTYPE_V3) {
+	nd := &Node{
+		Class: "ComfySwitchNode",
+		Inputs: map[string]Value{
+			"switch":   Bool(sw),
+			"on_false": Link(on_false),
+			"on_true":  Link(on_true),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, COMFY_MATCHTYPE_V3{NodeID: id, OutPort: 0}
+}
+
+func ConditioningAverage(gr *Graph, conditioning_to CONDITIONING, conditioning_from CONDITIONING, conditioning_to_strength float64) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningAverage",
 		Inputs: map[string]Value{
 			"conditioning_to":          Link(conditioning_to),
@@ -342,39 +873,39 @@ func ConditioningAverage(g *Graph, conditioning_to CONDITIONING, conditioning_fr
 			"conditioning_to_strength": Float(conditioning_to_strength),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // ConditioningCombine - Conditioning (Combine)
-func ConditioningCombine(g *Graph, conditioning_1 CONDITIONING, conditioning_2 CONDITIONING) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningCombine(gr *Graph, conditioning_1 CONDITIONING, conditioning_2 CONDITIONING) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningCombine",
 		Inputs: map[string]Value{
 			"conditioning_1": Link(conditioning_1),
 			"conditioning_2": Link(conditioning_2),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // ConditioningConcat - Conditioning (Concat)
-func ConditioningConcat(g *Graph, conditioning_to CONDITIONING, conditioning_from CONDITIONING) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningConcat(gr *Graph, conditioning_to CONDITIONING, conditioning_from CONDITIONING) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningConcat",
 		Inputs: map[string]Value{
 			"conditioning_to":   Link(conditioning_to),
 			"conditioning_from": Link(conditioning_from),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // ConditioningSetArea - Conditioning (Set Area)
-func ConditioningSetArea(g *Graph, conditioning CONDITIONING, width, height, x, y int, strength float64) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningSetArea(gr *Graph, conditioning CONDITIONING, width, height, x, y int, strength float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningSetArea",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
@@ -385,13 +916,13 @@ func ConditioningSetArea(g *Graph, conditioning CONDITIONING, width, height, x, 
 			"strength":     Float(strength),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // ConditioningSetAreaPercentage - Conditioning (Set Area with Percentage)
-func ConditioningSetAreaPercentage(g *Graph, conditioning CONDITIONING, width, height, x, y, strength float64) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningSetAreaPercentage(gr *Graph, conditioning CONDITIONING, width, height, x, y, strength float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningSetAreaPercentage",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
@@ -402,25 +933,56 @@ func ConditioningSetAreaPercentage(g *Graph, conditioning CONDITIONING, width, h
 			"strength":     Float(strength),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func ConditioningSetAreaStrength(g *Graph, conditioning CONDITIONING, strength float64) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningSetAreaPercentageVideo(gr *Graph, conditioning CONDITIONING, width, height, temporal, x, y, z, strength float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "ConditioningSetAreaPercentageVideo",
+		Inputs: map[string]Value{
+			"conditioning": Link(conditioning),
+			"width":        Float(width),
+			"height":       Float(height),
+			"temporal":     Float(temporal),
+			"x":            Float(x),
+			"y":            Float(y),
+			"z":            Float(z),
+			"strength":     Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func ConditioningSetAreaStrength(gr *Graph, conditioning CONDITIONING, strength float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningSetAreaStrength",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
 			"strength":     Float(strength),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// ConditioningSetDefaultCombine - Cond Set Default Combine
+func ConditioningSetDefaultCombine(gr *Graph, cond CONDITIONING, cond_default CONDITIONING, hooks HOOKS) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "ConditioningSetDefaultCombine",
+		Inputs: map[string]Value{
+			"cond":         Link(cond),
+			"cond_DEFAULT": Link(cond_default),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // ConditioningSetMask - Conditioning (Set Mask)
-func ConditioningSetMask(g *Graph, conditioning CONDITIONING, mask MASK, strength float64, set_cond_area string) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningSetMask(gr *Graph, conditioning CONDITIONING, mask MASK, strength float64, set_cond_area string) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningSetMask",
 		Inputs: map[string]Value{
 			"conditioning":  Link(conditioning),
@@ -429,12 +991,41 @@ func ConditioningSetMask(g *Graph, conditioning CONDITIONING, mask MASK, strengt
 			"set_cond_area": String(set_cond_area),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func ConditioningSetTimestepRange(g *Graph, conditioning CONDITIONING, start, end float64) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+// ConditioningSetProperties - Cond Set Props
+func ConditioningSetProperties(gr *Graph, cond_new CONDITIONING, mask MASK, hooks HOOKS, timesteps TIMESTEPS_RANGE, strength float64, set_cond_area string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "ConditioningSetProperties",
+		Inputs: map[string]Value{
+			"cond_NEW":      Link(cond_new),
+			"strength":      Float(strength),
+			"set_cond_area": String(set_cond_area),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// ConditioningSetPropertiesAndCombine - Cond Set Props Combine
+func ConditioningSetPropertiesAndCombine(gr *Graph, cond CONDITIONING, cond_new CONDITIONING, mask MASK, hooks HOOKS, timesteps TIMESTEPS_RANGE, strength float64, set_cond_area string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "ConditioningSetPropertiesAndCombine",
+		Inputs: map[string]Value{
+			"cond":          Link(cond),
+			"cond_NEW":      Link(cond_new),
+			"strength":      Float(strength),
+			"set_cond_area": String(set_cond_area),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func ConditioningSetTimestepRange(gr *Graph, conditioning CONDITIONING, start, end float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningSetTimestepRange",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
@@ -442,24 +1033,71 @@ func ConditioningSetTimestepRange(g *Graph, conditioning CONDITIONING, start, en
 			"end":          Float(end),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func ConditioningZeroOut(g *Graph, conditioning CONDITIONING) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func ConditioningStableAudio(gr *Graph, positive CONDITIONING, negative CONDITIONING, seconds_start, seconds_total float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
+		Class: "ConditioningStableAudio",
+		Inputs: map[string]Value{
+			"positive":      Link(positive),
+			"negative":      Link(negative),
+			"seconds_start": Float(seconds_start),
+			"seconds_total": Float(seconds_total),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// ConditioningTimestepsRange - Timesteps Range
+func ConditioningTimestepsRange(gr *Graph, start_percent, end_percent float64) (_ *Node, timesteps_range TIMESTEPS_RANGE, before_range TIMESTEPS_RANGE, after_range TIMESTEPS_RANGE) {
+	nd := &Node{
+		Class: "ConditioningTimestepsRange",
+		Inputs: map[string]Value{
+			"start_percent": Float(start_percent),
+			"end_percent":   Float(end_percent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, TIMESTEPS_RANGE{NodeID: id, OutPort: 0}, TIMESTEPS_RANGE{NodeID: id, OutPort: 1}, TIMESTEPS_RANGE{NodeID: id, OutPort: 2}
+}
+
+func ConditioningZeroOut(gr *Graph, conditioning CONDITIONING) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ConditioningZeroOut",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-// ControlNetApply - Apply ControlNet
-func ControlNetApply(g *Graph, conditioning CONDITIONING, control_net CONTROL_NET, image IMAGE, strength float64) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+// ContextWindowsManual - Context Windows (Manual)
+func ContextWindowsManual(gr *Graph, model MODEL, context_schedule COMBO, fuse_method COMBO, context_length, context_overlap int, context_stride int, closed_loop bool, dim int, freenoise bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ContextWindowsManual",
+		Inputs: map[string]Value{
+			"model":            Link(model),
+			"context_length":   Int(context_length),
+			"context_overlap":  Int(context_overlap),
+			"context_schedule": Link(context_schedule),
+			"context_stride":   Int(context_stride),
+			"closed_loop":      Bool(closed_loop),
+			"fuse_method":      Link(fuse_method),
+			"dim":              Int(dim),
+			"freenoise":        Bool(freenoise),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// ControlNetApply - Apply ControlNet (OLD)
+func ControlNetApply(gr *Graph, conditioning CONDITIONING, control_net CONTROL_NET, image IMAGE, strength float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "ControlNetApply",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
@@ -468,13 +1106,13 @@ func ControlNetApply(g *Graph, conditioning CONDITIONING, control_net CONTROL_NE
 			"strength":     Float(strength),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-// ControlNetApplyAdvanced - Apply ControlNet (Advanced)
-func ControlNetApplyAdvanced(g *Graph, positive CONDITIONING, negative CONDITIONING, control_net CONTROL_NET, image IMAGE, strength, start_percent, end_percent float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
-	n := &Node{
+// ControlNetApplyAdvanced - Apply ControlNet
+func ControlNetApplyAdvanced(gr *Graph, positive CONDITIONING, negative CONDITIONING, control_net CONTROL_NET, image IMAGE, vae VAE, strength, start_percent, end_percent float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
 		Class: "ControlNetApplyAdvanced",
 		Inputs: map[string]Value{
 			"positive":      Link(positive),
@@ -486,24 +1124,205 @@ func ControlNetApplyAdvanced(g *Graph, positive CONDITIONING, negative CONDITION
 			"end_percent":   Float(end_percent),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// ControlNetApplySD3 - Apply Controlnet with VAE
+func ControlNetApplySD3(gr *Graph, positive CONDITIONING, negative CONDITIONING, control_net CONTROL_NET, vae VAE, image IMAGE, strength, start_percent, end_percent float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
+		Class: "ControlNetApplySD3",
+		Inputs: map[string]Value{
+			"positive":      Link(positive),
+			"negative":      Link(negative),
+			"control_net":   Link(control_net),
+			"vae":           Link(vae),
+			"image":         Link(image),
+			"strength":      Float(strength),
+			"start_percent": Float(start_percent),
+			"end_percent":   Float(end_percent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+func ControlNetInpaintingAliMamaApply(gr *Graph, positive CONDITIONING, negative CONDITIONING, control_net CONTROL_NET, vae VAE, image IMAGE, mask MASK, strength, start_percent, end_percent float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
+		Class: "ControlNetInpaintingAliMamaApply",
+		Inputs: map[string]Value{
+			"positive":      Link(positive),
+			"negative":      Link(negative),
+			"control_net":   Link(control_net),
+			"vae":           Link(vae),
+			"image":         Link(image),
+			"mask":          Link(mask),
+			"strength":      Float(strength),
+			"start_percent": Float(start_percent),
+			"end_percent":   Float(end_percent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
 }
 
 // ControlNetLoader - Load ControlNet Model
-func ControlNetLoader(g *Graph, control_net_name string) (_ *Node, control_net CONTROL_NET) {
-	n := &Node{
+func ControlNetLoader(gr *Graph, control_net_name string) (_ *Node, control_net CONTROL_NET) {
+	nd := &Node{
 		Class: "ControlNetLoader",
 		Inputs: map[string]Value{
 			"control_net_name": String(control_net_name),
 		},
 	}
-	id := g.Add(n)
-	return n, CONTROL_NET{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONTROL_NET{NodeID: id, OutPort: 0}
 }
 
-func CropMask(g *Graph, mask MASK, x, y, width, height int) (_ *Node, out_mask MASK) {
-	n := &Node{
+func CosmosImageToVideoLatent(gr *Graph, vae VAE, start_image IMAGE, end_image IMAGE, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "CosmosImageToVideoLatent",
+		Inputs: map[string]Value{
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func CosmosPredict2ImageToVideoLatent(gr *Graph, vae VAE, start_image IMAGE, end_image IMAGE, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "CosmosPredict2ImageToVideoLatent",
+		Inputs: map[string]Value{
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// CreateHookKeyframe - Create Hook Keyframe
+func CreateHookKeyframe(gr *Graph, prev_hook_kf HOOK_KEYFRAMES, strength_mult, start_percent float64) (_ *Node, hook_kf HOOK_KEYFRAMES) {
+	nd := &Node{
+		Class: "CreateHookKeyframe",
+		Inputs: map[string]Value{
+			"strength_mult": Float(strength_mult),
+			"start_percent": Float(start_percent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOK_KEYFRAMES{NodeID: id, OutPort: 0}
+}
+
+// CreateHookKeyframesFromFloats - Create Hook Keyframes From Floats
+func CreateHookKeyframesFromFloats(gr *Graph, floats_strength FLOATS, prev_hook_kf HOOK_KEYFRAMES, start_percent, end_percent float64, print_keyframes bool) (_ *Node, hook_kf HOOK_KEYFRAMES) {
+	nd := &Node{
+		Class: "CreateHookKeyframesFromFloats",
+		Inputs: map[string]Value{
+			"floats_strength": Link(floats_strength),
+			"start_percent":   Float(start_percent),
+			"end_percent":     Float(end_percent),
+			"print_keyframes": Bool(print_keyframes),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOK_KEYFRAMES{NodeID: id, OutPort: 0}
+}
+
+// CreateHookKeyframesInterpolated - Create Hook Keyframes Interp.
+func CreateHookKeyframesInterpolated(gr *Graph, prev_hook_kf HOOK_KEYFRAMES, strength_start, strength_end float64, interpolation string, start_percent, end_percent float64, keyframes_count int, print_keyframes bool) (_ *Node, hook_kf HOOK_KEYFRAMES) {
+	nd := &Node{
+		Class: "CreateHookKeyframesInterpolated",
+		Inputs: map[string]Value{
+			"strength_start":  Float(strength_start),
+			"strength_end":    Float(strength_end),
+			"interpolation":   String(interpolation),
+			"start_percent":   Float(start_percent),
+			"end_percent":     Float(end_percent),
+			"keyframes_count": Int(keyframes_count),
+			"print_keyframes": Bool(print_keyframes),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOK_KEYFRAMES{NodeID: id, OutPort: 0}
+}
+
+// CreateHookLora - Create Hook LoRA
+func CreateHookLora(gr *Graph, prev_hooks HOOKS, lora_name string, strength_model, strength_clip float64) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class: "CreateHookLora",
+		Inputs: map[string]Value{
+			"lora_name":      String(lora_name),
+			"strength_model": Float(strength_model),
+			"strength_clip":  Float(strength_clip),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// CreateHookLoraModelOnly - Create Hook LoRA (MO)
+func CreateHookLoraModelOnly(gr *Graph, prev_hooks HOOKS, lora_name string, strength_model float64) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class: "CreateHookLoraModelOnly",
+		Inputs: map[string]Value{
+			"lora_name":      String(lora_name),
+			"strength_model": Float(strength_model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// CreateHookModelAsLora - Create Hook Model as LoRA
+func CreateHookModelAsLora(gr *Graph, prev_hooks HOOKS, ckpt_name string, strength_model, strength_clip float64) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class: "CreateHookModelAsLora",
+		Inputs: map[string]Value{
+			"ckpt_name":      String(ckpt_name),
+			"strength_model": Float(strength_model),
+			"strength_clip":  Float(strength_clip),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// CreateHookModelAsLoraModelOnly - Create Hook Model as LoRA (MO)
+func CreateHookModelAsLoraModelOnly(gr *Graph, prev_hooks HOOKS, ckpt_name string, strength_model float64) (_ *Node, hooks HOOKS) {
+	nd := &Node{
+		Class: "CreateHookModelAsLoraModelOnly",
+		Inputs: map[string]Value{
+			"ckpt_name":      String(ckpt_name),
+			"strength_model": Float(strength_model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
+}
+
+// CreateVideo - Create Video
+func CreateVideo(gr *Graph, images IMAGE, audio AUDIO, fps float64) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "CreateVideo",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"fps":    Float(fps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func CropMask(gr *Graph, mask MASK, x, y, width, height int) (_ *Node, out_mask MASK) {
+	nd := &Node{
 		Class: "CropMask",
 		Inputs: map[string]Value{
 			"mask":   Link(mask),
@@ -513,57 +1332,69 @@ func CropMask(g *Graph, mask MASK, x, y, width, height int) (_ *Node, out_mask M
 			"height": Int(height),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
+}
+
+// CustomCombo - Custom Combo
+func CustomCombo(gr *Graph, choice COMBO) (_ *Node, str STRING) {
+	nd := &Node{
+		Class: "CustomCombo",
+		Inputs: map[string]Value{
+			"choice": Link(choice),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
 }
 
 // DiffControlNetLoader - Load ControlNet Model (diff)
-func DiffControlNetLoader(g *Graph, model MODEL, control_net_name string) (_ *Node, control_net CONTROL_NET) {
-	n := &Node{
+func DiffControlNetLoader(gr *Graph, model MODEL, control_net_name string) (_ *Node, control_net CONTROL_NET) {
+	nd := &Node{
 		Class: "DiffControlNetLoader",
 		Inputs: map[string]Value{
 			"model":            Link(model),
 			"control_net_name": String(control_net_name),
 		},
 	}
-	id := g.Add(n)
-	return n, CONTROL_NET{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONTROL_NET{NodeID: id, OutPort: 0}
 }
 
 // DifferentialDiffusion - Differential Diffusion
-func DifferentialDiffusion(g *Graph, model MODEL) (_ *Node, out_model MODEL) {
-	n := &Node{
+func DifferentialDiffusion(gr *Graph, model MODEL, strength float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "DifferentialDiffusion",
 		Inputs: map[string]Value{
 			"model": Link(model),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func DiffusersLoader(g *Graph, model_path string) (_ *Node, model MODEL, clip CLIP, vae VAE) {
-	n := &Node{
+func DiffusersLoader(gr *Graph, model_path string) (_ *Node, model MODEL, clip CLIP, vae VAE) {
+	nd := &Node{
 		Class: "DiffusersLoader",
 		Inputs: map[string]Value{
 			"model_path": String(model_path),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
 }
 
-func DisableNoise(g *Graph) (_ *Node, noise NOISE) {
-	n := &Node{
+func DisableNoise(gr *Graph) (_ *Node, noise NOISE) {
+	nd := &Node{
 		Class:  "DisableNoise",
 		Inputs: map[string]Value{},
 	}
-	id := g.Add(n)
-	return n, NOISE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, NOISE{NodeID: id, OutPort: 0}
 }
 
-func DualCFGGuider(g *Graph, model MODEL, cond1 CONDITIONING, cond2 CONDITIONING, negative CONDITIONING, cfg_conds, cfg_cond2_negative float64) (_ *Node, guider GUIDER) {
-	n := &Node{
+func DualCFGGuider(gr *Graph, model MODEL, cond1 CONDITIONING, cond2 CONDITIONING, negative CONDITIONING, style COMBO, cfg_conds, cfg_cond2_negative float64) (_ *Node, guider GUIDER) {
+	nd := &Node{
 		Class: "DualCFGGuider",
 		Inputs: map[string]Value{
 			"model":              Link(model),
@@ -572,14 +1403,15 @@ func DualCFGGuider(g *Graph, model MODEL, cond1 CONDITIONING, cond2 CONDITIONING
 			"negative":           Link(negative),
 			"cfg_conds":          Float(cfg_conds),
 			"cfg_cond2_negative": Float(cfg_cond2_negative),
+			"style":              Link(style),
 		},
 	}
-	id := g.Add(n)
-	return n, GUIDER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, GUIDER{NodeID: id, OutPort: 0}
 }
 
-func DualCLIPLoader(g *Graph, clip_name1, clip_name2, typ string) (_ *Node, clip CLIP) {
-	n := &Node{
+func DualCLIPLoader(gr *Graph, clip_name1, clip_name2, typ, device string) (_ *Node, clip CLIP) {
+	nd := &Node{
 		Class: "DualCLIPLoader",
 		Inputs: map[string]Value{
 			"clip_name1": String(clip_name1),
@@ -587,12 +1419,137 @@ func DualCLIPLoader(g *Graph, clip_name1, clip_name2, typ string) (_ *Node, clip
 			"type":       String(typ),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
-func EmptyImage(g *Graph, width, height, batch_size, color int) (_ *Node, image IMAGE) {
-	n := &Node{
+func EasyCache(gr *Graph, model MODEL, reuse_threshold, start_percent, end_percent float64, verbose bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "EasyCache",
+		Inputs: map[string]Value{
+			"model":           Link(model),
+			"reuse_threshold": Float(reuse_threshold),
+			"start_percent":   Float(start_percent),
+			"end_percent":     Float(end_percent),
+			"verbose":         Bool(verbose),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func EmptyAceStepLatentAudio(gr *Graph, seconds float64, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyAceStepLatentAudio",
+		Inputs: map[string]Value{
+			"seconds":    Float(seconds),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// EmptyAudio - Empty Audio
+func EmptyAudio(gr *Graph, duration float64, sample_rate, channels int) (_ *Node, audio AUDIO) {
+	nd := &Node{
+		Class: "EmptyAudio",
+		Inputs: map[string]Value{
+			"duration":    Float(duration),
+			"sample_rate": Int(sample_rate),
+			"channels":    Int(channels),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+func EmptyChromaRadianceLatentImage(gr *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyChromaRadianceLatentImage",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func EmptyCosmosLatentVideo(gr *Graph, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyCosmosLatentVideo",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// EmptyFlux2LatentImage - Empty Flux 2 Latent
+func EmptyFlux2LatentImage(gr *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyFlux2LatentImage",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func EmptyHunyuanImageLatent(gr *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyHunyuanImageLatent",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// EmptyHunyuanLatentVideo - Empty HunyuanVideo 1.0 Latent
+func EmptyHunyuanLatentVideo(gr *Graph, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyHunyuanLatentVideo",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// EmptyHunyuanVideo15Latent - Empty HunyuanVideo 1.5 Latent
+func EmptyHunyuanVideo15Latent(gr *Graph, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyHunyuanVideo15Latent",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func EmptyImage(gr *Graph, width, height, batch_size, color int) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "EmptyImage",
 		Inputs: map[string]Value{
 			"width":      Int(width),
@@ -601,22 +1558,52 @@ func EmptyImage(g *Graph, width, height, batch_size, color int) (_ *Node, image 
 			"color":      Int(color),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func EmptyLatentAudio(g *Graph) (_ *Node, latent LATENT) {
-	n := &Node{
-		Class:  "EmptyLatentAudio",
-		Inputs: map[string]Value{},
+func EmptyLTXVLatentVideo(gr *Graph, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyLTXVLatentVideo",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// EmptyLatentAudio - Empty Latent Audio
+func EmptyLatentAudio(gr *Graph, seconds float64, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyLatentAudio",
+		Inputs: map[string]Value{
+			"seconds":    Float(seconds),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func EmptyLatentHunyuan3Dv2(gr *Graph, resolution, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyLatentHunyuan3Dv2",
+		Inputs: map[string]Value{
+			"resolution": Int(resolution),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // EmptyLatentImage - Empty Latent Image
-func EmptyLatentImage(g *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
-	n := &Node{
+func EmptyLatentImage(gr *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "EmptyLatentImage",
 		Inputs: map[string]Value{
 			"width":      Int(width),
@@ -624,12 +1611,41 @@ func EmptyLatentImage(g *Graph, width, height, batch_size int) (_ *Node, latent 
 			"batch_size": Int(batch_size),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func EmptySD3LatentImage(g *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
-	n := &Node{
+func EmptyMochiLatentVideo(gr *Graph, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyMochiLatentVideo",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// EmptyQwenImageLayeredLatentImage - Empty Qwen Image Layered Latent
+func EmptyQwenImageLayeredLatentImage(gr *Graph, width, height, layers, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "EmptyQwenImageLayeredLatentImage",
+		Inputs: map[string]Value{
+			"width":      Int(width),
+			"height":     Int(height),
+			"layers":     Int(layers),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func EmptySD3LatentImage(gr *Graph, width, height, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "EmptySD3LatentImage",
 		Inputs: map[string]Value{
 			"width":      Int(width),
@@ -637,12 +1653,24 @@ func EmptySD3LatentImage(g *Graph, width, height, batch_size int) (_ *Node, late
 			"batch_size": Int(batch_size),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func ExponentialScheduler(g *Graph, steps int, sigma_max, sigma_min float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+func Epsilon_Scaling(gr *Graph, model MODEL, scaling_factor float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "Epsilon Scaling",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"scaling_factor": Float(scaling_factor),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ExponentialScheduler(gr *Graph, steps int, sigma_max, sigma_min float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "ExponentialScheduler",
 		Inputs: map[string]Value{
 			"steps":     Int(steps),
@@ -650,12 +1678,27 @@ func ExponentialScheduler(g *Graph, steps int, sigma_max, sigma_min float64) (_ 
 			"sigma_min": Float(sigma_min),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func FeatherMask(g *Graph, mask MASK, left, top, right, bottom int) (_ *Node, out_mask MASK) {
-	n := &Node{
+func ExtendIntermediateSigmas(gr *Graph, sigmas SIGMAS, spacing COMBO, steps int, start_at_sigma, end_at_sigma float64) (_ *Node, out_sigmas SIGMAS) {
+	nd := &Node{
+		Class: "ExtendIntermediateSigmas",
+		Inputs: map[string]Value{
+			"sigmas":         Link(sigmas),
+			"steps":          Int(steps),
+			"start_at_sigma": Float(start_at_sigma),
+			"end_at_sigma":   Float(end_at_sigma),
+			"spacing":        Link(spacing),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+func FeatherMask(gr *Graph, mask MASK, left, top, right, bottom int) (_ *Node, out_mask MASK) {
+	nd := &Node{
 		Class: "FeatherMask",
 		Inputs: map[string]Value{
 			"mask":   Link(mask),
@@ -665,23 +1708,218 @@ func FeatherMask(g *Graph, mask MASK, left, top, right, bottom int) (_ *Node, ou
 			"bottom": Int(bottom),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
 }
 
-func FlipSigmas(g *Graph, sigmas SIGMAS) (_ *Node, out_sigmas SIGMAS) {
-	n := &Node{
+func FlipSigmas(gr *Graph, sigmas SIGMAS) (_ *Node, out_sigmas SIGMAS) {
+	nd := &Node{
 		Class: "FlipSigmas",
 		Inputs: map[string]Value{
 			"sigmas": Link(sigmas),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func FreeU(g *Graph, model MODEL, b1, b2, s1, s2 float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+// Flux2MaxImageNode - Flux.2 [max] Image
+func Flux2MaxImageNode(gr *Graph, images IMAGE, prompt string, width, height, seed int, prompt_upsampling bool) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "Flux2MaxImageNode",
+		Inputs: map[string]Value{
+			"prompt":            String(prompt),
+			"width":             Int(width),
+			"height":            Int(height),
+			"seed":              Int(seed),
+			"prompt_upsampling": Bool(prompt_upsampling),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// Flux2ProImageNode - Flux.2 [pro] Image
+func Flux2ProImageNode(gr *Graph, images IMAGE, prompt string, width, height, seed int, prompt_upsampling bool) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "Flux2ProImageNode",
+		Inputs: map[string]Value{
+			"prompt":            String(prompt),
+			"width":             Int(width),
+			"height":            Int(height),
+			"seed":              Int(seed),
+			"prompt_upsampling": Bool(prompt_upsampling),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func Flux2Scheduler(gr *Graph, steps, width, height int) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
+		Class: "Flux2Scheduler",
+		Inputs: map[string]Value{
+			"steps":  Int(steps),
+			"width":  Int(width),
+			"height": Int(height),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+func FluxDisableGuidance(gr *Graph, conditioning CONDITIONING) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "FluxDisableGuidance",
+		Inputs: map[string]Value{
+			"conditioning": Link(conditioning),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func FluxGuidance(gr *Graph, conditioning CONDITIONING, guidance float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "FluxGuidance",
+		Inputs: map[string]Value{
+			"conditioning": Link(conditioning),
+			"guidance":     Float(guidance),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func FluxKontextImageScale(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "FluxKontextImageScale",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// FluxKontextMaxImageNode - Flux.1 Kontext [max] Image
+func FluxKontextMaxImageNode(gr *Graph, input_image IMAGE, prompt, aspect_ratio string, guidance float64, steps, seed int, prompt_upsampling bool) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "FluxKontextMaxImageNode",
+		Inputs: map[string]Value{
+			"prompt":            String(prompt),
+			"aspect_ratio":      String(aspect_ratio),
+			"guidance":          Float(guidance),
+			"steps":             Int(steps),
+			"seed":              Int(seed),
+			"prompt_upsampling": Bool(prompt_upsampling),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// FluxKontextMultiReferenceLatentMethod - Edit Model Reference Method
+func FluxKontextMultiReferenceLatentMethod(gr *Graph, conditioning CONDITIONING, reference_latents_method COMBO) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "FluxKontextMultiReferenceLatentMethod",
+		Inputs: map[string]Value{
+			"conditioning":             Link(conditioning),
+			"reference_latents_method": Link(reference_latents_method),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// FluxKontextProImageNode - Flux.1 Kontext [pro] Image
+func FluxKontextProImageNode(gr *Graph, input_image IMAGE, prompt, aspect_ratio string, guidance float64, steps, seed int, prompt_upsampling bool) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "FluxKontextProImageNode",
+		Inputs: map[string]Value{
+			"prompt":            String(prompt),
+			"aspect_ratio":      String(aspect_ratio),
+			"guidance":          Float(guidance),
+			"steps":             Int(steps),
+			"seed":              Int(seed),
+			"prompt_upsampling": Bool(prompt_upsampling),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// FluxProExpandNode - Flux.1 Expand Image
+func FluxProExpandNode(gr *Graph, image IMAGE, prompt string, prompt_upsampling bool, top, bottom, left, right int, guidance float64, steps, seed int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "FluxProExpandNode",
+		Inputs: map[string]Value{
+			"image":             Link(image),
+			"prompt":            String(prompt),
+			"prompt_upsampling": Bool(prompt_upsampling),
+			"top":               Int(top),
+			"bottom":            Int(bottom),
+			"left":              Int(left),
+			"right":             Int(right),
+			"guidance":          Float(guidance),
+			"steps":             Int(steps),
+			"seed":              Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// FluxProFillNode - Flux.1 Fill Image
+func FluxProFillNode(gr *Graph, image IMAGE, mask MASK, prompt string, prompt_upsampling bool, guidance float64, steps, seed int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "FluxProFillNode",
+		Inputs: map[string]Value{
+			"image":             Link(image),
+			"mask":              Link(mask),
+			"prompt":            String(prompt),
+			"prompt_upsampling": Bool(prompt_upsampling),
+			"guidance":          Float(guidance),
+			"steps":             Int(steps),
+			"seed":              Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// FluxProUltraImageNode - Flux 1.1 [pro] Ultra Image
+func FluxProUltraImageNode(gr *Graph, image_prompt IMAGE, prompt string, prompt_upsampling bool, seed int, aspect_ratio string, raw bool, image_prompt_strength float64) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "FluxProUltraImageNode",
+		Inputs: map[string]Value{
+			"prompt":            String(prompt),
+			"prompt_upsampling": Bool(prompt_upsampling),
+			"seed":              Int(seed),
+			"aspect_ratio":      String(aspect_ratio),
+			"raw":               Bool(raw),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func FreSca(gr *Graph, model MODEL, scale_low, scale_high float64, freq_cutoff int) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "FreSca",
+		Inputs: map[string]Value{
+			"model":       Link(model),
+			"scale_low":   Float(scale_low),
+			"scale_high":  Float(scale_high),
+			"freq_cutoff": Int(freq_cutoff),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func FreeU(gr *Graph, model MODEL, b1, b2, s1, s2 float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "FreeU",
 		Inputs: map[string]Value{
 			"model": Link(model),
@@ -691,12 +1929,12 @@ func FreeU(g *Graph, model MODEL, b1, b2, s1, s2 float64) (_ *Node, out_model MO
 			"s2":    Float(s2),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func FreeU_V2(g *Graph, model MODEL, b1, b2, s1, s2 float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func FreeU_V2(gr *Graph, model MODEL, b1, b2, s1, s2 float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "FreeU_V2",
 		Inputs: map[string]Value{
 			"model": Link(model),
@@ -706,12 +1944,12 @@ func FreeU_V2(g *Graph, model MODEL, b1, b2, s1, s2 float64) (_ *Node, out_model
 			"s2":    Float(s2),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func GITSScheduler(g *Graph, coeff float64, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+func GITSScheduler(gr *Graph, coeff float64, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "GITSScheduler",
 		Inputs: map[string]Value{
 			"coeff":   Float(coeff),
@@ -719,23 +1957,23 @@ func GITSScheduler(g *Graph, coeff float64, steps int, denoise float64) (_ *Node
 			"denoise": Float(denoise),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func GLIGENLoader(g *Graph, gligen_name string) (_ *Node, gligen GLIGEN) {
-	n := &Node{
+func GLIGENLoader(gr *Graph, gligen_name string) (_ *Node, gligen GLIGEN) {
+	nd := &Node{
 		Class: "GLIGENLoader",
 		Inputs: map[string]Value{
 			"gligen_name": String(gligen_name),
 		},
 	}
-	id := g.Add(n)
-	return n, GLIGEN{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, GLIGEN{NodeID: id, OutPort: 0}
 }
 
-func GLIGENTextBoxApply(g *Graph, conditioning_to CONDITIONING, clip CLIP, gligen_textbox_model GLIGEN, text string, width, height, x, y int) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func GLIGENTextBoxApply(gr *Graph, conditioning_to CONDITIONING, clip CLIP, gligen_textbox_model GLIGEN, text string, width, height, x, y int) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "GLIGENTextBoxApply",
 		Inputs: map[string]Value{
 			"conditioning_to":      Link(conditioning_to),
@@ -748,12 +1986,117 @@ func GLIGENTextBoxApply(g *Graph, conditioning_to CONDITIONING, clip CLIP, glige
 			"y":                    Int(y),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func GrowMask(g *Graph, mask MASK, expand int, tapered_corners bool) (_ *Node, out_mask MASK) {
-	n := &Node{
+// GeminiImage2Node - Nano Banana Pro (Google Gemini Image)
+func GeminiImage2Node(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, response_modalities COMBO, images IMAGE, files GEMINI_INPUT_FILES, prompt string, seed int, system_prompt string) (_ *Node, image IMAGE, str STRING) {
+	nd := &Node{
+		Class: "GeminiImage2Node",
+		Inputs: map[string]Value{
+			"prompt":              String(prompt),
+			"model":               Link(model),
+			"seed":                Int(seed),
+			"aspect_ratio":        Link(aspect_ratio),
+			"resolution":          Link(resolution),
+			"response_modalities": Link(response_modalities),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}
+}
+
+// GeminiImageNode - Nano Banana (Google Gemini Image)
+func GeminiImageNode(gr *Graph, model COMBO, images IMAGE, files GEMINI_INPUT_FILES, aspect_ratio COMBO, response_modalities COMBO, prompt string, seed int, system_prompt string) (_ *Node, image IMAGE, str STRING) {
+	nd := &Node{
+		Class: "GeminiImageNode",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+			"model":  Link(model),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}
+}
+
+// GeminiInputFiles - Gemini Input Files
+func GeminiInputFiles(gr *Graph, file COMBO, gemini_input_files GEMINI_INPUT_FILES) (_ *Node, out_gemini_input_files GEMINI_INPUT_FILES) {
+	nd := &Node{
+		Class: "GeminiInputFiles",
+		Inputs: map[string]Value{
+			"file": Link(file),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, GEMINI_INPUT_FILES{NodeID: id, OutPort: 0}
+}
+
+// GeminiNode - Google Gemini
+func GeminiNode(gr *Graph, model COMBO, images IMAGE, audio AUDIO, video VIDEO, files GEMINI_INPUT_FILES, prompt string, seed int, system_prompt string) (_ *Node, str STRING) {
+	nd := &Node{
+		Class: "GeminiNode",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+			"model":  Link(model),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+func GenerateTracks(gr *Graph, interpolation COMBO, track_mask MASK, width, height int, start_x, start_y, end_x, end_y float64, num_frames, num_tracks int, track_spread float64, bezier bool, mid_x, mid_y float64) (_ *Node, tracks TRACKS, track_length INT) {
+	nd := &Node{
+		Class: "GenerateTracks",
+		Inputs: map[string]Value{
+			"width":         Int(width),
+			"height":        Int(height),
+			"start_x":       Float(start_x),
+			"start_y":       Float(start_y),
+			"end_x":         Float(end_x),
+			"end_y":         Float(end_y),
+			"num_frames":    Int(num_frames),
+			"num_tracks":    Int(num_tracks),
+			"track_spread":  Float(track_spread),
+			"bezier":        Bool(bezier),
+			"mid_x":         Float(mid_x),
+			"mid_y":         Float(mid_y),
+			"interpolation": Link(interpolation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, TRACKS{NodeID: id, OutPort: 0}, INT{NodeID: id, OutPort: 1}
+}
+
+// GetImageSize - Get Image Size
+func GetImageSize(gr *Graph, image IMAGE) (_ *Node, width INT, height INT, batch_size INT) {
+	nd := &Node{
+		Class: "GetImageSize",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, INT{NodeID: id, OutPort: 0}, INT{NodeID: id, OutPort: 1}, INT{NodeID: id, OutPort: 2}
+}
+
+// GetVideoComponents - Get Video Components
+func GetVideoComponents(gr *Graph, video VIDEO) (_ *Node, images IMAGE, audio AUDIO, fps FLOAT) {
+	nd := &Node{
+		Class: "GetVideoComponents",
+		Inputs: map[string]Value{
+			"video": Link(video),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, AUDIO{NodeID: id, OutPort: 1}, FLOAT{NodeID: id, OutPort: 2}
+}
+
+// GrowMask - Grow Mask
+func GrowMask(gr *Graph, mask MASK, expand int, tapered_corners bool) (_ *Node, out_mask MASK) {
+	nd := &Node{
 		Class: "GrowMask",
 		Inputs: map[string]Value{
 			"mask":            Link(mask),
@@ -761,12 +2104,111 @@ func GrowMask(g *Graph, mask MASK, expand int, tapered_corners bool) (_ *Node, o
 			"tapered_corners": Bool(tapered_corners),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
 }
 
-func HyperTile(g *Graph, model MODEL, tile_size, swap_size, max_depth int, scale_depth bool) (_ *Node, out_model MODEL) {
-	n := &Node{
+func Hunyuan3Dv2Conditioning(gr *Graph, clip_vision_output CLIP_VISION_OUTPUT) (_ *Node, positive CONDITIONING, negative CONDITIONING) {
+	nd := &Node{
+		Class: "Hunyuan3Dv2Conditioning",
+		Inputs: map[string]Value{
+			"clip_vision_output": Link(clip_vision_output),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+func Hunyuan3Dv2ConditioningMultiView(gr *Graph, front CLIP_VISION_OUTPUT, left CLIP_VISION_OUTPUT, back CLIP_VISION_OUTPUT, right CLIP_VISION_OUTPUT) (_ *Node, positive CONDITIONING, negative CONDITIONING) {
+	nd := &Node{
+		Class:  "Hunyuan3Dv2ConditioningMultiView",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+func HunyuanImageToVideo(gr *Graph, positive CONDITIONING, vae VAE, guidance_type COMBO, start_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "HunyuanImageToVideo",
+		Inputs: map[string]Value{
+			"positive":      Link(positive),
+			"vae":           Link(vae),
+			"width":         Int(width),
+			"height":        Int(height),
+			"length":        Int(length),
+			"batch_size":    Int(batch_size),
+			"guidance_type": Link(guidance_type),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
+}
+
+func HunyuanRefinerLatent(gr *Graph, positive CONDITIONING, negative CONDITIONING, latent LATENT, noise_augmentation float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, out_latent LATENT) {
+	nd := &Node{
+		Class: "HunyuanRefinerLatent",
+		Inputs: map[string]Value{
+			"positive":           Link(positive),
+			"negative":           Link(negative),
+			"latent":             Link(latent),
+			"noise_augmentation": Float(noise_augmentation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func HunyuanVideo15ImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, start_image IMAGE, clip_vision_output CLIP_VISION_OUTPUT, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "HunyuanVideo15ImageToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// HunyuanVideo15LatentUpscaleWithModel - Hunyuan Video 15 Latent Upscale With Model
+func HunyuanVideo15LatentUpscaleWithModel(gr *Graph, model LATENT_UPSCALE_MODEL, samples LATENT, upscale_method COMBO, crop COMBO, width, height int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "HunyuanVideo15LatentUpscaleWithModel",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"samples":        Link(samples),
+			"upscale_method": Link(upscale_method),
+			"width":          Int(width),
+			"height":         Int(height),
+			"crop":           Link(crop),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func HunyuanVideo15SuperResolution(gr *Graph, positive CONDITIONING, negative CONDITIONING, latent LATENT, vae VAE, start_image IMAGE, clip_vision_output CLIP_VISION_OUTPUT, noise_augmentation float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, out_latent LATENT) {
+	nd := &Node{
+		Class: "HunyuanVideo15SuperResolution",
+		Inputs: map[string]Value{
+			"positive":           Link(positive),
+			"negative":           Link(negative),
+			"latent":             Link(latent),
+			"noise_augmentation": Float(noise_augmentation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func HyperTile(gr *Graph, model MODEL, tile_size, swap_size, max_depth int, scale_depth bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "HyperTile",
 		Inputs: map[string]Value{
 			"model":       Link(model),
@@ -776,52 +2218,103 @@ func HyperTile(g *Graph, model MODEL, tile_size, swap_size, max_depth int, scale
 			"scale_depth": Bool(scale_depth),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func HypernetworkLoader(g *Graph, model MODEL, hypernetwork_name string, strength float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func HypernetworkLoader(gr *Graph, model MODEL, hypernetwork_name COMBO, strength float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "HypernetworkLoader",
 		Inputs: map[string]Value{
 			"model":             Link(model),
-			"hypernetwork_name": String(hypernetwork_name),
+			"hypernetwork_name": Link(hypernetwork_name),
 			"strength":          Float(strength),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// IdeogramV1 - Ideogram V1
+func IdeogramV1(gr *Graph, aspect_ratio COMBO, magic_prompt_option COMBO, prompt string, turbo bool, seed int, negative_prompt string, num_images int) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "IdeogramV1",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+			"turbo":  Bool(turbo),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// IdeogramV2 - Ideogram V2
+func IdeogramV2(gr *Graph, aspect_ratio COMBO, resolution COMBO, magic_prompt_option COMBO, style_type COMBO, prompt string, turbo bool, seed int, negative_prompt string, num_images int) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "IdeogramV2",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+			"turbo":  Bool(turbo),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// IdeogramV3 - Ideogram V3
+func IdeogramV3(gr *Graph, image IMAGE, mask MASK, aspect_ratio COMBO, resolution COMBO, magic_prompt_option COMBO, rendering_speed COMBO, character_image IMAGE, character_mask MASK, prompt string, seed, num_images int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "IdeogramV3",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func ImageAddNoise(gr *Graph, image IMAGE, seed int, strength float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ImageAddNoise",
+		Inputs: map[string]Value{
+			"image":    Link(image),
+			"seed":     Int(seed),
+			"strength": Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // ImageBatch - Batch Images
-func ImageBatch(g *Graph, image1 IMAGE, image2 IMAGE) (_ *Node, image IMAGE) {
-	n := &Node{
+func ImageBatch(gr *Graph, image1 IMAGE, image2 IMAGE) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "ImageBatch",
 		Inputs: map[string]Value{
 			"image1": Link(image1),
 			"image2": Link(image2),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageBlend(g *Graph, image1 IMAGE, image2 IMAGE, blend_factor float64, blend_mode string) (_ *Node, image IMAGE) {
-	n := &Node{
+func ImageBlend(gr *Graph, image1 IMAGE, image2 IMAGE, blend_mode COMBO, blend_factor float64) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "ImageBlend",
 		Inputs: map[string]Value{
 			"image1":       Link(image1),
 			"image2":       Link(image2),
 			"blend_factor": Float(blend_factor),
-			"blend_mode":   String(blend_mode),
+			"blend_mode":   Link(blend_mode),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageBlur(g *Graph, image IMAGE, blur_radius int, sigma float64) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageBlur(gr *Graph, image IMAGE, blur_radius int, sigma float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageBlur",
 		Inputs: map[string]Value{
 			"image":       Link(image),
@@ -829,24 +2322,36 @@ func ImageBlur(g *Graph, image IMAGE, blur_radius int, sigma float64) (_ *Node, 
 			"sigma":       Float(sigma),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageColorToMask(g *Graph, image IMAGE, color int) (_ *Node, mask MASK) {
-	n := &Node{
+func ImageColorToMask(gr *Graph, image IMAGE, color int) (_ *Node, mask MASK) {
+	nd := &Node{
 		Class: "ImageColorToMask",
 		Inputs: map[string]Value{
 			"image": Link(image),
 			"color": Int(color),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
 }
 
-func ImageCompositeMasked(g *Graph, destination IMAGE, source IMAGE, mask MASK, x, y int, resize_source bool) (_ *Node, image IMAGE) {
-	n := &Node{
+// ImageCompare - Image Compare
+func ImageCompare(gr *Graph, compare_view IMAGECOMPARE, image_a IMAGE, image_b IMAGE) (_ *Node) {
+	nd := &Node{
+		Class: "ImageCompare",
+		Inputs: map[string]Value{
+			"compare_view": Link(compare_view),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func ImageCompositeMasked(gr *Graph, destination IMAGE, source IMAGE, mask MASK, x, y int, resize_source bool) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "ImageCompositeMasked",
 		Inputs: map[string]Value{
 			"destination":   Link(destination),
@@ -856,12 +2361,13 @@ func ImageCompositeMasked(g *Graph, destination IMAGE, source IMAGE, mask MASK, 
 			"resize_source": Bool(resize_source),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageCrop(g *Graph, image IMAGE, width, height, x, y int) (_ *Node, out_image IMAGE) {
-	n := &Node{
+// ImageCrop - Image Crop
+func ImageCrop(gr *Graph, image IMAGE, width, height, x, y int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageCrop",
 		Inputs: map[string]Value{
 			"image":  Link(image),
@@ -871,12 +2377,37 @@ func ImageCrop(g *Graph, image IMAGE, width, height, x, y int) (_ *Node, out_ima
 			"y":      Int(y),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageFromBatch(g *Graph, image IMAGE, batch_index, length int) (_ *Node, out_image IMAGE) {
-	n := &Node{
+// ImageDeduplication - Image Deduplication
+func ImageDeduplication(gr *Graph, images IMAGE, similarity_threshold float64) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "ImageDeduplication",
+		Inputs: map[string]Value{
+			"images":               Link(images),
+			"similarity_threshold": Float(similarity_threshold),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func ImageFlip(gr *Graph, image IMAGE, flip_method COMBO) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ImageFlip",
+		Inputs: map[string]Value{
+			"image":       Link(image),
+			"flip_method": Link(flip_method),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func ImageFromBatch(gr *Graph, image IMAGE, batch_index, length int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageFromBatch",
 		Inputs: map[string]Value{
 			"image":       Link(image),
@@ -884,36 +2415,52 @@ func ImageFromBatch(g *Graph, image IMAGE, batch_index, length int) (_ *Node, ou
 			"length":      Int(length),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ImageGrid - Image Grid
+func ImageGrid(gr *Graph, images IMAGE, columns, cell_width, cell_height, padding int) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "ImageGrid",
+		Inputs: map[string]Value{
+			"images":      Link(images),
+			"columns":     Int(columns),
+			"cell_width":  Int(cell_width),
+			"cell_height": Int(cell_height),
+			"padding":     Int(padding),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // ImageInvert - Invert Image
-func ImageInvert(g *Graph, image IMAGE) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageInvert(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageInvert",
 		Inputs: map[string]Value{
 			"image": Link(image),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // ImageOnlyCheckpointLoader - Image Only Checkpoint Loader (img2vid model)
-func ImageOnlyCheckpointLoader(g *Graph, ckpt_name string) (_ *Node, model MODEL, clip_vision CLIP_VISION, vae VAE) {
-	n := &Node{
+func ImageOnlyCheckpointLoader(gr *Graph, ckpt_name string) (_ *Node, model MODEL, clip_vision CLIP_VISION, vae VAE) {
+	nd := &Node{
 		Class: "ImageOnlyCheckpointLoader",
 		Inputs: map[string]Value{
 			"ckpt_name": String(ckpt_name),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}, CLIP_VISION{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, CLIP_VISION{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}
 }
 
-func ImageOnlyCheckpointSave(g *Graph, model MODEL, clip_vision CLIP_VISION, vae VAE, filename_prefix string) (_ *Node) {
-	n := &Node{
+func ImageOnlyCheckpointSave(gr *Graph, model MODEL, clip_vision CLIP_VISION, vae VAE, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "ImageOnlyCheckpointSave",
 		Inputs: map[string]Value{
 			"model":           Link(model),
@@ -922,13 +2469,13 @@ func ImageOnlyCheckpointSave(g *Graph, model MODEL, clip_vision CLIP_VISION, vae
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
 // ImagePadForOutpaint - Pad Image for Outpainting
-func ImagePadForOutpaint(g *Graph, image IMAGE, left, top, right, bottom, feathering int) (_ *Node, out_image IMAGE, mask MASK) {
-	n := &Node{
+func ImagePadForOutpaint(gr *Graph, image IMAGE, left, top, right, bottom, feathering int) (_ *Node, out_image IMAGE, mask MASK) {
+	nd := &Node{
 		Class: "ImagePadForOutpaint",
 		Inputs: map[string]Value{
 			"image":      Link(image),
@@ -939,26 +2486,49 @@ func ImagePadForOutpaint(g *Graph, image IMAGE, left, top, right, bottom, feathe
 			"feathering": Int(feathering),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
 }
 
-func ImageQuantize(g *Graph, image IMAGE, colors int, dither string) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageQuantize(gr *Graph, image IMAGE, dither COMBO, colors int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageQuantize",
 		Inputs: map[string]Value{
 			"image":  Link(image),
 			"colors": Int(colors),
-			"dither": String(dither),
+			"dither": Link(dither),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func ImageRGBToYUV(gr *Graph, image IMAGE) (_ *Node, y IMAGE, u IMAGE, v IMAGE) {
+	nd := &Node{
+		Class: "ImageRGBToYUV",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, IMAGE{NodeID: id, OutPort: 1}, IMAGE{NodeID: id, OutPort: 2}
+}
+
+func ImageRotate(gr *Graph, image IMAGE, rotation COMBO) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ImageRotate",
+		Inputs: map[string]Value{
+			"image":    Link(image),
+			"rotation": Link(rotation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // ImageScale - Upscale Image
-func ImageScale(g *Graph, image IMAGE, upscale_method string, width, height int, crop string) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageScale(gr *Graph, image IMAGE, upscale_method string, width, height int, crop string) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageScale",
 		Inputs: map[string]Value{
 			"image":          Link(image),
@@ -968,13 +2538,13 @@ func ImageScale(g *Graph, image IMAGE, upscale_method string, width, height int,
 			"crop":           String(crop),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // ImageScaleBy - Upscale Image By
-func ImageScaleBy(g *Graph, image IMAGE, upscale_method string, scale_by float64) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageScaleBy(gr *Graph, image IMAGE, upscale_method string, scale_by float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageScaleBy",
 		Inputs: map[string]Value{
 			"image":          Link(image),
@@ -982,25 +2552,39 @@ func ImageScaleBy(g *Graph, image IMAGE, upscale_method string, scale_by float64
 			"scale_by":       Float(scale_by),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageScaleToTotalPixels(g *Graph, image IMAGE, upscale_method string, megapixels float64) (_ *Node, out_image IMAGE) {
-	n := &Node{
-		Class: "ImageScaleToTotalPixels",
+func ImageScaleToMaxDimension(gr *Graph, image IMAGE, upscale_method COMBO, largest_size int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ImageScaleToMaxDimension",
 		Inputs: map[string]Value{
 			"image":          Link(image),
-			"upscale_method": String(upscale_method),
-			"megapixels":     Float(megapixels),
+			"upscale_method": Link(upscale_method),
+			"largest_size":   Int(largest_size),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageSharpen(g *Graph, image IMAGE, sharpen_radius int, sigma, alpha float64) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageScaleToTotalPixels(gr *Graph, image IMAGE, upscale_method COMBO, megapixels float64, resolution_steps int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ImageScaleToTotalPixels",
+		Inputs: map[string]Value{
+			"image":            Link(image),
+			"upscale_method":   Link(upscale_method),
+			"megapixels":       Float(megapixels),
+			"resolution_steps": Int(resolution_steps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func ImageSharpen(gr *Graph, image IMAGE, sharpen_radius int, sigma, alpha float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageSharpen",
 		Inputs: map[string]Value{
 			"image":          Link(image),
@@ -1009,53 +2593,83 @@ func ImageSharpen(g *Graph, image IMAGE, sharpen_radius int, sigma, alpha float6
 			"alpha":          Float(alpha),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ImageStitch - Image Stitch
+func ImageStitch(gr *Graph, image1 IMAGE, direction COMBO, spacing_color COMBO, image2 IMAGE, match_image_size bool, spacing_width int) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "ImageStitch",
+		Inputs: map[string]Value{
+			"image1":           Link(image1),
+			"direction":        Link(direction),
+			"match_image_size": Bool(match_image_size),
+			"spacing_width":    Int(spacing_width),
+			"spacing_color":    Link(spacing_color),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // ImageToMask - Convert Image to Mask
-func ImageToMask(g *Graph, image IMAGE, channel string) (_ *Node, mask MASK) {
-	n := &Node{
+func ImageToMask(gr *Graph, image IMAGE, channel COMBO) (_ *Node, mask MASK) {
+	nd := &Node{
 		Class: "ImageToMask",
 		Inputs: map[string]Value{
 			"image":   Link(image),
-			"channel": String(channel),
+			"channel": Link(channel),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
 }
 
 // ImageUpscaleWithModel - Upscale Image (using Model)
-func ImageUpscaleWithModel(g *Graph, upscale_model UPSCALE_MODEL, image IMAGE) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func ImageUpscaleWithModel(gr *Graph, upscale_model UPSCALE_MODEL, image IMAGE) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "ImageUpscaleWithModel",
 		Inputs: map[string]Value{
 			"upscale_model": Link(upscale_model),
 			"image":         Link(image),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func InpaintModelConditioning(g *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, pixels IMAGE, mask MASK) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
-	n := &Node{
-		Class: "InpaintModelConditioning",
+func ImageYUVToRGB(gr *Graph, y IMAGE, u IMAGE, v IMAGE) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "ImageYUVToRGB",
 		Inputs: map[string]Value{
-			"positive": Link(positive),
-			"negative": Link(negative),
-			"vae":      Link(vae),
-			"pixels":   Link(pixels),
-			"mask":     Link(mask),
+			"Y": Link(y),
+			"U": Link(u),
+			"V": Link(v),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func InstructPixToPixConditioning(g *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, pixels IMAGE) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
-	n := &Node{
+func InpaintModelConditioning(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, pixels IMAGE, mask MASK, noise_mask bool) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "InpaintModelConditioning",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"pixels":     Link(pixels),
+			"mask":       Link(mask),
+			"noise_mask": Bool(noise_mask),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func InstructPixToPixConditioning(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, pixels IMAGE) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
 		Class: "InstructPixToPixConditioning",
 		Inputs: map[string]Value{
 			"positive": Link(positive),
@@ -1064,36 +2678,49 @@ func InstructPixToPixConditioning(g *Graph, positive CONDITIONING, negative COND
 			"pixels":   Link(pixels),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
 }
 
-func InvertMask(g *Graph, mask MASK) (_ *Node, out_mask MASK) {
-	n := &Node{
+func InvertMask(gr *Graph, mask MASK) (_ *Node, out_mask MASK) {
+	nd := &Node{
 		Class: "InvertMask",
 		Inputs: map[string]Value{
 			"mask": Link(mask),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
+}
+
+// JoinAudioChannels - Join Audio Channels
+func JoinAudioChannels(gr *Graph, audio_left AUDIO, audio_right AUDIO) (_ *Node, audio AUDIO) {
+	nd := &Node{
+		Class: "JoinAudioChannels",
+		Inputs: map[string]Value{
+			"audio_left":  Link(audio_left),
+			"audio_right": Link(audio_right),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
 }
 
 // JoinImageWithAlpha - Join Image with Alpha
-func JoinImageWithAlpha(g *Graph, image IMAGE, alpha MASK) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func JoinImageWithAlpha(gr *Graph, image IMAGE, alpha MASK) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "JoinImageWithAlpha",
 		Inputs: map[string]Value{
 			"image": Link(image),
 			"alpha": Link(alpha),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func KSampler(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, latent_image LATENT, seed, steps int, cfg float64, sampler_name, scheduler string, denoise float64) (_ *Node, latent LATENT) {
-	n := &Node{
+func KSampler(gr *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, latent_image LATENT, seed, steps int, cfg float64, sampler_name, scheduler string, denoise float64) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "KSampler",
 		Inputs: map[string]Value{
 			"model":        Link(model),
@@ -1108,13 +2735,13 @@ func KSampler(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONIN
 			"denoise":      Float(denoise),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // KSamplerAdvanced - KSampler (Advanced)
-func KSamplerAdvanced(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, latent_image LATENT, add_noise string, noise_seed, steps int, cfg float64, sampler_name, scheduler string, start_at_step, end_at_step int, return_with_leftover_noise string) (_ *Node, latent LATENT) {
-	n := &Node{
+func KSamplerAdvanced(gr *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, latent_image LATENT, add_noise string, noise_seed, steps int, cfg float64, sampler_name, scheduler string, start_at_step, end_at_step int, return_with_leftover_noise string) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "KSamplerAdvanced",
 		Inputs: map[string]Value{
 			"model":                      Link(model),
@@ -1132,23 +2759,40 @@ func KSamplerAdvanced(g *Graph, model MODEL, positive CONDITIONING, negative CON
 			"return_with_leftover_noise": String(return_with_leftover_noise),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func KSamplerSelect(g *Graph, sampler_name string) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func KSamplerSelect(gr *Graph, sampler_name COMBO) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "KSamplerSelect",
 		Inputs: map[string]Value{
-			"sampler_name": String(sampler_name),
+			"sampler_name": Link(sampler_name),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func KarrasScheduler(g *Graph, steps int, sigma_max, sigma_min, rho float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+func Kandinsky5ImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, start_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT, cond_latent LATENT) {
+	nd := &Node{
+		Class: "Kandinsky5ImageToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}, LATENT{NodeID: id, OutPort: 3}
+}
+
+func KarrasScheduler(gr *Graph, steps int, sigma_max, sigma_min, rho float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "KarrasScheduler",
 		Inputs: map[string]Value{
 			"steps":     Int(steps),
@@ -1157,49 +2801,652 @@ func KarrasScheduler(g *Graph, steps int, sigma_max, sigma_min, rho float64) (_ 
 			"rho":       Float(rho),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func LatentAdd(g *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent LATENT) {
-	n := &Node{
+// KlingCameraControlI2VNode - Kling Image to Video (Camera Control)
+func KlingCameraControlI2VNode(gr *Graph, start_frame IMAGE, aspect_ratio COMBO, camera_control CAMERA_CONTROL, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingCameraControlI2VNode",
+		Inputs: map[string]Value{
+			"start_frame":     Link(start_frame),
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"cfg_scale":       Float(cfg_scale),
+			"aspect_ratio":    Link(aspect_ratio),
+			"camera_control":  Link(camera_control),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingCameraControlT2VNode - Kling Text to Video (Camera Control)
+func KlingCameraControlT2VNode(gr *Graph, aspect_ratio COMBO, camera_control CAMERA_CONTROL, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingCameraControlT2VNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"cfg_scale":       Float(cfg_scale),
+			"aspect_ratio":    Link(aspect_ratio),
+			"camera_control":  Link(camera_control),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingCameraControls - Kling Camera Controls
+func KlingCameraControls(gr *Graph, camera_control_type COMBO, horizontal_movement, vertical_movement, pan, tilt, roll, zoom float64) (_ *Node, camera_control CAMERA_CONTROL) {
+	nd := &Node{
+		Class: "KlingCameraControls",
+		Inputs: map[string]Value{
+			"camera_control_type": Link(camera_control_type),
+			"horizontal_movement": Float(horizontal_movement),
+			"vertical_movement":   Float(vertical_movement),
+			"pan":                 Float(pan),
+			"tilt":                Float(tilt),
+			"roll":                Float(roll),
+			"zoom":                Float(zoom),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CAMERA_CONTROL{NodeID: id, OutPort: 0}
+}
+
+// KlingDualCharacterVideoEffectNode - Kling Dual Character Video Effects
+func KlingDualCharacterVideoEffectNode(gr *Graph, image_left IMAGE, image_right IMAGE, effect_scene COMBO, model_name COMBO, mode COMBO, duration COMBO) (_ *Node, video VIDEO, out_duration STRING) {
+	nd := &Node{
+		Class: "KlingDualCharacterVideoEffectNode",
+		Inputs: map[string]Value{
+			"image_left":   Link(image_left),
+			"image_right":  Link(image_right),
+			"effect_scene": Link(effect_scene),
+			"model_name":   Link(model_name),
+			"mode":         Link(mode),
+			"duration":     Link(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}
+}
+
+// KlingImage2VideoNode - Kling Image(First Frame) to Video
+func KlingImage2VideoNode(gr *Graph, start_frame IMAGE, model_name COMBO, mode COMBO, aspect_ratio COMBO, duration COMBO, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, out_duration STRING) {
+	nd := &Node{
+		Class: "KlingImage2VideoNode",
+		Inputs: map[string]Value{
+			"start_frame":     Link(start_frame),
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"model_name":      Link(model_name),
+			"cfg_scale":       Float(cfg_scale),
+			"mode":            Link(mode),
+			"aspect_ratio":    Link(aspect_ratio),
+			"duration":        Link(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingImageGenerationNode - Kling Image Generation
+func KlingImageGenerationNode(gr *Graph, image_type COMBO, model_name COMBO, aspect_ratio COMBO, image IMAGE, prompt, negative_prompt string, image_fidelity, human_fidelity float64, n int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "KlingImageGenerationNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"image_type":      Link(image_type),
+			"image_fidelity":  Float(image_fidelity),
+			"human_fidelity":  Float(human_fidelity),
+			"model_name":      Link(model_name),
+			"aspect_ratio":    Link(aspect_ratio),
+			"n":               Int(n),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// KlingImageToVideoWithAudio - Kling Image(First Frame) to Video with Audio
+func KlingImageToVideoWithAudio(gr *Graph, model_name COMBO, start_frame IMAGE, mode COMBO, duration COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingImageToVideoWithAudio",
+		Inputs: map[string]Value{
+			"model_name":     Link(model_name),
+			"start_frame":    Link(start_frame),
+			"prompt":         String(prompt),
+			"mode":           Link(mode),
+			"duration":       Link(duration),
+			"generate_audio": Bool(generate_audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingLipSyncAudioToVideoNode - Kling Lip Sync Video with Audio
+func KlingLipSyncAudioToVideoNode(gr *Graph, video VIDEO, audio AUDIO, voice_language COMBO) (_ *Node, out_video VIDEO, video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingLipSyncAudioToVideoNode",
+		Inputs: map[string]Value{
+			"video":          Link(video),
+			"audio":          Link(audio),
+			"voice_language": Link(voice_language),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingLipSyncTextToVideoNode - Kling Lip Sync Video with Text
+func KlingLipSyncTextToVideoNode(gr *Graph, video VIDEO, voice COMBO, text string, voice_speed float64) (_ *Node, out_video VIDEO, video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingLipSyncTextToVideoNode",
+		Inputs: map[string]Value{
+			"video":       Link(video),
+			"text":        String(text),
+			"voice":       Link(voice),
+			"voice_speed": Float(voice_speed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingMotionControl - Kling Motion Control
+func KlingMotionControl(gr *Graph, reference_image IMAGE, reference_video VIDEO, character_orientation COMBO, mode COMBO, prompt string, keep_original_sound bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingMotionControl",
+		Inputs: map[string]Value{
+			"prompt":                String(prompt),
+			"reference_image":       Link(reference_image),
+			"reference_video":       Link(reference_video),
+			"keep_original_sound":   Bool(keep_original_sound),
+			"character_orientation": Link(character_orientation),
+			"mode":                  Link(mode),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingOmniProEditVideoNode - Kling Omni Edit Video (Pro)
+func KlingOmniProEditVideoNode(gr *Graph, model_name COMBO, video VIDEO, reference_images IMAGE, resolution COMBO, prompt string, keep_original_sound bool) (_ *Node, out_video VIDEO) {
+	nd := &Node{
+		Class: "KlingOmniProEditVideoNode",
+		Inputs: map[string]Value{
+			"model_name":          Link(model_name),
+			"prompt":              String(prompt),
+			"video":               Link(video),
+			"keep_original_sound": Bool(keep_original_sound),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingOmniProFirstLastFrameNode - Kling Omni First-Last-Frame to Video (Pro)
+func KlingOmniProFirstLastFrameNode(gr *Graph, model_name COMBO, first_frame IMAGE, end_frame IMAGE, reference_images IMAGE, resolution COMBO, prompt string, duration int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingOmniProFirstLastFrameNode",
+		Inputs: map[string]Value{
+			"model_name":  Link(model_name),
+			"prompt":      String(prompt),
+			"duration":    Int(duration),
+			"first_frame": Link(first_frame),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingOmniProImageNode - Kling Omni Image (Pro)
+func KlingOmniProImageNode(gr *Graph, model_name COMBO, resolution COMBO, aspect_ratio COMBO, reference_images IMAGE, prompt string) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "KlingOmniProImageNode",
+		Inputs: map[string]Value{
+			"model_name":   Link(model_name),
+			"prompt":       String(prompt),
+			"resolution":   Link(resolution),
+			"aspect_ratio": Link(aspect_ratio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// KlingOmniProImageToVideoNode - Kling Omni Image to Video (Pro)
+func KlingOmniProImageToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO, reference_images IMAGE, resolution COMBO, prompt string, duration int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingOmniProImageToVideoNode",
+		Inputs: map[string]Value{
+			"model_name":       Link(model_name),
+			"prompt":           String(prompt),
+			"aspect_ratio":     Link(aspect_ratio),
+			"duration":         Int(duration),
+			"reference_images": Link(reference_images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingOmniProTextToVideoNode - Kling Omni Text to Video (Pro)
+func KlingOmniProTextToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO, duration COMBO, resolution COMBO, prompt string) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingOmniProTextToVideoNode",
+		Inputs: map[string]Value{
+			"model_name":   Link(model_name),
+			"prompt":       String(prompt),
+			"aspect_ratio": Link(aspect_ratio),
+			"duration":     Link(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingOmniProVideoToVideoNode - Kling Omni Video to Video (Pro)
+func KlingOmniProVideoToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO, reference_video VIDEO, reference_images IMAGE, resolution COMBO, prompt string, duration int, keep_original_sound bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingOmniProVideoToVideoNode",
+		Inputs: map[string]Value{
+			"model_name":          Link(model_name),
+			"prompt":              String(prompt),
+			"aspect_ratio":        Link(aspect_ratio),
+			"duration":            Int(duration),
+			"reference_video":     Link(reference_video),
+			"keep_original_sound": Bool(keep_original_sound),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingSingleImageVideoEffectNode - Kling Video Effects
+func KlingSingleImageVideoEffectNode(gr *Graph, image IMAGE, effect_scene COMBO, model_name COMBO, duration COMBO) (_ *Node, video VIDEO, video_id STRING, out_duration STRING) {
+	nd := &Node{
+		Class: "KlingSingleImageVideoEffectNode",
+		Inputs: map[string]Value{
+			"image":        Link(image),
+			"effect_scene": Link(effect_scene),
+			"model_name":   Link(model_name),
+			"duration":     Link(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingStartEndFrameNode - Kling Start-End Frame to Video
+func KlingStartEndFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, aspect_ratio COMBO, mode COMBO, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingStartEndFrameNode",
+		Inputs: map[string]Value{
+			"start_frame":     Link(start_frame),
+			"end_frame":       Link(end_frame),
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"cfg_scale":       Float(cfg_scale),
+			"aspect_ratio":    Link(aspect_ratio),
+			"mode":            Link(mode),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingTextToVideoNode - Kling Text to Video
+func KlingTextToVideoNode(gr *Graph, aspect_ratio COMBO, mode COMBO, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingTextToVideoNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"cfg_scale":       Float(cfg_scale),
+			"aspect_ratio":    Link(aspect_ratio),
+			"mode":            Link(mode),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingTextToVideoWithAudio - Kling Text to Video with Audio
+func KlingTextToVideoWithAudio(gr *Graph, model_name COMBO, mode COMBO, aspect_ratio COMBO, duration COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "KlingTextToVideoWithAudio",
+		Inputs: map[string]Value{
+			"model_name":     Link(model_name),
+			"prompt":         String(prompt),
+			"mode":           Link(mode),
+			"aspect_ratio":   Link(aspect_ratio),
+			"duration":       Link(duration),
+			"generate_audio": Bool(generate_audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// KlingVideoExtendNode - Kling Video Extend
+func KlingVideoExtendNode(gr *Graph, prompt, negative_prompt string, cfg_scale float64, video_id string) (_ *Node, video VIDEO, out_video_id STRING, duration STRING) {
+	nd := &Node{
+		Class: "KlingVideoExtendNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"cfg_scale":       Float(cfg_scale),
+			"video_id":        String(video_id),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}
+}
+
+// KlingVirtualTryOnNode - Kling Virtual Try On
+func KlingVirtualTryOnNode(gr *Graph, human_image IMAGE, cloth_image IMAGE, model_name COMBO) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "KlingVirtualTryOnNode",
+		Inputs: map[string]Value{
+			"human_image": Link(human_image),
+			"cloth_image": Link(cloth_image),
+			"model_name":  Link(model_name),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// LTXAVTextEncoderLoader - LTXV Audio Text Encoder Loader
+func LTXAVTextEncoderLoader(gr *Graph, text_encoder COMBO, ckpt_name COMBO, device COMBO) (_ *Node, clip CLIP) {
+	nd := &Node{
+		Class: "LTXAVTextEncoderLoader",
+		Inputs: map[string]Value{
+			"text_encoder": Link(text_encoder),
+			"ckpt_name":    Link(ckpt_name),
+			"device":       Link(device),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
+}
+
+func LTXVAddGuide(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, latent LATENT, image IMAGE, frame_idx int, strength float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, out_latent LATENT) {
+	nd := &Node{
+		Class: "LTXVAddGuide",
+		Inputs: map[string]Value{
+			"positive":  Link(positive),
+			"negative":  Link(negative),
+			"vae":       Link(vae),
+			"latent":    Link(latent),
+			"image":     Link(image),
+			"frame_idx": Int(frame_idx),
+			"strength":  Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// LTXVAudioVAEDecode - LTXV Audio VAE Decode
+func LTXVAudioVAEDecode(gr *Graph, samples LATENT, audio_vae VAE) (_ *Node, audio AUDIO) {
+	nd := &Node{
+		Class: "LTXVAudioVAEDecode",
+		Inputs: map[string]Value{
+			"samples":   Link(samples),
+			"audio_vae": Link(audio_vae),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+// LTXVAudioVAEEncode - LTXV Audio VAE Encode
+func LTXVAudioVAEEncode(gr *Graph, audio AUDIO, audio_vae VAE) (_ *Node, audio_latent LATENT) {
+	nd := &Node{
+		Class: "LTXVAudioVAEEncode",
+		Inputs: map[string]Value{
+			"audio":     Link(audio),
+			"audio_vae": Link(audio_vae),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// LTXVAudioVAELoader - LTXV Audio VAE Loader
+func LTXVAudioVAELoader(gr *Graph, ckpt_name COMBO) (_ *Node, audio_vae VAE) {
+	nd := &Node{
+		Class: "LTXVAudioVAELoader",
+		Inputs: map[string]Value{
+			"ckpt_name": Link(ckpt_name),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VAE{NodeID: id, OutPort: 0}
+}
+
+func LTXVConcatAVLatent(gr *Graph, video_latent LATENT, audio_latent LATENT) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LTXVConcatAVLatent",
+		Inputs: map[string]Value{
+			"video_latent": Link(video_latent),
+			"audio_latent": Link(audio_latent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LTXVConditioning(gr *Graph, positive CONDITIONING, negative CONDITIONING, frame_rate float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
+		Class: "LTXVConditioning",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"frame_rate": Float(frame_rate),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+func LTXVCropGuides(gr *Graph, positive CONDITIONING, negative CONDITIONING, latent LATENT) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, out_latent LATENT) {
+	nd := &Node{
+		Class: "LTXVCropGuides",
+		Inputs: map[string]Value{
+			"positive": Link(positive),
+			"negative": Link(negative),
+			"latent":   Link(latent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// LTXVEmptyLatentAudio - LTXV Empty Latent Audio
+func LTXVEmptyLatentAudio(gr *Graph, audio_vae VAE, frames_number, frame_rate, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LTXVEmptyLatentAudio",
+		Inputs: map[string]Value{
+			"frames_number": Int(frames_number),
+			"frame_rate":    Int(frame_rate),
+			"batch_size":    Int(batch_size),
+			"audio_vae":     Link(audio_vae),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LTXVImgToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, image IMAGE, width, height, length, batch_size int, strength float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "LTXVImgToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"image":      Link(image),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+			"strength":   Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func LTXVImgToVideoInplace(gr *Graph, vae VAE, image IMAGE, latent LATENT, strength float64, bypass bool) (_ *Node, out_latent LATENT) {
+	nd := &Node{
+		Class: "LTXVImgToVideoInplace",
+		Inputs: map[string]Value{
+			"vae":      Link(vae),
+			"image":    Link(image),
+			"latent":   Link(latent),
+			"strength": Float(strength),
+			"bypass":   Bool(bypass),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LTXVLatentUpsampler(gr *Graph, samples LATENT, upscale_model LATENT_UPSCALE_MODEL, vae VAE) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LTXVLatentUpsampler",
+		Inputs: map[string]Value{
+			"samples":       Link(samples),
+			"upscale_model": Link(upscale_model),
+			"vae":           Link(vae),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LTXVPreprocess(gr *Graph, image IMAGE, img_compression int) (_ *Node, output_image IMAGE) {
+	nd := &Node{
+		Class: "LTXVPreprocess",
+		Inputs: map[string]Value{
+			"image":           Link(image),
+			"img_compression": Int(img_compression),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func LTXVScheduler(gr *Graph, latent LATENT, steps int, max_shift, base_shift float64, stretch bool, terminal float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
+		Class: "LTXVScheduler",
+		Inputs: map[string]Value{
+			"steps":      Int(steps),
+			"max_shift":  Float(max_shift),
+			"base_shift": Float(base_shift),
+			"stretch":    Bool(stretch),
+			"terminal":   Float(terminal),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+func LTXVSeparateAVLatent(gr *Graph, av_latent LATENT) (_ *Node, video_latent LATENT, audio_latent LATENT) {
+	nd := &Node{
+		Class: "LTXVSeparateAVLatent",
+		Inputs: map[string]Value{
+			"av_latent": Link(av_latent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
+}
+
+func LaplaceScheduler(gr *Graph, steps int, sigma_max, sigma_min, mu, beta float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
+		Class: "LaplaceScheduler",
+		Inputs: map[string]Value{
+			"steps":     Int(steps),
+			"sigma_max": Float(sigma_max),
+			"sigma_min": Float(sigma_min),
+			"mu":        Float(mu),
+			"beta":      Float(beta),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+func LatentAdd(gr *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentAdd",
 		Inputs: map[string]Value{
 			"samples1": Link(samples1),
 			"samples2": Link(samples2),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentBatch(g *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentApplyOperation(gr *Graph, samples LATENT, operation LATENT_OPERATION) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LatentApplyOperation",
+		Inputs: map[string]Value{
+			"samples":   Link(samples),
+			"operation": Link(operation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LatentApplyOperationCFG(gr *Graph, model MODEL, operation LATENT_OPERATION) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "LatentApplyOperationCFG",
+		Inputs: map[string]Value{
+			"model":     Link(model),
+			"operation": Link(operation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func LatentBatch(gr *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentBatch",
 		Inputs: map[string]Value{
 			"samples1": Link(samples1),
 			"samples2": Link(samples2),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentBatchSeedBehavior(g *Graph, samples LATENT, seed_behavior string) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentBatchSeedBehavior(gr *Graph, samples LATENT, seed_behavior COMBO) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentBatchSeedBehavior",
 		Inputs: map[string]Value{
 			"samples":       Link(samples),
-			"seed_behavior": String(seed_behavior),
+			"seed_behavior": Link(seed_behavior),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentBlend - Latent Blend
-func LatentBlend(g *Graph, samples1 LATENT, samples2 LATENT, blend_factor float64) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentBlend(gr *Graph, samples1 LATENT, samples2 LATENT, blend_factor float64) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentBlend",
 		Inputs: map[string]Value{
 			"samples1":     Link(samples1),
@@ -1207,13 +3454,13 @@ func LatentBlend(g *Graph, samples1 LATENT, samples2 LATENT, blend_factor float6
 			"blend_factor": Float(blend_factor),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentComposite - Latent Composite
-func LatentComposite(g *Graph, samples_to LATENT, samples_from LATENT, x, y, feather int) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentComposite(gr *Graph, samples_to LATENT, samples_from LATENT, x, y, feather int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentComposite",
 		Inputs: map[string]Value{
 			"samples_to":   Link(samples_to),
@@ -1223,12 +3470,12 @@ func LatentComposite(g *Graph, samples_to LATENT, samples_from LATENT, x, y, fea
 			"feather":      Int(feather),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentCompositeMasked(g *Graph, destination LATENT, source LATENT, mask MASK, x, y int, resize_source bool) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentCompositeMasked(gr *Graph, destination LATENT, source LATENT, mask MASK, x, y int, resize_source bool) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentCompositeMasked",
 		Inputs: map[string]Value{
 			"destination":   Link(destination),
@@ -1238,13 +3485,26 @@ func LatentCompositeMasked(g *Graph, destination LATENT, source LATENT, mask MAS
 			"resize_source": Bool(resize_source),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LatentConcat(gr *Graph, samples1 LATENT, samples2 LATENT, dim COMBO) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LatentConcat",
+		Inputs: map[string]Value{
+			"samples1": Link(samples1),
+			"samples2": Link(samples2),
+			"dim":      Link(dim),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentCrop - Crop Latent
-func LatentCrop(g *Graph, samples LATENT, width, height, x, y int) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentCrop(gr *Graph, samples LATENT, width, height, x, y int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentCrop",
 		Inputs: map[string]Value{
 			"samples": Link(samples),
@@ -1254,26 +3514,53 @@ func LatentCrop(g *Graph, samples LATENT, width, height, x, y int) (_ *Node, lat
 			"y":       Int(y),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LatentCut(gr *Graph, samples LATENT, dim COMBO, index, amount int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LatentCut",
+		Inputs: map[string]Value{
+			"samples": Link(samples),
+			"dim":     Link(dim),
+			"index":   Int(index),
+			"amount":  Int(amount),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LatentCutToBatch(gr *Graph, samples LATENT, dim COMBO, slice_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "LatentCutToBatch",
+		Inputs: map[string]Value{
+			"samples":    Link(samples),
+			"dim":        Link(dim),
+			"slice_size": Int(slice_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentFlip - Flip Latent
-func LatentFlip(g *Graph, samples LATENT, flip_method string) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentFlip(gr *Graph, samples LATENT, flip_method string) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentFlip",
 		Inputs: map[string]Value{
 			"samples":     Link(samples),
 			"flip_method": String(flip_method),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentFromBatch - Latent From Batch
-func LatentFromBatch(g *Graph, samples LATENT, batch_index, length int) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentFromBatch(gr *Graph, samples LATENT, batch_index, length int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentFromBatch",
 		Inputs: map[string]Value{
 			"samples":     Link(samples),
@@ -1281,12 +3568,12 @@ func LatentFromBatch(g *Graph, samples LATENT, batch_index, length int) (_ *Node
 			"length":      Int(length),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentInterpolate(g *Graph, samples1 LATENT, samples2 LATENT, ratio float64) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentInterpolate(gr *Graph, samples1 LATENT, samples2 LATENT, ratio float64) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentInterpolate",
 		Inputs: map[string]Value{
 			"samples1": Link(samples1),
@@ -1294,50 +3581,74 @@ func LatentInterpolate(g *Graph, samples1 LATENT, samples2 LATENT, ratio float64
 			"ratio":    Float(ratio),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentMultiply(g *Graph, samples LATENT, multiplier float64) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentMultiply(gr *Graph, samples LATENT, multiplier float64) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentMultiply",
 		Inputs: map[string]Value{
 			"samples":    Link(samples),
 			"multiplier": Float(multiplier),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func LatentOperationSharpen(gr *Graph, sharpen_radius int, sigma, alpha float64) (_ *Node, latent_operation LATENT_OPERATION) {
+	nd := &Node{
+		Class: "LatentOperationSharpen",
+		Inputs: map[string]Value{
+			"sharpen_radius": Int(sharpen_radius),
+			"sigma":          Float(sigma),
+			"alpha":          Float(alpha),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT_OPERATION{NodeID: id, OutPort: 0}
+}
+
+func LatentOperationTonemapReinhard(gr *Graph, multiplier float64) (_ *Node, latent_operation LATENT_OPERATION) {
+	nd := &Node{
+		Class: "LatentOperationTonemapReinhard",
+		Inputs: map[string]Value{
+			"multiplier": Float(multiplier),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT_OPERATION{NodeID: id, OutPort: 0}
 }
 
 // LatentRotate - Rotate Latent
-func LatentRotate(g *Graph, samples LATENT, rotation string) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentRotate(gr *Graph, samples LATENT, rotation string) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentRotate",
 		Inputs: map[string]Value{
 			"samples":  Link(samples),
 			"rotation": String(rotation),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentSubtract(g *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentSubtract(gr *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentSubtract",
 		Inputs: map[string]Value{
 			"samples1": Link(samples1),
 			"samples2": Link(samples2),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentUpscale - Upscale Latent
-func LatentUpscale(g *Graph, samples LATENT, upscale_method string, width, height int, crop string) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentUpscale(gr *Graph, samples LATENT, upscale_method string, width, height int, crop string) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentUpscale",
 		Inputs: map[string]Value{
 			"samples":        Link(samples),
@@ -1347,13 +3658,13 @@ func LatentUpscale(g *Graph, samples LATENT, upscale_method string, width, heigh
 			"crop":           String(crop),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // LatentUpscaleBy - Upscale Latent By
-func LatentUpscaleBy(g *Graph, samples LATENT, upscale_method string, scale_by float64) (_ *Node, latent LATENT) {
-	n := &Node{
+func LatentUpscaleBy(gr *Graph, samples LATENT, upscale_method string, scale_by float64) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "LatentUpscaleBy",
 		Inputs: map[string]Value{
 			"samples":        Link(samples),
@@ -1361,60 +3672,163 @@ func LatentUpscaleBy(g *Graph, samples LATENT, upscale_method string, scale_by f
 			"scale_by":       Float(scale_by),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LoadAudio(g *Graph, audio string) (_ *Node, out_audio AUDIO) {
-	n := &Node{
-		Class: "LoadAudio",
+// LatentUpscaleModelLoader - Load Latent Upscale Model
+func LatentUpscaleModelLoader(gr *Graph, model_name COMBO) (_ *Node, latent_upscale_model LATENT_UPSCALE_MODEL) {
+	nd := &Node{
+		Class: "LatentUpscaleModelLoader",
 		Inputs: map[string]Value{
-			"audio": String(audio),
+			"model_name": Link(model_name),
 		},
 	}
-	id := g.Add(n)
-	return n, AUDIO{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT_UPSCALE_MODEL{NodeID: id, OutPort: 0}
+}
+
+func LazyCache(gr *Graph, model MODEL, reuse_threshold, start_percent, end_percent float64, verbose bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "LazyCache",
+		Inputs: map[string]Value{
+			"model":           Link(model),
+			"reuse_threshold": Float(reuse_threshold),
+			"start_percent":   Float(start_percent),
+			"end_percent":     Float(end_percent),
+			"verbose":         Bool(verbose),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// Load3D - Load 3D & Animation
+func Load3D(gr *Graph, model_file COMBO, image LOAD_3D, width, height int) (_ *Node, out_image IMAGE, mask MASK, mesh_path STRING, normal IMAGE, camera_info LOAD3D_CAMERA, recording_video VIDEO) {
+	nd := &Node{
+		Class: "Load3D",
+		Inputs: map[string]Value{
+			"model_file": Link(model_file),
+			"image":      Link(image),
+			"width":      Int(width),
+			"height":     Int(height),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}, STRING{NodeID: id, OutPort: 2}, IMAGE{NodeID: id, OutPort: 3}, LOAD3D_CAMERA{NodeID: id, OutPort: 4}, VIDEO{NodeID: id, OutPort: 5}
+}
+
+// LoadAudio - Load Audio
+func LoadAudio(gr *Graph, audio COMBO) (_ *Node, out_audio AUDIO) {
+	nd := &Node{
+		Class: "LoadAudio",
+		Inputs: map[string]Value{
+			"audio": Link(audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
 }
 
 // LoadImage - Load Image
-func LoadImage(g *Graph, image string) (_ *Node, out_image IMAGE, mask MASK) {
-	n := &Node{
+func LoadImage(gr *Graph, image string) (_ *Node, out_image IMAGE, mask MASK) {
+	nd := &Node{
 		Class: "LoadImage",
 		Inputs: map[string]Value{
 			"image": String(image),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+}
+
+// LoadImageDataSetFromFolder - Load Image Dataset from Folder
+func LoadImageDataSetFromFolder(gr *Graph, folder COMBO) (_ *Node, images IMAGE) {
+	nd := &Node{
+		Class: "LoadImageDataSetFromFolder",
+		Inputs: map[string]Value{
+			"folder": Link(folder),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // LoadImageMask - Load Image (as Mask)
-func LoadImageMask(g *Graph, image, channel string) (_ *Node, mask MASK) {
-	n := &Node{
+func LoadImageMask(gr *Graph, image, channel string) (_ *Node, mask MASK) {
+	nd := &Node{
 		Class: "LoadImageMask",
 		Inputs: map[string]Value{
 			"image":   String(image),
 			"channel": String(channel),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
 }
 
-func LoadLatent(g *Graph, latent string) (_ *Node, out_latent LATENT) {
-	n := &Node{
+// LoadImageOutput - Load Image (from Outputs)
+func LoadImageOutput(gr *Graph, image COMBO) (_ *Node, out_image IMAGE, mask MASK) {
+	nd := &Node{
+		Class: "LoadImageOutput",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+}
+
+// LoadImageTextDataSetFromFolder - Load Image and Text Dataset from Folder
+func LoadImageTextDataSetFromFolder(gr *Graph, folder COMBO) (_ *Node, images IMAGE, texts STRING) {
+	nd := &Node{
+		Class: "LoadImageTextDataSetFromFolder",
+		Inputs: map[string]Value{
+			"folder": Link(folder),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}
+}
+
+func LoadLatent(gr *Graph, latent string) (_ *Node, out_latent LATENT) {
+	nd := &Node{
 		Class: "LoadLatent",
 		Inputs: map[string]Value{
 			"latent": String(latent),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// LoadTrainingDataset - Load Training Dataset
+func LoadTrainingDataset(gr *Graph, folder_name string) (_ *Node, latents LATENT, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "LoadTrainingDataset",
+		Inputs: map[string]Value{
+			"folder_name": String(folder_name),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// LoadVideo - Load Video
+func LoadVideo(gr *Graph, file COMBO) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "LoadVideo",
+		Inputs: map[string]Value{
+			"file": Link(file),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
 }
 
 // LoraLoader - Load LoRA
-func LoraLoader(g *Graph, model MODEL, clip CLIP, lora_name string, strength_model, strength_clip float64) (_ *Node, out_model MODEL, out_clip CLIP) {
-	n := &Node{
+func LoraLoader(gr *Graph, model MODEL, clip CLIP, lora_name string, strength_model, strength_clip float64) (_ *Node, out_model MODEL, out_clip CLIP) {
+	nd := &Node{
 		Class: "LoraLoader",
 		Inputs: map[string]Value{
 			"model":          Link(model),
@@ -1424,12 +3838,12 @@ func LoraLoader(g *Graph, model MODEL, clip CLIP, lora_name string, strength_mod
 			"strength_clip":  Float(strength_clip),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}
 }
 
-func LoraLoaderModelOnly(g *Graph, model MODEL, lora_name string, strength_model float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func LoraLoaderModelOnly(gr *Graph, model MODEL, lora_name string, strength_model float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "LoraLoaderModelOnly",
 		Inputs: map[string]Value{
 			"model":          Link(model),
@@ -1437,51 +3851,520 @@ func LoraLoaderModelOnly(g *Graph, model MODEL, lora_name string, strength_model
 			"strength_model": Float(strength_model),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func MaskComposite(g *Graph, destination MASK, source MASK, x, y int, operation string) (_ *Node, mask MASK) {
-	n := &Node{
+// LoraModelLoader - Load LoRA Model
+func LoraModelLoader(gr *Graph, model MODEL, lora LORA_MODEL, strength_model float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "LoraModelLoader",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"lora":           Link(lora),
+			"strength_model": Float(strength_model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// LoraSave - Extract and Save Lora
+func LoraSave(gr *Graph, lora_type COMBO, model_diff MODEL, text_encoder_diff CLIP, filename_prefix string, rank int, bias_diff bool) (_ *Node) {
+	nd := &Node{
+		Class: "LoraSave",
+		Inputs: map[string]Value{
+			"filename_prefix": String(filename_prefix),
+			"rank":            Int(rank),
+			"lora_type":       Link(lora_type),
+			"bias_diff":       Bool(bias_diff),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// LossGraphNode - Plot Loss Graph
+func LossGraphNode(gr *Graph, loss LOSS_MAP, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "LossGraphNode",
+		Inputs: map[string]Value{
+			"loss":            Link(loss),
+			"filename_prefix": String(filename_prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func LotusConditioning(gr *Graph) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class:  "LotusConditioning",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// LtxvApiImageToVideo - LTXV Image To Video
+func LtxvApiImageToVideo(gr *Graph, image IMAGE, model COMBO, duration COMBO, resolution COMBO, fps COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "LtxvApiImageToVideo",
+		Inputs: map[string]Value{
+			"image":      Link(image),
+			"model":      Link(model),
+			"prompt":     String(prompt),
+			"duration":   Link(duration),
+			"resolution": Link(resolution),
+			"fps":        Link(fps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// LtxvApiTextToVideo - LTXV Text To Video
+func LtxvApiTextToVideo(gr *Graph, model COMBO, duration COMBO, resolution COMBO, fps COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "LtxvApiTextToVideo",
+		Inputs: map[string]Value{
+			"model":      Link(model),
+			"prompt":     String(prompt),
+			"duration":   Link(duration),
+			"resolution": Link(resolution),
+			"fps":        Link(fps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// LumaConceptsNode - Luma Concepts
+func LumaConceptsNode(gr *Graph, concept1 COMBO, concept2 COMBO, concept3 COMBO, concept4 COMBO, luma_concepts LUMA_CONCEPTS) (_ *Node, out_luma_concepts LUMA_CONCEPTS) {
+	nd := &Node{
+		Class: "LumaConceptsNode",
+		Inputs: map[string]Value{
+			"concept1": Link(concept1),
+			"concept2": Link(concept2),
+			"concept3": Link(concept3),
+			"concept4": Link(concept4),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LUMA_CONCEPTS{NodeID: id, OutPort: 0}
+}
+
+// LumaImageModifyNode - Luma Image to Image
+func LumaImageModifyNode(gr *Graph, image IMAGE, model COMBO, prompt string, image_weight float64, seed int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "LumaImageModifyNode",
+		Inputs: map[string]Value{
+			"image":        Link(image),
+			"prompt":       String(prompt),
+			"image_weight": Float(image_weight),
+			"model":        Link(model),
+			"seed":         Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// LumaImageNode - Luma Text to Image
+func LumaImageNode(gr *Graph, model COMBO, aspect_ratio COMBO, image_luma_ref LUMA_REF, style_image IMAGE, character_image IMAGE, prompt string, seed int, style_image_weight float64) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "LumaImageNode",
+		Inputs: map[string]Value{
+			"prompt":             String(prompt),
+			"model":              Link(model),
+			"aspect_ratio":       Link(aspect_ratio),
+			"seed":               Int(seed),
+			"style_image_weight": Float(style_image_weight),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// LumaImageToVideoNode - Luma Image to Video
+func LumaImageToVideoNode(gr *Graph, model COMBO, resolution COMBO, duration COMBO, first_image IMAGE, last_image IMAGE, luma_concepts LUMA_CONCEPTS, prompt string, loop bool, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "LumaImageToVideoNode",
+		Inputs: map[string]Value{
+			"prompt":     String(prompt),
+			"model":      Link(model),
+			"resolution": Link(resolution),
+			"duration":   Link(duration),
+			"loop":       Bool(loop),
+			"seed":       Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// LumaReferenceNode - Luma Reference
+func LumaReferenceNode(gr *Graph, image IMAGE, luma_ref LUMA_REF, weight float64) (_ *Node, out_luma_ref LUMA_REF) {
+	nd := &Node{
+		Class: "LumaReferenceNode",
+		Inputs: map[string]Value{
+			"image":  Link(image),
+			"weight": Float(weight),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LUMA_REF{NodeID: id, OutPort: 0}
+}
+
+// LumaVideoNode - Luma Text to Video
+func LumaVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, duration COMBO, luma_concepts LUMA_CONCEPTS, prompt string, loop bool, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "LumaVideoNode",
+		Inputs: map[string]Value{
+			"prompt":       String(prompt),
+			"model":        Link(model),
+			"aspect_ratio": Link(aspect_ratio),
+			"resolution":   Link(resolution),
+			"duration":     Link(duration),
+			"loop":         Bool(loop),
+			"seed":         Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// Mahiro - Mahiro CFG
+func Mahiro(gr *Graph, model MODEL) (_ *Node, patched_model MODEL) {
+	nd := &Node{
+		Class: "Mahiro",
+		Inputs: map[string]Value{
+			"model": Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// MakeTrainingDataset - Make Training Dataset
+func MakeTrainingDataset(gr *Graph, images IMAGE, vae VAE, clip CLIP, texts string) (_ *Node, latents LATENT, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "MakeTrainingDataset",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"vae":    Link(vae),
+			"clip":   Link(clip),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+func ManualSigmas(gr *Graph, sigmas string) (_ *Node, out_sigmas SIGMAS) {
+	nd := &Node{
+		Class: "ManualSigmas",
+		Inputs: map[string]Value{
+			"sigmas": String(sigmas),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+func MaskComposite(gr *Graph, destination MASK, source MASK, operation COMBO, x, y int) (_ *Node, mask MASK) {
+	nd := &Node{
 		Class: "MaskComposite",
 		Inputs: map[string]Value{
 			"destination": Link(destination),
 			"source":      Link(source),
 			"x":           Int(x),
 			"y":           Int(y),
-			"operation":   String(operation),
+			"operation":   Link(operation),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
+}
+
+// MaskPreview - Preview Mask
+func MaskPreview(gr *Graph, mask MASK) (_ *Node) {
+	nd := &Node{
+		Class: "MaskPreview",
+		Inputs: map[string]Value{
+			"mask": Link(mask),
+		},
+	}
+	gr.Add(nd)
+	return nd
 }
 
 // MaskToImage - Convert Mask to Image
-func MaskToImage(g *Graph, mask MASK) (_ *Node, image IMAGE) {
-	n := &Node{
+func MaskToImage(gr *Graph, mask MASK) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "MaskToImage",
 		Inputs: map[string]Value{
 			"mask": Link(mask),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeAdd(g *Graph, model1 MODEL, model2 MODEL) (_ *Node, model MODEL) {
-	n := &Node{
+// MergeImageLists - Merge Image Lists
+func MergeImageLists(gr *Graph, images IMAGE) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "MergeImageLists",
+		Inputs: map[string]Value{
+			"images": Link(images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// MergeTextLists - Merge Text Lists
+func MergeTextLists(gr *Graph, texts string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "MergeTextLists",
+		Inputs: map[string]Value{
+			"texts": String(texts),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// MeshyAnimateModelNode - Meshy: Animate Model
+func MeshyAnimateModelNode(gr *Graph, rig_task_id MESHY_RIGGED_TASK_ID, action_id int) (_ *Node, model_file STRING) {
+	nd := &Node{
+		Class: "MeshyAnimateModelNode",
+		Inputs: map[string]Value{
+			"rig_task_id": Link(rig_task_id),
+			"action_id":   Int(action_id),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// MeshyImageToModelNode - Meshy: Image to Model
+func MeshyImageToModelNode(gr *Graph, model COMBO, image IMAGE, should_remesh COMFY_DYNAMICCOMBO_V3, symmetry_mode COMBO, should_texture COMFY_DYNAMICCOMBO_V3, pose_mode COMBO, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
+	nd := &Node{
+		Class: "MeshyImageToModelNode",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"image":          Link(image),
+			"should_remesh":  Link(should_remesh),
+			"symmetry_mode":  Link(symmetry_mode),
+			"should_texture": Link(should_texture),
+			"pose_mode":      Link(pose_mode),
+			"seed":           Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MESHY_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// MeshyMultiImageToModelNode - Meshy: Multi-Image to Model
+func MeshyMultiImageToModelNode(gr *Graph, model COMBO, images COMFY_AUTOGROW_V3, should_remesh COMFY_DYNAMICCOMBO_V3, symmetry_mode COMBO, should_texture COMFY_DYNAMICCOMBO_V3, pose_mode COMBO, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
+	nd := &Node{
+		Class: "MeshyMultiImageToModelNode",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"images":         Link(images),
+			"should_remesh":  Link(should_remesh),
+			"symmetry_mode":  Link(symmetry_mode),
+			"should_texture": Link(should_texture),
+			"pose_mode":      Link(pose_mode),
+			"seed":           Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MESHY_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// MeshyRefineNode - Meshy: Refine Draft Model
+func MeshyRefineNode(gr *Graph, model COMBO, meshy_task_id MESHY_TASK_ID, texture_image IMAGE, enable_pbr bool, texture_prompt string) (_ *Node, model_file STRING, out_meshy_task_id MESHY_TASK_ID) {
+	nd := &Node{
+		Class: "MeshyRefineNode",
+		Inputs: map[string]Value{
+			"model":          Link(model),
+			"meshy_task_id":  Link(meshy_task_id),
+			"enable_pbr":     Bool(enable_pbr),
+			"texture_prompt": String(texture_prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MESHY_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// MeshyRigModelNode - Meshy: Rig Model
+func MeshyRigModelNode(gr *Graph, meshy_task_id MESHY_TASK_ID, texture_image IMAGE, height_meters float64) (_ *Node, model_file STRING, rig_task_id MESHY_RIGGED_TASK_ID) {
+	nd := &Node{
+		Class: "MeshyRigModelNode",
+		Inputs: map[string]Value{
+			"meshy_task_id": Link(meshy_task_id),
+			"height_meters": Float(height_meters),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MESHY_RIGGED_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// MeshyTextToModelNode - Meshy: Text to Model
+func MeshyTextToModelNode(gr *Graph, model COMBO, style COMBO, should_remesh COMFY_DYNAMICCOMBO_V3, symmetry_mode COMBO, pose_mode COMBO, prompt string, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
+	nd := &Node{
+		Class: "MeshyTextToModelNode",
+		Inputs: map[string]Value{
+			"model":         Link(model),
+			"prompt":        String(prompt),
+			"style":         Link(style),
+			"should_remesh": Link(should_remesh),
+			"symmetry_mode": Link(symmetry_mode),
+			"pose_mode":     Link(pose_mode),
+			"seed":          Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MESHY_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// MeshyTextureNode - Meshy: Texture Model
+func MeshyTextureNode(gr *Graph, model COMBO, meshy_task_id MESHY_TASK_ID, image_style IMAGE, enable_original_uv, pbr bool, text_style_prompt string) (_ *Node, model_file STRING, out_meshy_task_id MODEL_TASK_ID) {
+	nd := &Node{
+		Class: "MeshyTextureNode",
+		Inputs: map[string]Value{
+			"model":              Link(model),
+			"meshy_task_id":      Link(meshy_task_id),
+			"enable_original_uv": Bool(enable_original_uv),
+			"pbr":                Bool(pbr),
+			"text_style_prompt":  String(text_style_prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MODEL_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// MinimaxHailuoVideoNode - MiniMax Hailuo Video
+func MinimaxHailuoVideoNode(gr *Graph, first_frame_image IMAGE, duration COMBO, resolution COMBO, prompt_text string, seed int, prompt_optimizer bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "MinimaxHailuoVideoNode",
+		Inputs: map[string]Value{
+			"prompt_text": String(prompt_text),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// MinimaxImageToVideoNode - MiniMax Image to Video
+func MinimaxImageToVideoNode(gr *Graph, image IMAGE, model COMBO, prompt_text string, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "MinimaxImageToVideoNode",
+		Inputs: map[string]Value{
+			"image":       Link(image),
+			"prompt_text": String(prompt_text),
+			"model":       Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// MinimaxTextToVideoNode - MiniMax Text to Video
+func MinimaxTextToVideoNode(gr *Graph, model COMBO, prompt_text string, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "MinimaxTextToVideoNode",
+		Inputs: map[string]Value{
+			"prompt_text": String(prompt_text),
+			"model":       Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func ModelComputeDtype(gr *Graph, model MODEL, dtype string) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ModelComputeDtype",
+		Inputs: map[string]Value{
+			"model": Link(model),
+			"dtype": String(dtype),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeAdd(gr *Graph, model1 MODEL, model2 MODEL) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeAdd",
 		Inputs: map[string]Value{
 			"model1": Link(model1),
 			"model2": Link(model2),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeBlocks(g *Graph, model1 MODEL, model2 MODEL, input, middle, out float64) (_ *Node, model MODEL) {
-	n := &Node{
+func ModelMergeAuraflow(gr *Graph, model1 MODEL, model2 MODEL, init_x_linear_, positional_encoding, cond_seq_linear_, register_tokens, t_embedder_, double_layers_0_, double_layers_1_, double_layers_2_, double_layers_3_, single_layers_0_, single_layers_1_, single_layers_2_, single_layers_3_, single_layers_4_, single_layers_5_, single_layers_6_, single_layers_7_, single_layers_8_, single_layers_9_, single_layers_10_, single_layers_11_, single_layers_12_, single_layers_13_, single_layers_14_, single_layers_15_, single_layers_16_, single_layers_17_, single_layers_18_, single_layers_19_, single_layers_20_, single_layers_21_, single_layers_22_, single_layers_23_, single_layers_24_, single_layers_25_, single_layers_26_, single_layers_27_, single_layers_28_, single_layers_29_, single_layers_30_, single_layers_31_, modf_, final_linear_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeAuraflow",
+		Inputs: map[string]Value{
+			"model1":              Link(model1),
+			"model2":              Link(model2),
+			"init_x_linear.":      Float(init_x_linear_),
+			"positional_encoding": Float(positional_encoding),
+			"cond_seq_linear.":    Float(cond_seq_linear_),
+			"register_tokens":     Float(register_tokens),
+			"t_embedder.":         Float(t_embedder_),
+			"double_layers.0.":    Float(double_layers_0_),
+			"double_layers.1.":    Float(double_layers_1_),
+			"double_layers.2.":    Float(double_layers_2_),
+			"double_layers.3.":    Float(double_layers_3_),
+			"single_layers.0.":    Float(single_layers_0_),
+			"single_layers.1.":    Float(single_layers_1_),
+			"single_layers.2.":    Float(single_layers_2_),
+			"single_layers.3.":    Float(single_layers_3_),
+			"single_layers.4.":    Float(single_layers_4_),
+			"single_layers.5.":    Float(single_layers_5_),
+			"single_layers.6.":    Float(single_layers_6_),
+			"single_layers.7.":    Float(single_layers_7_),
+			"single_layers.8.":    Float(single_layers_8_),
+			"single_layers.9.":    Float(single_layers_9_),
+			"single_layers.10.":   Float(single_layers_10_),
+			"single_layers.11.":   Float(single_layers_11_),
+			"single_layers.12.":   Float(single_layers_12_),
+			"single_layers.13.":   Float(single_layers_13_),
+			"single_layers.14.":   Float(single_layers_14_),
+			"single_layers.15.":   Float(single_layers_15_),
+			"single_layers.16.":   Float(single_layers_16_),
+			"single_layers.17.":   Float(single_layers_17_),
+			"single_layers.18.":   Float(single_layers_18_),
+			"single_layers.19.":   Float(single_layers_19_),
+			"single_layers.20.":   Float(single_layers_20_),
+			"single_layers.21.":   Float(single_layers_21_),
+			"single_layers.22.":   Float(single_layers_22_),
+			"single_layers.23.":   Float(single_layers_23_),
+			"single_layers.24.":   Float(single_layers_24_),
+			"single_layers.25.":   Float(single_layers_25_),
+			"single_layers.26.":   Float(single_layers_26_),
+			"single_layers.27.":   Float(single_layers_27_),
+			"single_layers.28.":   Float(single_layers_28_),
+			"single_layers.29.":   Float(single_layers_29_),
+			"single_layers.30.":   Float(single_layers_30_),
+			"single_layers.31.":   Float(single_layers_31_),
+			"modF.":               Float(modf_),
+			"final_linear.":       Float(final_linear_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeBlocks(gr *Graph, model1 MODEL, model2 MODEL, input, middle, out float64) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeBlocks",
 		Inputs: map[string]Value{
 			"model1": Link(model1),
@@ -1491,12 +4374,473 @@ func ModelMergeBlocks(g *Graph, model1 MODEL, model2 MODEL, input, middle, out f
 			"out":    Float(out),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeSD1(g *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_, input_blocks_0_, input_blocks_1_, input_blocks_2_, input_blocks_3_, input_blocks_4_, input_blocks_5_, input_blocks_6_, input_blocks_7_, input_blocks_8_, input_blocks_9_, input_blocks_10_, input_blocks_11_, middle_block_0_, middle_block_1_, middle_block_2_, output_blocks_0_, output_blocks_1_, output_blocks_2_, output_blocks_3_, output_blocks_4_, output_blocks_5_, output_blocks_6_, output_blocks_7_, output_blocks_8_, output_blocks_9_, output_blocks_10_, output_blocks_11_, out_ float64) (_ *Node, model MODEL) {
-	n := &Node{
+func ModelMergeCosmos14B(gr *Graph, model1 MODEL, model2 MODEL, pos_embedder_, extra_pos_embedder_, x_embedder_, t_embedder_, affline_norm_, blocks_block0_, blocks_block1_, blocks_block2_, blocks_block3_, blocks_block4_, blocks_block5_, blocks_block6_, blocks_block7_, blocks_block8_, blocks_block9_, blocks_block10_, blocks_block11_, blocks_block12_, blocks_block13_, blocks_block14_, blocks_block15_, blocks_block16_, blocks_block17_, blocks_block18_, blocks_block19_, blocks_block20_, blocks_block21_, blocks_block22_, blocks_block23_, blocks_block24_, blocks_block25_, blocks_block26_, blocks_block27_, blocks_block28_, blocks_block29_, blocks_block30_, blocks_block31_, blocks_block32_, blocks_block33_, blocks_block34_, blocks_block35_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeCosmos14B",
+		Inputs: map[string]Value{
+			"model1":              Link(model1),
+			"model2":              Link(model2),
+			"pos_embedder.":       Float(pos_embedder_),
+			"extra_pos_embedder.": Float(extra_pos_embedder_),
+			"x_embedder.":         Float(x_embedder_),
+			"t_embedder.":         Float(t_embedder_),
+			"affline_norm.":       Float(affline_norm_),
+			"blocks.block0.":      Float(blocks_block0_),
+			"blocks.block1.":      Float(blocks_block1_),
+			"blocks.block2.":      Float(blocks_block2_),
+			"blocks.block3.":      Float(blocks_block3_),
+			"blocks.block4.":      Float(blocks_block4_),
+			"blocks.block5.":      Float(blocks_block5_),
+			"blocks.block6.":      Float(blocks_block6_),
+			"blocks.block7.":      Float(blocks_block7_),
+			"blocks.block8.":      Float(blocks_block8_),
+			"blocks.block9.":      Float(blocks_block9_),
+			"blocks.block10.":     Float(blocks_block10_),
+			"blocks.block11.":     Float(blocks_block11_),
+			"blocks.block12.":     Float(blocks_block12_),
+			"blocks.block13.":     Float(blocks_block13_),
+			"blocks.block14.":     Float(blocks_block14_),
+			"blocks.block15.":     Float(blocks_block15_),
+			"blocks.block16.":     Float(blocks_block16_),
+			"blocks.block17.":     Float(blocks_block17_),
+			"blocks.block18.":     Float(blocks_block18_),
+			"blocks.block19.":     Float(blocks_block19_),
+			"blocks.block20.":     Float(blocks_block20_),
+			"blocks.block21.":     Float(blocks_block21_),
+			"blocks.block22.":     Float(blocks_block22_),
+			"blocks.block23.":     Float(blocks_block23_),
+			"blocks.block24.":     Float(blocks_block24_),
+			"blocks.block25.":     Float(blocks_block25_),
+			"blocks.block26.":     Float(blocks_block26_),
+			"blocks.block27.":     Float(blocks_block27_),
+			"blocks.block28.":     Float(blocks_block28_),
+			"blocks.block29.":     Float(blocks_block29_),
+			"blocks.block30.":     Float(blocks_block30_),
+			"blocks.block31.":     Float(blocks_block31_),
+			"blocks.block32.":     Float(blocks_block32_),
+			"blocks.block33.":     Float(blocks_block33_),
+			"blocks.block34.":     Float(blocks_block34_),
+			"blocks.block35.":     Float(blocks_block35_),
+			"final_layer.":        Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeCosmos7B(gr *Graph, model1 MODEL, model2 MODEL, pos_embedder_, extra_pos_embedder_, x_embedder_, t_embedder_, affline_norm_, blocks_block0_, blocks_block1_, blocks_block2_, blocks_block3_, blocks_block4_, blocks_block5_, blocks_block6_, blocks_block7_, blocks_block8_, blocks_block9_, blocks_block10_, blocks_block11_, blocks_block12_, blocks_block13_, blocks_block14_, blocks_block15_, blocks_block16_, blocks_block17_, blocks_block18_, blocks_block19_, blocks_block20_, blocks_block21_, blocks_block22_, blocks_block23_, blocks_block24_, blocks_block25_, blocks_block26_, blocks_block27_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeCosmos7B",
+		Inputs: map[string]Value{
+			"model1":              Link(model1),
+			"model2":              Link(model2),
+			"pos_embedder.":       Float(pos_embedder_),
+			"extra_pos_embedder.": Float(extra_pos_embedder_),
+			"x_embedder.":         Float(x_embedder_),
+			"t_embedder.":         Float(t_embedder_),
+			"affline_norm.":       Float(affline_norm_),
+			"blocks.block0.":      Float(blocks_block0_),
+			"blocks.block1.":      Float(blocks_block1_),
+			"blocks.block2.":      Float(blocks_block2_),
+			"blocks.block3.":      Float(blocks_block3_),
+			"blocks.block4.":      Float(blocks_block4_),
+			"blocks.block5.":      Float(blocks_block5_),
+			"blocks.block6.":      Float(blocks_block6_),
+			"blocks.block7.":      Float(blocks_block7_),
+			"blocks.block8.":      Float(blocks_block8_),
+			"blocks.block9.":      Float(blocks_block9_),
+			"blocks.block10.":     Float(blocks_block10_),
+			"blocks.block11.":     Float(blocks_block11_),
+			"blocks.block12.":     Float(blocks_block12_),
+			"blocks.block13.":     Float(blocks_block13_),
+			"blocks.block14.":     Float(blocks_block14_),
+			"blocks.block15.":     Float(blocks_block15_),
+			"blocks.block16.":     Float(blocks_block16_),
+			"blocks.block17.":     Float(blocks_block17_),
+			"blocks.block18.":     Float(blocks_block18_),
+			"blocks.block19.":     Float(blocks_block19_),
+			"blocks.block20.":     Float(blocks_block20_),
+			"blocks.block21.":     Float(blocks_block21_),
+			"blocks.block22.":     Float(blocks_block22_),
+			"blocks.block23.":     Float(blocks_block23_),
+			"blocks.block24.":     Float(blocks_block24_),
+			"blocks.block25.":     Float(blocks_block25_),
+			"blocks.block26.":     Float(blocks_block26_),
+			"blocks.block27.":     Float(blocks_block27_),
+			"final_layer.":        Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeCosmosPredict2_14B(gr *Graph, model1 MODEL, model2 MODEL, pos_embedder_, x_embedder_, t_embedder_, t_embedding_norm_, blocks_0_, blocks_1_, blocks_2_, blocks_3_, blocks_4_, blocks_5_, blocks_6_, blocks_7_, blocks_8_, blocks_9_, blocks_10_, blocks_11_, blocks_12_, blocks_13_, blocks_14_, blocks_15_, blocks_16_, blocks_17_, blocks_18_, blocks_19_, blocks_20_, blocks_21_, blocks_22_, blocks_23_, blocks_24_, blocks_25_, blocks_26_, blocks_27_, blocks_28_, blocks_29_, blocks_30_, blocks_31_, blocks_32_, blocks_33_, blocks_34_, blocks_35_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeCosmosPredict2_14B",
+		Inputs: map[string]Value{
+			"model1":            Link(model1),
+			"model2":            Link(model2),
+			"pos_embedder.":     Float(pos_embedder_),
+			"x_embedder.":       Float(x_embedder_),
+			"t_embedder.":       Float(t_embedder_),
+			"t_embedding_norm.": Float(t_embedding_norm_),
+			"blocks.0.":         Float(blocks_0_),
+			"blocks.1.":         Float(blocks_1_),
+			"blocks.2.":         Float(blocks_2_),
+			"blocks.3.":         Float(blocks_3_),
+			"blocks.4.":         Float(blocks_4_),
+			"blocks.5.":         Float(blocks_5_),
+			"blocks.6.":         Float(blocks_6_),
+			"blocks.7.":         Float(blocks_7_),
+			"blocks.8.":         Float(blocks_8_),
+			"blocks.9.":         Float(blocks_9_),
+			"blocks.10.":        Float(blocks_10_),
+			"blocks.11.":        Float(blocks_11_),
+			"blocks.12.":        Float(blocks_12_),
+			"blocks.13.":        Float(blocks_13_),
+			"blocks.14.":        Float(blocks_14_),
+			"blocks.15.":        Float(blocks_15_),
+			"blocks.16.":        Float(blocks_16_),
+			"blocks.17.":        Float(blocks_17_),
+			"blocks.18.":        Float(blocks_18_),
+			"blocks.19.":        Float(blocks_19_),
+			"blocks.20.":        Float(blocks_20_),
+			"blocks.21.":        Float(blocks_21_),
+			"blocks.22.":        Float(blocks_22_),
+			"blocks.23.":        Float(blocks_23_),
+			"blocks.24.":        Float(blocks_24_),
+			"blocks.25.":        Float(blocks_25_),
+			"blocks.26.":        Float(blocks_26_),
+			"blocks.27.":        Float(blocks_27_),
+			"blocks.28.":        Float(blocks_28_),
+			"blocks.29.":        Float(blocks_29_),
+			"blocks.30.":        Float(blocks_30_),
+			"blocks.31.":        Float(blocks_31_),
+			"blocks.32.":        Float(blocks_32_),
+			"blocks.33.":        Float(blocks_33_),
+			"blocks.34.":        Float(blocks_34_),
+			"blocks.35.":        Float(blocks_35_),
+			"final_layer.":      Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeCosmosPredict2_2B(gr *Graph, model1 MODEL, model2 MODEL, pos_embedder_, x_embedder_, t_embedder_, t_embedding_norm_, blocks_0_, blocks_1_, blocks_2_, blocks_3_, blocks_4_, blocks_5_, blocks_6_, blocks_7_, blocks_8_, blocks_9_, blocks_10_, blocks_11_, blocks_12_, blocks_13_, blocks_14_, blocks_15_, blocks_16_, blocks_17_, blocks_18_, blocks_19_, blocks_20_, blocks_21_, blocks_22_, blocks_23_, blocks_24_, blocks_25_, blocks_26_, blocks_27_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeCosmosPredict2_2B",
+		Inputs: map[string]Value{
+			"model1":            Link(model1),
+			"model2":            Link(model2),
+			"pos_embedder.":     Float(pos_embedder_),
+			"x_embedder.":       Float(x_embedder_),
+			"t_embedder.":       Float(t_embedder_),
+			"t_embedding_norm.": Float(t_embedding_norm_),
+			"blocks.0.":         Float(blocks_0_),
+			"blocks.1.":         Float(blocks_1_),
+			"blocks.2.":         Float(blocks_2_),
+			"blocks.3.":         Float(blocks_3_),
+			"blocks.4.":         Float(blocks_4_),
+			"blocks.5.":         Float(blocks_5_),
+			"blocks.6.":         Float(blocks_6_),
+			"blocks.7.":         Float(blocks_7_),
+			"blocks.8.":         Float(blocks_8_),
+			"blocks.9.":         Float(blocks_9_),
+			"blocks.10.":        Float(blocks_10_),
+			"blocks.11.":        Float(blocks_11_),
+			"blocks.12.":        Float(blocks_12_),
+			"blocks.13.":        Float(blocks_13_),
+			"blocks.14.":        Float(blocks_14_),
+			"blocks.15.":        Float(blocks_15_),
+			"blocks.16.":        Float(blocks_16_),
+			"blocks.17.":        Float(blocks_17_),
+			"blocks.18.":        Float(blocks_18_),
+			"blocks.19.":        Float(blocks_19_),
+			"blocks.20.":        Float(blocks_20_),
+			"blocks.21.":        Float(blocks_21_),
+			"blocks.22.":        Float(blocks_22_),
+			"blocks.23.":        Float(blocks_23_),
+			"blocks.24.":        Float(blocks_24_),
+			"blocks.25.":        Float(blocks_25_),
+			"blocks.26.":        Float(blocks_26_),
+			"blocks.27.":        Float(blocks_27_),
+			"final_layer.":      Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeFlux1(gr *Graph, model1 MODEL, model2 MODEL, img_in_, time_in_, guidance_in, vector_in_, txt_in_, double_blocks_0_, double_blocks_1_, double_blocks_2_, double_blocks_3_, double_blocks_4_, double_blocks_5_, double_blocks_6_, double_blocks_7_, double_blocks_8_, double_blocks_9_, double_blocks_10_, double_blocks_11_, double_blocks_12_, double_blocks_13_, double_blocks_14_, double_blocks_15_, double_blocks_16_, double_blocks_17_, double_blocks_18_, single_blocks_0_, single_blocks_1_, single_blocks_2_, single_blocks_3_, single_blocks_4_, single_blocks_5_, single_blocks_6_, single_blocks_7_, single_blocks_8_, single_blocks_9_, single_blocks_10_, single_blocks_11_, single_blocks_12_, single_blocks_13_, single_blocks_14_, single_blocks_15_, single_blocks_16_, single_blocks_17_, single_blocks_18_, single_blocks_19_, single_blocks_20_, single_blocks_21_, single_blocks_22_, single_blocks_23_, single_blocks_24_, single_blocks_25_, single_blocks_26_, single_blocks_27_, single_blocks_28_, single_blocks_29_, single_blocks_30_, single_blocks_31_, single_blocks_32_, single_blocks_33_, single_blocks_34_, single_blocks_35_, single_blocks_36_, single_blocks_37_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeFlux1",
+		Inputs: map[string]Value{
+			"model1":            Link(model1),
+			"model2":            Link(model2),
+			"img_in.":           Float(img_in_),
+			"time_in.":          Float(time_in_),
+			"guidance_in":       Float(guidance_in),
+			"vector_in.":        Float(vector_in_),
+			"txt_in.":           Float(txt_in_),
+			"double_blocks.0.":  Float(double_blocks_0_),
+			"double_blocks.1.":  Float(double_blocks_1_),
+			"double_blocks.2.":  Float(double_blocks_2_),
+			"double_blocks.3.":  Float(double_blocks_3_),
+			"double_blocks.4.":  Float(double_blocks_4_),
+			"double_blocks.5.":  Float(double_blocks_5_),
+			"double_blocks.6.":  Float(double_blocks_6_),
+			"double_blocks.7.":  Float(double_blocks_7_),
+			"double_blocks.8.":  Float(double_blocks_8_),
+			"double_blocks.9.":  Float(double_blocks_9_),
+			"double_blocks.10.": Float(double_blocks_10_),
+			"double_blocks.11.": Float(double_blocks_11_),
+			"double_blocks.12.": Float(double_blocks_12_),
+			"double_blocks.13.": Float(double_blocks_13_),
+			"double_blocks.14.": Float(double_blocks_14_),
+			"double_blocks.15.": Float(double_blocks_15_),
+			"double_blocks.16.": Float(double_blocks_16_),
+			"double_blocks.17.": Float(double_blocks_17_),
+			"double_blocks.18.": Float(double_blocks_18_),
+			"single_blocks.0.":  Float(single_blocks_0_),
+			"single_blocks.1.":  Float(single_blocks_1_),
+			"single_blocks.2.":  Float(single_blocks_2_),
+			"single_blocks.3.":  Float(single_blocks_3_),
+			"single_blocks.4.":  Float(single_blocks_4_),
+			"single_blocks.5.":  Float(single_blocks_5_),
+			"single_blocks.6.":  Float(single_blocks_6_),
+			"single_blocks.7.":  Float(single_blocks_7_),
+			"single_blocks.8.":  Float(single_blocks_8_),
+			"single_blocks.9.":  Float(single_blocks_9_),
+			"single_blocks.10.": Float(single_blocks_10_),
+			"single_blocks.11.": Float(single_blocks_11_),
+			"single_blocks.12.": Float(single_blocks_12_),
+			"single_blocks.13.": Float(single_blocks_13_),
+			"single_blocks.14.": Float(single_blocks_14_),
+			"single_blocks.15.": Float(single_blocks_15_),
+			"single_blocks.16.": Float(single_blocks_16_),
+			"single_blocks.17.": Float(single_blocks_17_),
+			"single_blocks.18.": Float(single_blocks_18_),
+			"single_blocks.19.": Float(single_blocks_19_),
+			"single_blocks.20.": Float(single_blocks_20_),
+			"single_blocks.21.": Float(single_blocks_21_),
+			"single_blocks.22.": Float(single_blocks_22_),
+			"single_blocks.23.": Float(single_blocks_23_),
+			"single_blocks.24.": Float(single_blocks_24_),
+			"single_blocks.25.": Float(single_blocks_25_),
+			"single_blocks.26.": Float(single_blocks_26_),
+			"single_blocks.27.": Float(single_blocks_27_),
+			"single_blocks.28.": Float(single_blocks_28_),
+			"single_blocks.29.": Float(single_blocks_29_),
+			"single_blocks.30.": Float(single_blocks_30_),
+			"single_blocks.31.": Float(single_blocks_31_),
+			"single_blocks.32.": Float(single_blocks_32_),
+			"single_blocks.33.": Float(single_blocks_33_),
+			"single_blocks.34.": Float(single_blocks_34_),
+			"single_blocks.35.": Float(single_blocks_35_),
+			"single_blocks.36.": Float(single_blocks_36_),
+			"single_blocks.37.": Float(single_blocks_37_),
+			"final_layer.":      Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeLTXV(gr *Graph, model1 MODEL, model2 MODEL, patchify_proj_, adaln_single_, caption_projection_, transformer_blocks_0_, transformer_blocks_1_, transformer_blocks_2_, transformer_blocks_3_, transformer_blocks_4_, transformer_blocks_5_, transformer_blocks_6_, transformer_blocks_7_, transformer_blocks_8_, transformer_blocks_9_, transformer_blocks_10_, transformer_blocks_11_, transformer_blocks_12_, transformer_blocks_13_, transformer_blocks_14_, transformer_blocks_15_, transformer_blocks_16_, transformer_blocks_17_, transformer_blocks_18_, transformer_blocks_19_, transformer_blocks_20_, transformer_blocks_21_, transformer_blocks_22_, transformer_blocks_23_, transformer_blocks_24_, transformer_blocks_25_, transformer_blocks_26_, transformer_blocks_27_, scale_shift_table, proj_out_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeLTXV",
+		Inputs: map[string]Value{
+			"model1":                 Link(model1),
+			"model2":                 Link(model2),
+			"patchify_proj.":         Float(patchify_proj_),
+			"adaln_single.":          Float(adaln_single_),
+			"caption_projection.":    Float(caption_projection_),
+			"transformer_blocks.0.":  Float(transformer_blocks_0_),
+			"transformer_blocks.1.":  Float(transformer_blocks_1_),
+			"transformer_blocks.2.":  Float(transformer_blocks_2_),
+			"transformer_blocks.3.":  Float(transformer_blocks_3_),
+			"transformer_blocks.4.":  Float(transformer_blocks_4_),
+			"transformer_blocks.5.":  Float(transformer_blocks_5_),
+			"transformer_blocks.6.":  Float(transformer_blocks_6_),
+			"transformer_blocks.7.":  Float(transformer_blocks_7_),
+			"transformer_blocks.8.":  Float(transformer_blocks_8_),
+			"transformer_blocks.9.":  Float(transformer_blocks_9_),
+			"transformer_blocks.10.": Float(transformer_blocks_10_),
+			"transformer_blocks.11.": Float(transformer_blocks_11_),
+			"transformer_blocks.12.": Float(transformer_blocks_12_),
+			"transformer_blocks.13.": Float(transformer_blocks_13_),
+			"transformer_blocks.14.": Float(transformer_blocks_14_),
+			"transformer_blocks.15.": Float(transformer_blocks_15_),
+			"transformer_blocks.16.": Float(transformer_blocks_16_),
+			"transformer_blocks.17.": Float(transformer_blocks_17_),
+			"transformer_blocks.18.": Float(transformer_blocks_18_),
+			"transformer_blocks.19.": Float(transformer_blocks_19_),
+			"transformer_blocks.20.": Float(transformer_blocks_20_),
+			"transformer_blocks.21.": Float(transformer_blocks_21_),
+			"transformer_blocks.22.": Float(transformer_blocks_22_),
+			"transformer_blocks.23.": Float(transformer_blocks_23_),
+			"transformer_blocks.24.": Float(transformer_blocks_24_),
+			"transformer_blocks.25.": Float(transformer_blocks_25_),
+			"transformer_blocks.26.": Float(transformer_blocks_26_),
+			"transformer_blocks.27.": Float(transformer_blocks_27_),
+			"scale_shift_table":      Float(scale_shift_table),
+			"proj_out.":              Float(proj_out_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeMochiPreview(gr *Graph, model1 MODEL, model2 MODEL, pos_frequencies_, t_embedder_, t5_y_embedder_, t5_yproj_, blocks_0_, blocks_1_, blocks_2_, blocks_3_, blocks_4_, blocks_5_, blocks_6_, blocks_7_, blocks_8_, blocks_9_, blocks_10_, blocks_11_, blocks_12_, blocks_13_, blocks_14_, blocks_15_, blocks_16_, blocks_17_, blocks_18_, blocks_19_, blocks_20_, blocks_21_, blocks_22_, blocks_23_, blocks_24_, blocks_25_, blocks_26_, blocks_27_, blocks_28_, blocks_29_, blocks_30_, blocks_31_, blocks_32_, blocks_33_, blocks_34_, blocks_35_, blocks_36_, blocks_37_, blocks_38_, blocks_39_, blocks_40_, blocks_41_, blocks_42_, blocks_43_, blocks_44_, blocks_45_, blocks_46_, blocks_47_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeMochiPreview",
+		Inputs: map[string]Value{
+			"model1":           Link(model1),
+			"model2":           Link(model2),
+			"pos_frequencies.": Float(pos_frequencies_),
+			"t_embedder.":      Float(t_embedder_),
+			"t5_y_embedder.":   Float(t5_y_embedder_),
+			"t5_yproj.":        Float(t5_yproj_),
+			"blocks.0.":        Float(blocks_0_),
+			"blocks.1.":        Float(blocks_1_),
+			"blocks.2.":        Float(blocks_2_),
+			"blocks.3.":        Float(blocks_3_),
+			"blocks.4.":        Float(blocks_4_),
+			"blocks.5.":        Float(blocks_5_),
+			"blocks.6.":        Float(blocks_6_),
+			"blocks.7.":        Float(blocks_7_),
+			"blocks.8.":        Float(blocks_8_),
+			"blocks.9.":        Float(blocks_9_),
+			"blocks.10.":       Float(blocks_10_),
+			"blocks.11.":       Float(blocks_11_),
+			"blocks.12.":       Float(blocks_12_),
+			"blocks.13.":       Float(blocks_13_),
+			"blocks.14.":       Float(blocks_14_),
+			"blocks.15.":       Float(blocks_15_),
+			"blocks.16.":       Float(blocks_16_),
+			"blocks.17.":       Float(blocks_17_),
+			"blocks.18.":       Float(blocks_18_),
+			"blocks.19.":       Float(blocks_19_),
+			"blocks.20.":       Float(blocks_20_),
+			"blocks.21.":       Float(blocks_21_),
+			"blocks.22.":       Float(blocks_22_),
+			"blocks.23.":       Float(blocks_23_),
+			"blocks.24.":       Float(blocks_24_),
+			"blocks.25.":       Float(blocks_25_),
+			"blocks.26.":       Float(blocks_26_),
+			"blocks.27.":       Float(blocks_27_),
+			"blocks.28.":       Float(blocks_28_),
+			"blocks.29.":       Float(blocks_29_),
+			"blocks.30.":       Float(blocks_30_),
+			"blocks.31.":       Float(blocks_31_),
+			"blocks.32.":       Float(blocks_32_),
+			"blocks.33.":       Float(blocks_33_),
+			"blocks.34.":       Float(blocks_34_),
+			"blocks.35.":       Float(blocks_35_),
+			"blocks.36.":       Float(blocks_36_),
+			"blocks.37.":       Float(blocks_37_),
+			"blocks.38.":       Float(blocks_38_),
+			"blocks.39.":       Float(blocks_39_),
+			"blocks.40.":       Float(blocks_40_),
+			"blocks.41.":       Float(blocks_41_),
+			"blocks.42.":       Float(blocks_42_),
+			"blocks.43.":       Float(blocks_43_),
+			"blocks.44.":       Float(blocks_44_),
+			"blocks.45.":       Float(blocks_45_),
+			"blocks.46.":       Float(blocks_46_),
+			"blocks.47.":       Float(blocks_47_),
+			"final_layer.":     Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeQwenImage(gr *Graph, model1 MODEL, model2 MODEL, pos_embeds_, img_in_, txt_norm_, txt_in_, time_text_embed_, transformer_blocks_0_, transformer_blocks_1_, transformer_blocks_2_, transformer_blocks_3_, transformer_blocks_4_, transformer_blocks_5_, transformer_blocks_6_, transformer_blocks_7_, transformer_blocks_8_, transformer_blocks_9_, transformer_blocks_10_, transformer_blocks_11_, transformer_blocks_12_, transformer_blocks_13_, transformer_blocks_14_, transformer_blocks_15_, transformer_blocks_16_, transformer_blocks_17_, transformer_blocks_18_, transformer_blocks_19_, transformer_blocks_20_, transformer_blocks_21_, transformer_blocks_22_, transformer_blocks_23_, transformer_blocks_24_, transformer_blocks_25_, transformer_blocks_26_, transformer_blocks_27_, transformer_blocks_28_, transformer_blocks_29_, transformer_blocks_30_, transformer_blocks_31_, transformer_blocks_32_, transformer_blocks_33_, transformer_blocks_34_, transformer_blocks_35_, transformer_blocks_36_, transformer_blocks_37_, transformer_blocks_38_, transformer_blocks_39_, transformer_blocks_40_, transformer_blocks_41_, transformer_blocks_42_, transformer_blocks_43_, transformer_blocks_44_, transformer_blocks_45_, transformer_blocks_46_, transformer_blocks_47_, transformer_blocks_48_, transformer_blocks_49_, transformer_blocks_50_, transformer_blocks_51_, transformer_blocks_52_, transformer_blocks_53_, transformer_blocks_54_, transformer_blocks_55_, transformer_blocks_56_, transformer_blocks_57_, transformer_blocks_58_, transformer_blocks_59_, proj_out_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeQwenImage",
+		Inputs: map[string]Value{
+			"model1":                 Link(model1),
+			"model2":                 Link(model2),
+			"pos_embeds.":            Float(pos_embeds_),
+			"img_in.":                Float(img_in_),
+			"txt_norm.":              Float(txt_norm_),
+			"txt_in.":                Float(txt_in_),
+			"time_text_embed.":       Float(time_text_embed_),
+			"transformer_blocks.0.":  Float(transformer_blocks_0_),
+			"transformer_blocks.1.":  Float(transformer_blocks_1_),
+			"transformer_blocks.2.":  Float(transformer_blocks_2_),
+			"transformer_blocks.3.":  Float(transformer_blocks_3_),
+			"transformer_blocks.4.":  Float(transformer_blocks_4_),
+			"transformer_blocks.5.":  Float(transformer_blocks_5_),
+			"transformer_blocks.6.":  Float(transformer_blocks_6_),
+			"transformer_blocks.7.":  Float(transformer_blocks_7_),
+			"transformer_blocks.8.":  Float(transformer_blocks_8_),
+			"transformer_blocks.9.":  Float(transformer_blocks_9_),
+			"transformer_blocks.10.": Float(transformer_blocks_10_),
+			"transformer_blocks.11.": Float(transformer_blocks_11_),
+			"transformer_blocks.12.": Float(transformer_blocks_12_),
+			"transformer_blocks.13.": Float(transformer_blocks_13_),
+			"transformer_blocks.14.": Float(transformer_blocks_14_),
+			"transformer_blocks.15.": Float(transformer_blocks_15_),
+			"transformer_blocks.16.": Float(transformer_blocks_16_),
+			"transformer_blocks.17.": Float(transformer_blocks_17_),
+			"transformer_blocks.18.": Float(transformer_blocks_18_),
+			"transformer_blocks.19.": Float(transformer_blocks_19_),
+			"transformer_blocks.20.": Float(transformer_blocks_20_),
+			"transformer_blocks.21.": Float(transformer_blocks_21_),
+			"transformer_blocks.22.": Float(transformer_blocks_22_),
+			"transformer_blocks.23.": Float(transformer_blocks_23_),
+			"transformer_blocks.24.": Float(transformer_blocks_24_),
+			"transformer_blocks.25.": Float(transformer_blocks_25_),
+			"transformer_blocks.26.": Float(transformer_blocks_26_),
+			"transformer_blocks.27.": Float(transformer_blocks_27_),
+			"transformer_blocks.28.": Float(transformer_blocks_28_),
+			"transformer_blocks.29.": Float(transformer_blocks_29_),
+			"transformer_blocks.30.": Float(transformer_blocks_30_),
+			"transformer_blocks.31.": Float(transformer_blocks_31_),
+			"transformer_blocks.32.": Float(transformer_blocks_32_),
+			"transformer_blocks.33.": Float(transformer_blocks_33_),
+			"transformer_blocks.34.": Float(transformer_blocks_34_),
+			"transformer_blocks.35.": Float(transformer_blocks_35_),
+			"transformer_blocks.36.": Float(transformer_blocks_36_),
+			"transformer_blocks.37.": Float(transformer_blocks_37_),
+			"transformer_blocks.38.": Float(transformer_blocks_38_),
+			"transformer_blocks.39.": Float(transformer_blocks_39_),
+			"transformer_blocks.40.": Float(transformer_blocks_40_),
+			"transformer_blocks.41.": Float(transformer_blocks_41_),
+			"transformer_blocks.42.": Float(transformer_blocks_42_),
+			"transformer_blocks.43.": Float(transformer_blocks_43_),
+			"transformer_blocks.44.": Float(transformer_blocks_44_),
+			"transformer_blocks.45.": Float(transformer_blocks_45_),
+			"transformer_blocks.46.": Float(transformer_blocks_46_),
+			"transformer_blocks.47.": Float(transformer_blocks_47_),
+			"transformer_blocks.48.": Float(transformer_blocks_48_),
+			"transformer_blocks.49.": Float(transformer_blocks_49_),
+			"transformer_blocks.50.": Float(transformer_blocks_50_),
+			"transformer_blocks.51.": Float(transformer_blocks_51_),
+			"transformer_blocks.52.": Float(transformer_blocks_52_),
+			"transformer_blocks.53.": Float(transformer_blocks_53_),
+			"transformer_blocks.54.": Float(transformer_blocks_54_),
+			"transformer_blocks.55.": Float(transformer_blocks_55_),
+			"transformer_blocks.56.": Float(transformer_blocks_56_),
+			"transformer_blocks.57.": Float(transformer_blocks_57_),
+			"transformer_blocks.58.": Float(transformer_blocks_58_),
+			"transformer_blocks.59.": Float(transformer_blocks_59_),
+			"proj_out.":              Float(proj_out_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeSD1(gr *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_, input_blocks_0_, input_blocks_1_, input_blocks_2_, input_blocks_3_, input_blocks_4_, input_blocks_5_, input_blocks_6_, input_blocks_7_, input_blocks_8_, input_blocks_9_, input_blocks_10_, input_blocks_11_, middle_block_0_, middle_block_1_, middle_block_2_, output_blocks_0_, output_blocks_1_, output_blocks_2_, output_blocks_3_, output_blocks_4_, output_blocks_5_, output_blocks_6_, output_blocks_7_, output_blocks_8_, output_blocks_9_, output_blocks_10_, output_blocks_11_, out_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeSD1",
 		Inputs: map[string]Value{
 			"model1":            Link(model1),
@@ -1533,12 +4877,12 @@ func ModelMergeSD1(g *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_
 			"out.":              Float(out_),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeSD2(g *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_, input_blocks_0_, input_blocks_1_, input_blocks_2_, input_blocks_3_, input_blocks_4_, input_blocks_5_, input_blocks_6_, input_blocks_7_, input_blocks_8_, input_blocks_9_, input_blocks_10_, input_blocks_11_, middle_block_0_, middle_block_1_, middle_block_2_, output_blocks_0_, output_blocks_1_, output_blocks_2_, output_blocks_3_, output_blocks_4_, output_blocks_5_, output_blocks_6_, output_blocks_7_, output_blocks_8_, output_blocks_9_, output_blocks_10_, output_blocks_11_, out_ float64) (_ *Node, model MODEL) {
-	n := &Node{
+func ModelMergeSD2(gr *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_, input_blocks_0_, input_blocks_1_, input_blocks_2_, input_blocks_3_, input_blocks_4_, input_blocks_5_, input_blocks_6_, input_blocks_7_, input_blocks_8_, input_blocks_9_, input_blocks_10_, input_blocks_11_, middle_block_0_, middle_block_1_, middle_block_2_, output_blocks_0_, output_blocks_1_, output_blocks_2_, output_blocks_3_, output_blocks_4_, output_blocks_5_, output_blocks_6_, output_blocks_7_, output_blocks_8_, output_blocks_9_, output_blocks_10_, output_blocks_11_, out_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeSD2",
 		Inputs: map[string]Value{
 			"model1":            Link(model1),
@@ -1575,13 +4919,13 @@ func ModelMergeSD2(g *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_
 			"out.":              Float(out_),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeSD3(g *Graph, model1 MODEL, model2 MODEL, pos_embed_, x_embedder_, context_embedder_, y_embedder_, t_embedder_, joint_blocks_0_, joint_blocks_1_, joint_blocks_2_, joint_blocks_3_, joint_blocks_4_, joint_blocks_5_, joint_blocks_6_, joint_blocks_7_, joint_blocks_8_, joint_blocks_9_, joint_blocks_10_, joint_blocks_11_, joint_blocks_12_, joint_blocks_13_, joint_blocks_14_, joint_blocks_15_, joint_blocks_16_, joint_blocks_17_, joint_blocks_18_, joint_blocks_19_, joint_blocks_20_, joint_blocks_21_, joint_blocks_22_, joint_blocks_23_, joint_blocks_24_, joint_blocks_25_, joint_blocks_26_, joint_blocks_27_, joint_blocks_28_, joint_blocks_29_, joint_blocks_30_, joint_blocks_31_, joint_blocks_32_, joint_blocks_33_, joint_blocks_34_, joint_blocks_35_, joint_blocks_36_, joint_blocks_37_, final_layer_ float64) (_ *Node, model MODEL) {
-	n := &Node{
-		Class: "ModelMergeSD3",
+func ModelMergeSD35_Large(gr *Graph, model1 MODEL, model2 MODEL, pos_embed_, x_embedder_, context_embedder_, y_embedder_, t_embedder_, joint_blocks_0_, joint_blocks_1_, joint_blocks_2_, joint_blocks_3_, joint_blocks_4_, joint_blocks_5_, joint_blocks_6_, joint_blocks_7_, joint_blocks_8_, joint_blocks_9_, joint_blocks_10_, joint_blocks_11_, joint_blocks_12_, joint_blocks_13_, joint_blocks_14_, joint_blocks_15_, joint_blocks_16_, joint_blocks_17_, joint_blocks_18_, joint_blocks_19_, joint_blocks_20_, joint_blocks_21_, joint_blocks_22_, joint_blocks_23_, joint_blocks_24_, joint_blocks_25_, joint_blocks_26_, joint_blocks_27_, joint_blocks_28_, joint_blocks_29_, joint_blocks_30_, joint_blocks_31_, joint_blocks_32_, joint_blocks_33_, joint_blocks_34_, joint_blocks_35_, joint_blocks_36_, joint_blocks_37_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeSD35_Large",
 		Inputs: map[string]Value{
 			"model1":            Link(model1),
 			"model2":            Link(model2),
@@ -1631,12 +4975,54 @@ func ModelMergeSD3(g *Graph, model1 MODEL, model2 MODEL, pos_embed_, x_embedder_
 			"final_layer.":      Float(final_layer_),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeSDXL(g *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_, input_blocks_0, input_blocks_1, input_blocks_2, input_blocks_3, input_blocks_4, input_blocks_5, input_blocks_6, input_blocks_7, input_blocks_8, middle_block_0, middle_block_1, middle_block_2, output_blocks_0, output_blocks_1, output_blocks_2, output_blocks_3, output_blocks_4, output_blocks_5, output_blocks_6, output_blocks_7, output_blocks_8, out_ float64) (_ *Node, model MODEL) {
-	n := &Node{
+func ModelMergeSD3_2B(gr *Graph, model1 MODEL, model2 MODEL, pos_embed_, x_embedder_, context_embedder_, y_embedder_, t_embedder_, joint_blocks_0_, joint_blocks_1_, joint_blocks_2_, joint_blocks_3_, joint_blocks_4_, joint_blocks_5_, joint_blocks_6_, joint_blocks_7_, joint_blocks_8_, joint_blocks_9_, joint_blocks_10_, joint_blocks_11_, joint_blocks_12_, joint_blocks_13_, joint_blocks_14_, joint_blocks_15_, joint_blocks_16_, joint_blocks_17_, joint_blocks_18_, joint_blocks_19_, joint_blocks_20_, joint_blocks_21_, joint_blocks_22_, joint_blocks_23_, final_layer_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeSD3_2B",
+		Inputs: map[string]Value{
+			"model1":            Link(model1),
+			"model2":            Link(model2),
+			"pos_embed.":        Float(pos_embed_),
+			"x_embedder.":       Float(x_embedder_),
+			"context_embedder.": Float(context_embedder_),
+			"y_embedder.":       Float(y_embedder_),
+			"t_embedder.":       Float(t_embedder_),
+			"joint_blocks.0.":   Float(joint_blocks_0_),
+			"joint_blocks.1.":   Float(joint_blocks_1_),
+			"joint_blocks.2.":   Float(joint_blocks_2_),
+			"joint_blocks.3.":   Float(joint_blocks_3_),
+			"joint_blocks.4.":   Float(joint_blocks_4_),
+			"joint_blocks.5.":   Float(joint_blocks_5_),
+			"joint_blocks.6.":   Float(joint_blocks_6_),
+			"joint_blocks.7.":   Float(joint_blocks_7_),
+			"joint_blocks.8.":   Float(joint_blocks_8_),
+			"joint_blocks.9.":   Float(joint_blocks_9_),
+			"joint_blocks.10.":  Float(joint_blocks_10_),
+			"joint_blocks.11.":  Float(joint_blocks_11_),
+			"joint_blocks.12.":  Float(joint_blocks_12_),
+			"joint_blocks.13.":  Float(joint_blocks_13_),
+			"joint_blocks.14.":  Float(joint_blocks_14_),
+			"joint_blocks.15.":  Float(joint_blocks_15_),
+			"joint_blocks.16.":  Float(joint_blocks_16_),
+			"joint_blocks.17.":  Float(joint_blocks_17_),
+			"joint_blocks.18.":  Float(joint_blocks_18_),
+			"joint_blocks.19.":  Float(joint_blocks_19_),
+			"joint_blocks.20.":  Float(joint_blocks_20_),
+			"joint_blocks.21.":  Float(joint_blocks_21_),
+			"joint_blocks.22.":  Float(joint_blocks_22_),
+			"joint_blocks.23.":  Float(joint_blocks_23_),
+			"final_layer.":      Float(final_layer_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelMergeSDXL(gr *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb_, input_blocks_0, input_blocks_1, input_blocks_2, input_blocks_3, input_blocks_4, input_blocks_5, input_blocks_6, input_blocks_7, input_blocks_8, middle_block_0, middle_block_1, middle_block_2, output_blocks_0, output_blocks_1, output_blocks_2, output_blocks_3, output_blocks_4, output_blocks_5, output_blocks_6, output_blocks_7, output_blocks_8, out_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeSDXL",
 		Inputs: map[string]Value{
 			"model1":          Link(model1),
@@ -1667,12 +5053,12 @@ func ModelMergeSDXL(g *Graph, model1 MODEL, model2 MODEL, time_embed_, label_emb
 			"out.":            Float(out_),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeSimple(g *Graph, model1 MODEL, model2 MODEL, ratio float64) (_ *Node, model MODEL) {
-	n := &Node{
+func ModelMergeSimple(gr *Graph, model1 MODEL, model2 MODEL, ratio float64) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeSimple",
 		Inputs: map[string]Value{
 			"model1": Link(model1),
@@ -1680,12 +5066,12 @@ func ModelMergeSimple(g *Graph, model1 MODEL, model2 MODEL, ratio float64) (_ *N
 			"ratio":  Float(ratio),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelMergeSubtract(g *Graph, model1 MODEL, model2 MODEL, multiplier float64) (_ *Node, model MODEL) {
-	n := &Node{
+func ModelMergeSubtract(gr *Graph, model1 MODEL, model2 MODEL, multiplier float64) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "ModelMergeSubtract",
 		Inputs: map[string]Value{
 			"model1":     Link(model1),
@@ -1693,12 +5079,93 @@ func ModelMergeSubtract(g *Graph, model1 MODEL, model2 MODEL, multiplier float64
 			"multiplier": Float(multiplier),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelSamplingContinuousEDM(g *Graph, model MODEL, sampling string, sigma_max, sigma_min float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func ModelMergeWAN2_1(gr *Graph, model1 MODEL, model2 MODEL, patch_embedding_, time_embedding_, time_projection_, text_embedding_, img_emb_, blocks_0_, blocks_1_, blocks_2_, blocks_3_, blocks_4_, blocks_5_, blocks_6_, blocks_7_, blocks_8_, blocks_9_, blocks_10_, blocks_11_, blocks_12_, blocks_13_, blocks_14_, blocks_15_, blocks_16_, blocks_17_, blocks_18_, blocks_19_, blocks_20_, blocks_21_, blocks_22_, blocks_23_, blocks_24_, blocks_25_, blocks_26_, blocks_27_, blocks_28_, blocks_29_, blocks_30_, blocks_31_, blocks_32_, blocks_33_, blocks_34_, blocks_35_, blocks_36_, blocks_37_, blocks_38_, blocks_39_, head_ float64) (_ *Node, model MODEL) {
+	nd := &Node{
+		Class: "ModelMergeWAN2_1",
+		Inputs: map[string]Value{
+			"model1":           Link(model1),
+			"model2":           Link(model2),
+			"patch_embedding.": Float(patch_embedding_),
+			"time_embedding.":  Float(time_embedding_),
+			"time_projection.": Float(time_projection_),
+			"text_embedding.":  Float(text_embedding_),
+			"img_emb.":         Float(img_emb_),
+			"blocks.0.":        Float(blocks_0_),
+			"blocks.1.":        Float(blocks_1_),
+			"blocks.2.":        Float(blocks_2_),
+			"blocks.3.":        Float(blocks_3_),
+			"blocks.4.":        Float(blocks_4_),
+			"blocks.5.":        Float(blocks_5_),
+			"blocks.6.":        Float(blocks_6_),
+			"blocks.7.":        Float(blocks_7_),
+			"blocks.8.":        Float(blocks_8_),
+			"blocks.9.":        Float(blocks_9_),
+			"blocks.10.":       Float(blocks_10_),
+			"blocks.11.":       Float(blocks_11_),
+			"blocks.12.":       Float(blocks_12_),
+			"blocks.13.":       Float(blocks_13_),
+			"blocks.14.":       Float(blocks_14_),
+			"blocks.15.":       Float(blocks_15_),
+			"blocks.16.":       Float(blocks_16_),
+			"blocks.17.":       Float(blocks_17_),
+			"blocks.18.":       Float(blocks_18_),
+			"blocks.19.":       Float(blocks_19_),
+			"blocks.20.":       Float(blocks_20_),
+			"blocks.21.":       Float(blocks_21_),
+			"blocks.22.":       Float(blocks_22_),
+			"blocks.23.":       Float(blocks_23_),
+			"blocks.24.":       Float(blocks_24_),
+			"blocks.25.":       Float(blocks_25_),
+			"blocks.26.":       Float(blocks_26_),
+			"blocks.27.":       Float(blocks_27_),
+			"blocks.28.":       Float(blocks_28_),
+			"blocks.29.":       Float(blocks_29_),
+			"blocks.30.":       Float(blocks_30_),
+			"blocks.31.":       Float(blocks_31_),
+			"blocks.32.":       Float(blocks_32_),
+			"blocks.33.":       Float(blocks_33_),
+			"blocks.34.":       Float(blocks_34_),
+			"blocks.35.":       Float(blocks_35_),
+			"blocks.36.":       Float(blocks_36_),
+			"blocks.37.":       Float(blocks_37_),
+			"blocks.38.":       Float(blocks_38_),
+			"blocks.39.":       Float(blocks_39_),
+			"head.":            Float(head_),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelPatchLoader(gr *Graph, name string) (_ *Node, model_patch MODEL_PATCH) {
+	nd := &Node{
+		Class: "ModelPatchLoader",
+		Inputs: map[string]Value{
+			"name": String(name),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL_PATCH{NodeID: id, OutPort: 0}
+}
+
+func ModelSamplingAuraFlow(gr *Graph, model MODEL, shift float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ModelSamplingAuraFlow",
+		Inputs: map[string]Value{
+			"model": Link(model),
+			"shift": Float(shift),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelSamplingContinuousEDM(gr *Graph, model MODEL, sampling string, sigma_max, sigma_min float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "ModelSamplingContinuousEDM",
 		Inputs: map[string]Value{
 			"model":     Link(model),
@@ -1707,12 +5174,12 @@ func ModelSamplingContinuousEDM(g *Graph, model MODEL, sampling string, sigma_ma
 			"sigma_min": Float(sigma_min),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelSamplingContinuousV(g *Graph, model MODEL, sampling string, sigma_max, sigma_min float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func ModelSamplingContinuousV(gr *Graph, model MODEL, sampling string, sigma_max, sigma_min float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "ModelSamplingContinuousV",
 		Inputs: map[string]Value{
 			"model":     Link(model),
@@ -1721,12 +5188,12 @@ func ModelSamplingContinuousV(g *Graph, model MODEL, sampling string, sigma_max,
 			"sigma_min": Float(sigma_min),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelSamplingDiscrete(g *Graph, model MODEL, sampling string, zsnr bool) (_ *Node, out_model MODEL) {
-	n := &Node{
+func ModelSamplingDiscrete(gr *Graph, model MODEL, sampling string, zsnr bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "ModelSamplingDiscrete",
 		Inputs: map[string]Value{
 			"model":    Link(model),
@@ -1734,51 +5201,333 @@ func ModelSamplingDiscrete(g *Graph, model MODEL, sampling string, zsnr bool) (_
 			"zsnr":     Bool(zsnr),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelSamplingSD3(g *Graph, model MODEL, shift float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func ModelSamplingFlux(gr *Graph, model MODEL, max_shift, base_shift float64, width, height int) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ModelSamplingFlux",
+		Inputs: map[string]Value{
+			"model":      Link(model),
+			"max_shift":  Float(max_shift),
+			"base_shift": Float(base_shift),
+			"width":      Int(width),
+			"height":     Int(height),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelSamplingLTXV(gr *Graph, model MODEL, latent LATENT, max_shift, base_shift float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ModelSamplingLTXV",
+		Inputs: map[string]Value{
+			"model":      Link(model),
+			"max_shift":  Float(max_shift),
+			"base_shift": Float(base_shift),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelSamplingSD3(gr *Graph, model MODEL, shift float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "ModelSamplingSD3",
 		Inputs: map[string]Value{
 			"model": Link(model),
 			"shift": Float(shift),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ModelSamplingStableCascade(g *Graph, model MODEL, shift float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func ModelSamplingStableCascade(gr *Graph, model MODEL, shift float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "ModelSamplingStableCascade",
 		Inputs: map[string]Value{
 			"model": Link(model),
 			"shift": Float(shift),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func ModelSave(gr *Graph, model MODEL, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "ModelSave",
+		Inputs: map[string]Value{
+			"model":           Link(model),
+			"filename_prefix": String(filename_prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// MoonvalleyImg2VideoNode - Moonvalley Marey Image to Video
+func MoonvalleyImg2VideoNode(gr *Graph, image IMAGE, resolution COMBO, prompt, negative_prompt string, prompt_adherence float64, seed, steps int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "MoonvalleyImg2VideoNode",
+		Inputs: map[string]Value{
+			"image":            Link(image),
+			"prompt":           String(prompt),
+			"negative_prompt":  String(negative_prompt),
+			"resolution":       Link(resolution),
+			"prompt_adherence": Float(prompt_adherence),
+			"seed":             Int(seed),
+			"steps":            Int(steps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// MoonvalleyTxt2VideoNode - Moonvalley Marey Text to Video
+func MoonvalleyTxt2VideoNode(gr *Graph, resolution COMBO, prompt, negative_prompt string, prompt_adherence float64, seed, steps int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "MoonvalleyTxt2VideoNode",
+		Inputs: map[string]Value{
+			"prompt":           String(prompt),
+			"negative_prompt":  String(negative_prompt),
+			"resolution":       Link(resolution),
+			"prompt_adherence": Float(prompt_adherence),
+			"seed":             Int(seed),
+			"steps":            Int(steps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// MoonvalleyVideo2VideoNode - Moonvalley Marey Video to Video
+func MoonvalleyVideo2VideoNode(gr *Graph, video VIDEO, control_type COMBO, prompt, negative_prompt string, seed int, steps int, motion_intensity int) (_ *Node, out_video VIDEO) {
+	nd := &Node{
+		Class: "MoonvalleyVideo2VideoNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"seed":            Int(seed),
+			"video":           Link(video),
+			"steps":           Int(steps),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
 }
 
 // Morphology - ImageMorphology
-func Morphology(g *Graph, image IMAGE, operation string, kernel_size int) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func Morphology(gr *Graph, image IMAGE, operation COMBO, kernel_size int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "Morphology",
 		Inputs: map[string]Value{
 			"image":       Link(image),
-			"operation":   String(operation),
+			"operation":   Link(operation),
 			"kernel_size": Int(kernel_size),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// NormalizeImages - Normalize Images
+func NormalizeImages(gr *Graph, images IMAGE, mean, std float64) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "NormalizeImages",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"mean":   Float(mean),
+			"std":    Float(std),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func NormalizeVideoLatentStart(gr *Graph, latent LATENT, start_frame_count, reference_frame_count int) (_ *Node, out_latent LATENT) {
+	nd := &Node{
+		Class: "NormalizeVideoLatentStart",
+		Inputs: map[string]Value{
+			"latent":                Link(latent),
+			"start_frame_count":     Int(start_frame_count),
+			"reference_frame_count": Int(reference_frame_count),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+// OpenAIChatConfig - OpenAI ChatGPT Advanced Options
+func OpenAIChatConfig(gr *Graph, truncation COMBO, max_output_tokens int, instructions string) (_ *Node, openai_chat_config OPENAI_CHAT_CONFIG) {
+	nd := &Node{
+		Class: "OpenAIChatConfig",
+		Inputs: map[string]Value{
+			"truncation": Link(truncation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, OPENAI_CHAT_CONFIG{NodeID: id, OutPort: 0}
+}
+
+// OpenAIChatNode - OpenAI ChatGPT
+func OpenAIChatNode(gr *Graph, model COMBO, images IMAGE, files OPENAI_INPUT_FILES, advanced_options OPENAI_CHAT_CONFIG, prompt string, persist_context bool) (_ *Node, str STRING) {
+	nd := &Node{
+		Class: "OpenAIChatNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"persist_context": Bool(persist_context),
+			"model":           Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// OpenAIDalle2 - OpenAI DALL·E 2
+func OpenAIDalle2(gr *Graph, size COMBO, image IMAGE, mask MASK, prompt string, seed int, n int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "OpenAIDalle2",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// OpenAIDalle3 - OpenAI DALL·E 3
+func OpenAIDalle3(gr *Graph, quality COMBO, style COMBO, size COMBO, prompt string, seed int) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "OpenAIDalle3",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// OpenAIGPTImage1 - OpenAI GPT Image 1
+func OpenAIGPTImage1(gr *Graph, quality COMBO, background COMBO, size COMBO, image IMAGE, mask MASK, model COMBO, prompt string, seed int, n int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "OpenAIGPTImage1",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// OpenAIInputFiles - OpenAI ChatGPT Input Files
+func OpenAIInputFiles(gr *Graph, file COMBO, openai_input_files OPENAI_INPUT_FILES) (_ *Node, out_openai_input_files OPENAI_INPUT_FILES) {
+	nd := &Node{
+		Class: "OpenAIInputFiles",
+		Inputs: map[string]Value{
+			"file": Link(file),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, OPENAI_INPUT_FILES{NodeID: id, OutPort: 0}
+}
+
+// OpenAIVideoSora2 - OpenAI Sora - Video
+func OpenAIVideoSora2(gr *Graph, model COMBO, size COMBO, duration COMBO, image IMAGE, prompt string, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "OpenAIVideoSora2",
+		Inputs: map[string]Value{
+			"model":    Link(model),
+			"prompt":   String(prompt),
+			"size":     Link(size),
+			"duration": Link(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func OptimalStepsScheduler(gr *Graph, model_type COMBO, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
+		Class: "OptimalStepsScheduler",
+		Inputs: map[string]Value{
+			"model_type": Link(model_type),
+			"steps":      Int(steps),
+			"denoise":    Float(denoise),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+// PairConditioningCombine - Cond Pair Combine
+func PairConditioningCombine(gr *Graph, positive_a CONDITIONING, negative_a CONDITIONING, positive_b CONDITIONING, negative_b CONDITIONING) (_ *Node, positive CONDITIONING, negative CONDITIONING) {
+	nd := &Node{
+		Class: "PairConditioningCombine",
+		Inputs: map[string]Value{
+			"positive_A": Link(positive_a),
+			"negative_A": Link(negative_a),
+			"positive_B": Link(positive_b),
+			"negative_B": Link(negative_b),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// PairConditioningSetDefaultCombine - Cond Pair Set Default Combine
+func PairConditioningSetDefaultCombine(gr *Graph, positive CONDITIONING, negative CONDITIONING, positive_default CONDITIONING, negative_default CONDITIONING, hooks HOOKS) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
+		Class: "PairConditioningSetDefaultCombine",
+		Inputs: map[string]Value{
+			"positive":         Link(positive),
+			"negative":         Link(negative),
+			"positive_DEFAULT": Link(positive_default),
+			"negative_DEFAULT": Link(negative_default),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// PairConditioningSetProperties - Cond Pair Set Props
+func PairConditioningSetProperties(gr *Graph, positive_new CONDITIONING, negative_new CONDITIONING, mask MASK, hooks HOOKS, timesteps TIMESTEPS_RANGE, strength float64, set_cond_area string) (_ *Node, positive CONDITIONING, negative CONDITIONING) {
+	nd := &Node{
+		Class: "PairConditioningSetProperties",
+		Inputs: map[string]Value{
+			"positive_NEW":  Link(positive_new),
+			"negative_NEW":  Link(negative_new),
+			"strength":      Float(strength),
+			"set_cond_area": String(set_cond_area),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// PairConditioningSetPropertiesAndCombine - Cond Pair Set Props Combine
+func PairConditioningSetPropertiesAndCombine(gr *Graph, positive CONDITIONING, negative CONDITIONING, positive_new CONDITIONING, negative_new CONDITIONING, mask MASK, hooks HOOKS, timesteps TIMESTEPS_RANGE, strength float64, set_cond_area string) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING) {
+	nd := &Node{
+		Class: "PairConditioningSetPropertiesAndCombine",
+		Inputs: map[string]Value{
+			"positive":      Link(positive),
+			"negative":      Link(negative),
+			"positive_NEW":  Link(positive_new),
+			"negative_NEW":  Link(negative_new),
+			"strength":      Float(strength),
+			"set_cond_area": String(set_cond_area),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
 }
 
 // PatchModelAddDownscale - PatchModelAddDownscale (Kohya Deep Shrink)
-func PatchModelAddDownscale(g *Graph, model MODEL, block_number int, downscale_factor, start_percent, end_percent float64, downscale_after_skip bool, downscale_method, upscale_method string) (_ *Node, out_model MODEL) {
-	n := &Node{
+func PatchModelAddDownscale(gr *Graph, model MODEL, downscale_method COMBO, upscale_method COMBO, block_number int, downscale_factor, start_percent, end_percent float64, downscale_after_skip bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "PatchModelAddDownscale",
 		Inputs: map[string]Value{
 			"model":                Link(model),
@@ -1787,17 +5536,17 @@ func PatchModelAddDownscale(g *Graph, model MODEL, block_number int, downscale_f
 			"start_percent":        Float(start_percent),
 			"end_percent":          Float(end_percent),
 			"downscale_after_skip": Bool(downscale_after_skip),
-			"downscale_method":     String(downscale_method),
-			"upscale_method":       String(upscale_method),
+			"downscale_method":     Link(downscale_method),
+			"upscale_method":       Link(upscale_method),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
 // PerpNeg - Perp-Neg (DEPRECATED by PerpNegGuider)
-func PerpNeg(g *Graph, model MODEL, empty_conditioning CONDITIONING, neg_scale float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func PerpNeg(gr *Graph, model MODEL, empty_conditioning CONDITIONING, neg_scale float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "PerpNeg",
 		Inputs: map[string]Value{
 			"model":              Link(model),
@@ -1805,12 +5554,12 @@ func PerpNeg(g *Graph, model MODEL, empty_conditioning CONDITIONING, neg_scale f
 			"neg_scale":          Float(neg_scale),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func PerpNegGuider(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, empty_conditioning CONDITIONING, cfg, neg_scale float64) (_ *Node, guider GUIDER) {
-	n := &Node{
+func PerpNegGuider(gr *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, empty_conditioning CONDITIONING, cfg, neg_scale float64) (_ *Node, guider GUIDER) {
+	nd := &Node{
 		Class: "PerpNegGuider",
 		Inputs: map[string]Value{
 			"model":              Link(model),
@@ -1821,24 +5570,24 @@ func PerpNegGuider(g *Graph, model MODEL, positive CONDITIONING, negative CONDIT
 			"neg_scale":          Float(neg_scale),
 		},
 	}
-	id := g.Add(n)
-	return n, GUIDER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, GUIDER{NodeID: id, OutPort: 0}
 }
 
-func PerturbedAttentionGuidance(g *Graph, model MODEL, scale float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func PerturbedAttentionGuidance(gr *Graph, model MODEL, scale float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "PerturbedAttentionGuidance",
 		Inputs: map[string]Value{
 			"model": Link(model),
 			"scale": Float(scale),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func PhotoMakerEncode(g *Graph, photomaker PHOTOMAKER, image IMAGE, clip CLIP, text string) (_ *Node, conditioning CONDITIONING) {
-	n := &Node{
+func PhotoMakerEncode(gr *Graph, photomaker PHOTOMAKER, image IMAGE, clip CLIP, text string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "PhotoMakerEncode",
 		Inputs: map[string]Value{
 			"photomaker": Link(photomaker),
@@ -1847,23 +5596,87 @@ func PhotoMakerEncode(g *Graph, photomaker PHOTOMAKER, image IMAGE, clip CLIP, t
 			"text":       String(text),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func PhotoMakerLoader(g *Graph, photomaker_model_name string) (_ *Node, photomaker PHOTOMAKER) {
-	n := &Node{
+func PhotoMakerLoader(gr *Graph, photomaker_model_name COMBO) (_ *Node, photomaker PHOTOMAKER) {
+	nd := &Node{
 		Class: "PhotoMakerLoader",
 		Inputs: map[string]Value{
-			"photomaker_model_name": String(photomaker_model_name),
+			"photomaker_model_name": Link(photomaker_model_name),
 		},
 	}
-	id := g.Add(n)
-	return n, PHOTOMAKER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, PHOTOMAKER{NodeID: id, OutPort: 0}
 }
 
-func PolyexponentialScheduler(g *Graph, steps int, sigma_max, sigma_min, rho float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+// PixverseImageToVideoNode - PixVerse Image to Video
+func PixverseImageToVideoNode(gr *Graph, image IMAGE, quality COMBO, duration_seconds COMBO, motion_mode COMBO, pixverse_template PIXVERSE_TEMPLATE, prompt string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "PixverseImageToVideoNode",
+		Inputs: map[string]Value{
+			"image":            Link(image),
+			"prompt":           String(prompt),
+			"quality":          Link(quality),
+			"duration_seconds": Link(duration_seconds),
+			"motion_mode":      Link(motion_mode),
+			"seed":             Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// PixverseTemplateNode - PixVerse Template
+func PixverseTemplateNode(gr *Graph, template COMBO) (_ *Node, pixverse_template PIXVERSE_TEMPLATE) {
+	nd := &Node{
+		Class: "PixverseTemplateNode",
+		Inputs: map[string]Value{
+			"template": Link(template),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, PIXVERSE_TEMPLATE{NodeID: id, OutPort: 0}
+}
+
+// PixverseTextToVideoNode - PixVerse Text to Video
+func PixverseTextToVideoNode(gr *Graph, aspect_ratio COMBO, quality COMBO, duration_seconds COMBO, motion_mode COMBO, pixverse_template PIXVERSE_TEMPLATE, prompt string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "PixverseTextToVideoNode",
+		Inputs: map[string]Value{
+			"prompt":           String(prompt),
+			"aspect_ratio":     Link(aspect_ratio),
+			"quality":          Link(quality),
+			"duration_seconds": Link(duration_seconds),
+			"motion_mode":      Link(motion_mode),
+			"seed":             Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// PixverseTransitionVideoNode - PixVerse Transition Video
+func PixverseTransitionVideoNode(gr *Graph, first_frame IMAGE, last_frame IMAGE, quality COMBO, duration_seconds COMBO, motion_mode COMBO, prompt string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "PixverseTransitionVideoNode",
+		Inputs: map[string]Value{
+			"first_frame":      Link(first_frame),
+			"last_frame":       Link(last_frame),
+			"prompt":           String(prompt),
+			"quality":          Link(quality),
+			"duration_seconds": Link(duration_seconds),
+			"motion_mode":      Link(motion_mode),
+			"seed":             Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func PolyexponentialScheduler(gr *Graph, steps int, sigma_max, sigma_min, rho float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "PolyexponentialScheduler",
 		Inputs: map[string]Value{
 			"steps":     Int(steps),
@@ -1872,114 +5685,753 @@ func PolyexponentialScheduler(g *Graph, steps int, sigma_max, sigma_min, rho flo
 			"rho":       Float(rho),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
 // PorterDuffImageComposite - Porter-Duff Image Composite
-func PorterDuffImageComposite(g *Graph, source IMAGE, source_alpha MASK, destination IMAGE, destination_alpha MASK, mode string) (_ *Node, image IMAGE, mask MASK) {
-	n := &Node{
+func PorterDuffImageComposite(gr *Graph, source IMAGE, source_alpha MASK, destination IMAGE, destination_alpha MASK, mode COMBO) (_ *Node, image IMAGE, mask MASK) {
+	nd := &Node{
 		Class: "PorterDuffImageComposite",
 		Inputs: map[string]Value{
 			"source":            Link(source),
 			"source_alpha":      Link(source_alpha),
 			"destination":       Link(destination),
 			"destination_alpha": Link(destination_alpha),
-			"mode":              String(mode),
+			"mode":              Link(mode),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+}
+
+// Preview3D - Preview 3D & Animation
+func Preview3D(gr *Graph, camera_info LOAD3D_CAMERA, bg_image IMAGE, model_file string) (_ *Node) {
+	nd := &Node{
+		Class: "Preview3D",
+		Inputs: map[string]Value{
+			"model_file": String(model_file),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// PreviewAny - Preview as Text
+func PreviewAny(gr *Graph, source Link) (_ *Node) {
+	nd := &Node{
+		Class: "PreviewAny",
+		Inputs: map[string]Value{
+			"source": Link(source),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// PreviewAudio - Preview Audio
+func PreviewAudio(gr *Graph, audio AUDIO) (_ *Node) {
+	nd := &Node{
+		Class: "PreviewAudio",
+		Inputs: map[string]Value{
+			"audio": Link(audio),
+		},
+	}
+	gr.Add(nd)
+	return nd
 }
 
 // PreviewImage - Preview Image
-func PreviewImage(g *Graph, images IMAGE) (_ *Node) {
-	n := &Node{
+func PreviewImage(gr *Graph, images IMAGE) (_ *Node) {
+	nd := &Node{
 		Class: "PreviewImage",
 		Inputs: map[string]Value{
 			"images": Link(images),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func RandomNoise(g *Graph, noise_seed int) (_ *Node, noise NOISE) {
-	n := &Node{
+// PrimitiveBoolean - Boolean
+func PrimitiveBoolean(gr *Graph, value bool) (_ *Node, boolean BOOLEAN) {
+	nd := &Node{
+		Class: "PrimitiveBoolean",
+		Inputs: map[string]Value{
+			"value": Bool(value),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, BOOLEAN{NodeID: id, OutPort: 0}
+}
+
+// PrimitiveFloat - Float
+func PrimitiveFloat(gr *Graph, value float64) (_ *Node, float FLOAT) {
+	nd := &Node{
+		Class: "PrimitiveFloat",
+		Inputs: map[string]Value{
+			"value": Float(value),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, FLOAT{NodeID: id, OutPort: 0}
+}
+
+// PrimitiveInt - Int
+func PrimitiveInt(gr *Graph, value int) (_ *Node, int INT) {
+	nd := &Node{
+		Class: "PrimitiveInt",
+		Inputs: map[string]Value{
+			"value": Int(value),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, INT{NodeID: id, OutPort: 0}
+}
+
+// PrimitiveString - String
+func PrimitiveString(gr *Graph, value string) (_ *Node, str STRING) {
+	nd := &Node{
+		Class: "PrimitiveString",
+		Inputs: map[string]Value{
+			"value": String(value),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// PrimitiveStringMultiline - String (Multiline)
+func PrimitiveStringMultiline(gr *Graph, value string) (_ *Node, str STRING) {
+	nd := &Node{
+		Class: "PrimitiveStringMultiline",
+		Inputs: map[string]Value{
+			"value": String(value),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+func QuadrupleCLIPLoader(gr *Graph, clip_name1 COMBO, clip_name2 COMBO, clip_name3 COMBO, clip_name4 COMBO) (_ *Node, clip CLIP) {
+	nd := &Node{
+		Class: "QuadrupleCLIPLoader",
+		Inputs: map[string]Value{
+			"clip_name1": Link(clip_name1),
+			"clip_name2": Link(clip_name2),
+			"clip_name3": Link(clip_name3),
+			"clip_name4": Link(clip_name4),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
+}
+
+func QwenImageDiffsynthControlnet(gr *Graph, model MODEL, model_patch MODEL_PATCH, vae VAE, image IMAGE, mask MASK, strength float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "QwenImageDiffsynthControlnet",
+		Inputs: map[string]Value{
+			"model":       Link(model),
+			"model_patch": Link(model_patch),
+			"vae":         Link(vae),
+			"image":       Link(image),
+			"strength":    Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// RandomCropImages - Random Crop Images
+func RandomCropImages(gr *Graph, images IMAGE, width, height, seed int) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "RandomCropImages",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"width":  Int(width),
+			"height": Int(height),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func RandomNoise(gr *Graph, noise_seed int) (_ *Node, noise NOISE) {
+	nd := &Node{
 		Class: "RandomNoise",
 		Inputs: map[string]Value{
 			"noise_seed": Int(noise_seed),
 		},
 	}
-	id := g.Add(n)
-	return n, NOISE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, NOISE{NodeID: id, OutPort: 0}
 }
 
 // RebatchImages - Rebatch Images
-func RebatchImages(g *Graph, images IMAGE, batch_size int) (_ *Node, image IMAGE) {
-	n := &Node{
+func RebatchImages(gr *Graph, images IMAGE, batch_size int) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "RebatchImages",
 		Inputs: map[string]Value{
 			"images":     Link(images),
 			"batch_size": Int(batch_size),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // RebatchLatents - Rebatch Latents
-func RebatchLatents(g *Graph, latents LATENT, batch_size int) (_ *Node, latent LATENT) {
-	n := &Node{
+func RebatchLatents(gr *Graph, latents LATENT, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "RebatchLatents",
 		Inputs: map[string]Value{
 			"latents":    Link(latents),
 			"batch_size": Int(batch_size),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func RepeatImageBatch(g *Graph, image IMAGE, amount int) (_ *Node, out_image IMAGE) {
-	n := &Node{
+// RecordAudio - Record Audio
+func RecordAudio(gr *Graph, audio AUDIO_RECORD) (_ *Node, out_audio AUDIO) {
+	nd := &Node{
+		Class: "RecordAudio",
+		Inputs: map[string]Value{
+			"audio": Link(audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+// RecraftColorRGB - Recraft Color RGB
+func RecraftColorRGB(gr *Graph, recraft_color RECRAFT_COLOR, r, g, b int) (_ *Node, out_recraft_color RECRAFT_COLOR) {
+	nd := &Node{
+		Class: "RecraftColorRGB",
+		Inputs: map[string]Value{
+			"r": Int(r),
+			"g": Int(g),
+			"b": Int(b),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, RECRAFT_COLOR{NodeID: id, OutPort: 0}
+}
+
+// RecraftControls - Recraft Controls
+func RecraftControls(gr *Graph, colors RECRAFT_COLOR, background_color RECRAFT_COLOR) (_ *Node, recraft_controls RECRAFT_CONTROLS) {
+	nd := &Node{
+		Class:  "RecraftControls",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, RECRAFT_CONTROLS{NodeID: id, OutPort: 0}
+}
+
+// RecraftCreativeUpscaleNode - Recraft Creative Upscale Image
+func RecraftCreativeUpscaleNode(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "RecraftCreativeUpscaleNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// RecraftCrispUpscaleNode - Recraft Crisp Upscale Image
+func RecraftCrispUpscaleNode(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "RecraftCrispUpscaleNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// RecraftImageInpaintingNode - Recraft Image Inpainting
+func RecraftImageInpaintingNode(gr *Graph, image IMAGE, mask MASK, recraft_style RECRAFT_V3_STYLE, prompt string, n, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "RecraftImageInpaintingNode",
+		Inputs: map[string]Value{
+			"image":  Link(image),
+			"mask":   Link(mask),
+			"prompt": String(prompt),
+			"n":      Int(n),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// RecraftImageToImageNode - Recraft Image to Image
+func RecraftImageToImageNode(gr *Graph, image IMAGE, recraft_style RECRAFT_V3_STYLE, recraft_controls RECRAFT_CONTROLS, prompt string, n int, strength float64, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "RecraftImageToImageNode",
+		Inputs: map[string]Value{
+			"image":    Link(image),
+			"prompt":   String(prompt),
+			"n":        Int(n),
+			"strength": Float(strength),
+			"seed":     Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// RecraftRemoveBackgroundNode - Recraft Remove Background
+func RecraftRemoveBackgroundNode(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE, mask MASK) {
+	nd := &Node{
+		Class: "RecraftRemoveBackgroundNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+}
+
+// RecraftReplaceBackgroundNode - Recraft Replace Background
+func RecraftReplaceBackgroundNode(gr *Graph, image IMAGE, recraft_style RECRAFT_V3_STYLE, prompt string, n, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "RecraftReplaceBackgroundNode",
+		Inputs: map[string]Value{
+			"image":  Link(image),
+			"prompt": String(prompt),
+			"n":      Int(n),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// RecraftStyleV3DigitalIllustration - Recraft Style - Digital Illustration
+func RecraftStyleV3DigitalIllustration(gr *Graph, substyle COMBO) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+	nd := &Node{
+		Class: "RecraftStyleV3DigitalIllustration",
+		Inputs: map[string]Value{
+			"substyle": Link(substyle),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, RECRAFT_V3_STYLE{NodeID: id, OutPort: 0}
+}
+
+// RecraftStyleV3InfiniteStyleLibrary - Recraft Style - Infinite Style Library
+func RecraftStyleV3InfiniteStyleLibrary(gr *Graph, style_id string) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+	nd := &Node{
+		Class: "RecraftStyleV3InfiniteStyleLibrary",
+		Inputs: map[string]Value{
+			"style_id": String(style_id),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, RECRAFT_V3_STYLE{NodeID: id, OutPort: 0}
+}
+
+// RecraftStyleV3LogoRaster - Recraft Style - Logo Raster
+func RecraftStyleV3LogoRaster(gr *Graph, substyle COMBO) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+	nd := &Node{
+		Class: "RecraftStyleV3LogoRaster",
+		Inputs: map[string]Value{
+			"substyle": Link(substyle),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, RECRAFT_V3_STYLE{NodeID: id, OutPort: 0}
+}
+
+// RecraftStyleV3RealisticImage - Recraft Style - Realistic Image
+func RecraftStyleV3RealisticImage(gr *Graph, substyle COMBO) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+	nd := &Node{
+		Class: "RecraftStyleV3RealisticImage",
+		Inputs: map[string]Value{
+			"substyle": Link(substyle),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, RECRAFT_V3_STYLE{NodeID: id, OutPort: 0}
+}
+
+// RecraftTextToImageNode - Recraft Text to Image
+func RecraftTextToImageNode(gr *Graph, size COMBO, recraft_style RECRAFT_V3_STYLE, recraft_controls RECRAFT_CONTROLS, prompt string, n, seed int, negative_prompt string) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "RecraftTextToImageNode",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+			"size":   Link(size),
+			"n":      Int(n),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// RecraftTextToVectorNode - Recraft Text to Vector
+func RecraftTextToVectorNode(gr *Graph, substyle COMBO, size COMBO, recraft_controls RECRAFT_CONTROLS, prompt string, n, seed int, negative_prompt string) (_ *Node, svg SVG) {
+	nd := &Node{
+		Class: "RecraftTextToVectorNode",
+		Inputs: map[string]Value{
+			"prompt":   String(prompt),
+			"substyle": Link(substyle),
+			"size":     Link(size),
+			"n":        Int(n),
+			"seed":     Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SVG{NodeID: id, OutPort: 0}
+}
+
+// RecraftVectorizeImageNode - Recraft Vectorize Image
+func RecraftVectorizeImageNode(gr *Graph, image IMAGE) (_ *Node, svg SVG) {
+	nd := &Node{
+		Class: "RecraftVectorizeImageNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SVG{NodeID: id, OutPort: 0}
+}
+
+func ReferenceLatent(gr *Graph, conditioning CONDITIONING, latent LATENT) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "ReferenceLatent",
+		Inputs: map[string]Value{
+			"conditioning": Link(conditioning),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// RegexExtract - Regex Extract
+func RegexExtract(gr *Graph, mode COMBO, str, regex_pattern string, case_insensitive, multiline, dotall bool, group_index int) (_ *Node, out_str STRING) {
+	nd := &Node{
+		Class: "RegexExtract",
+		Inputs: map[string]Value{
+			"string":           String(str),
+			"regex_pattern":    String(regex_pattern),
+			"mode":             Link(mode),
+			"case_insensitive": Bool(case_insensitive),
+			"multiline":        Bool(multiline),
+			"dotall":           Bool(dotall),
+			"group_index":      Int(group_index),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// RegexMatch - Regex Match
+func RegexMatch(gr *Graph, str, regex_pattern string, case_insensitive, multiline, dotall bool) (_ *Node, matches BOOLEAN) {
+	nd := &Node{
+		Class: "RegexMatch",
+		Inputs: map[string]Value{
+			"string":           String(str),
+			"regex_pattern":    String(regex_pattern),
+			"case_insensitive": Bool(case_insensitive),
+			"multiline":        Bool(multiline),
+			"dotall":           Bool(dotall),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, BOOLEAN{NodeID: id, OutPort: 0}
+}
+
+// RegexReplace - Regex Replace
+func RegexReplace(gr *Graph, str, regex_pattern, replace string, case_insensitive, multiline, dotall bool, count int) (_ *Node, out_str STRING) {
+	nd := &Node{
+		Class: "RegexReplace",
+		Inputs: map[string]Value{
+			"string":        String(str),
+			"regex_pattern": String(regex_pattern),
+			"replace":       String(replace),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+func RenormCFG(gr *Graph, model MODEL, cfg_trunc, renorm_cfg float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "RenormCFG",
+		Inputs: map[string]Value{
+			"model":      Link(model),
+			"cfg_trunc":  Float(cfg_trunc),
+			"renorm_cfg": Float(renorm_cfg),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func RepeatImageBatch(gr *Graph, image IMAGE, amount int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "RepeatImageBatch",
 		Inputs: map[string]Value{
 			"image":  Link(image),
 			"amount": Int(amount),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // RepeatLatentBatch - Repeat Latent Batch
-func RepeatLatentBatch(g *Graph, samples LATENT, amount int) (_ *Node, latent LATENT) {
-	n := &Node{
+func RepeatLatentBatch(gr *Graph, samples LATENT, amount int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "RepeatLatentBatch",
 		Inputs: map[string]Value{
 			"samples": Link(samples),
 			"amount":  Int(amount),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func RescaleCFG(g *Graph, model MODEL, multiplier float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+// ReplaceText - Replace Text
+func ReplaceText(gr *Graph, texts, find, replace string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "ReplaceText",
+		Inputs: map[string]Value{
+			"texts":   String(texts),
+			"find":    String(find),
+			"replace": String(replace),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+func ReplaceVideoLatentFrames(gr *Graph, destination LATENT, source LATENT, index int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "ReplaceVideoLatentFrames",
+		Inputs: map[string]Value{
+			"destination": Link(destination),
+			"index":       Int(index),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func RescaleCFG(gr *Graph, model MODEL, multiplier float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "RescaleCFG",
 		Inputs: map[string]Value{
 			"model":      Link(model),
 			"multiplier": Float(multiplier),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func SDTurboScheduler(g *Graph, model MODEL, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+func ResizeAndPadImage(gr *Graph, image IMAGE, padding_color COMBO, interpolation COMBO, target_width, target_height int) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "ResizeAndPadImage",
+		Inputs: map[string]Value{
+			"image":         Link(image),
+			"target_width":  Int(target_width),
+			"target_height": Int(target_height),
+			"padding_color": Link(padding_color),
+			"interpolation": Link(interpolation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ResizeImageMaskNode - Resize Image/Mask
+func ResizeImageMaskNode(gr *Graph, input COMFY_MATCHTYPE_V3, resize_type COMFY_DYNAMICCOMBO_V3, scale_method COMBO) (_ *Node, resized COMFY_MATCHTYPE_V3) {
+	nd := &Node{
+		Class: "ResizeImageMaskNode",
+		Inputs: map[string]Value{
+			"input":        Link(input),
+			"resize_type":  Link(resize_type),
+			"scale_method": Link(scale_method),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, COMFY_MATCHTYPE_V3{NodeID: id, OutPort: 0}
+}
+
+// ResizeImagesByLongerEdge - Resize Images by Longer Edge
+func ResizeImagesByLongerEdge(gr *Graph, images IMAGE, longer_edge int) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "ResizeImagesByLongerEdge",
+		Inputs: map[string]Value{
+			"images":      Link(images),
+			"longer_edge": Int(longer_edge),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ResizeImagesByShorterEdge - Resize Images by Shorter Edge
+func ResizeImagesByShorterEdge(gr *Graph, images IMAGE, shorter_edge int) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "ResizeImagesByShorterEdge",
+		Inputs: map[string]Value{
+			"images":       Link(images),
+			"shorter_edge": Int(shorter_edge),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ResolutionBucket - Resolution Bucket
+func ResolutionBucket(gr *Graph, latents LATENT, conditioning CONDITIONING) (_ *Node, out_latents LATENT, out_conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "ResolutionBucket",
+		Inputs: map[string]Value{
+			"latents":      Link(latents),
+			"conditioning": Link(conditioning),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
+}
+
+// Rodin3D_Detail - Rodin 3D Generate - Detail Generate
+func Rodin3D_Detail(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, seed int) (_ *Node, _3d_model_path STRING) {
+	nd := &Node{
+		Class: "Rodin3D_Detail",
+		Inputs: map[string]Value{
+			"Images": Link(images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// Rodin3D_Gen2 - Rodin 3D Generate - Gen-2 Generate
+func Rodin3D_Gen2(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, tapose bool, seed int) (_ *Node, _3d_model_path STRING) {
+	nd := &Node{
+		Class: "Rodin3D_Gen2",
+		Inputs: map[string]Value{
+			"Images": Link(images),
+			"TAPose": Bool(tapose),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// Rodin3D_Regular - Rodin 3D Generate - Regular Generate
+func Rodin3D_Regular(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, seed int) (_ *Node, _3d_model_path STRING) {
+	nd := &Node{
+		Class: "Rodin3D_Regular",
+		Inputs: map[string]Value{
+			"Images": Link(images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// Rodin3D_Sketch - Rodin 3D Generate - Sketch Generate
+func Rodin3D_Sketch(gr *Graph, images IMAGE, seed int) (_ *Node, _3d_model_path STRING) {
+	nd := &Node{
+		Class: "Rodin3D_Sketch",
+		Inputs: map[string]Value{
+			"Images": Link(images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// Rodin3D_Smooth - Rodin 3D Generate - Smooth Generate
+func Rodin3D_Smooth(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, seed int) (_ *Node, _3d_model_path STRING) {
+	nd := &Node{
+		Class: "Rodin3D_Smooth",
+		Inputs: map[string]Value{
+			"Images": Link(images),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// RunwayFirstLastFrameNode - Runway First-Last-Frame to Video
+func RunwayFirstLastFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, duration COMBO, ratio COMBO, prompt string, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "RunwayFirstLastFrameNode",
+		Inputs: map[string]Value{
+			"prompt":      String(prompt),
+			"start_frame": Link(start_frame),
+			"end_frame":   Link(end_frame),
+			"duration":    Link(duration),
+			"ratio":       Link(ratio),
+			"seed":        Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// RunwayImageToVideoNodeGen3a - Runway Image to Video (Gen3a Turbo)
+func RunwayImageToVideoNodeGen3a(gr *Graph, start_frame IMAGE, duration COMBO, ratio COMBO, prompt string, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "RunwayImageToVideoNodeGen3a",
+		Inputs: map[string]Value{
+			"prompt":      String(prompt),
+			"start_frame": Link(start_frame),
+			"duration":    Link(duration),
+			"ratio":       Link(ratio),
+			"seed":        Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// RunwayImageToVideoNodeGen4 - Runway Image to Video (Gen4 Turbo)
+func RunwayImageToVideoNodeGen4(gr *Graph, start_frame IMAGE, duration COMBO, ratio COMBO, prompt string, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "RunwayImageToVideoNodeGen4",
+		Inputs: map[string]Value{
+			"prompt":      String(prompt),
+			"start_frame": Link(start_frame),
+			"duration":    Link(duration),
+			"ratio":       Link(ratio),
+			"seed":        Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// RunwayTextToImageNode - Runway Text to Image
+func RunwayTextToImageNode(gr *Graph, ratio COMBO, reference_image IMAGE, prompt string) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "RunwayTextToImageNode",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+			"ratio":  Link(ratio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func SDTurboScheduler(gr *Graph, model MODEL, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "SDTurboScheduler",
 		Inputs: map[string]Value{
 			"model":   Link(model),
@@ -1987,12 +6439,12 @@ func SDTurboScheduler(g *Graph, model MODEL, steps int, denoise float64) (_ *Nod
 			"denoise": Float(denoise),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func SD_4XUpscale_Conditioning(g *Graph, images IMAGE, positive CONDITIONING, negative CONDITIONING, scale_ratio, noise_augmentation float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
-	n := &Node{
+func SD_4XUpscale_Conditioning(gr *Graph, images IMAGE, positive CONDITIONING, negative CONDITIONING, scale_ratio, noise_augmentation float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
 		Class: "SD_4XUpscale_Conditioning",
 		Inputs: map[string]Value{
 			"images":             Link(images),
@@ -2002,12 +6454,12 @@ func SD_4XUpscale_Conditioning(g *Graph, images IMAGE, positive CONDITIONING, ne
 			"noise_augmentation": Float(noise_augmentation),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
 }
 
-func SV3D_Conditioning(g *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, video_frames int, elevation float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
-	n := &Node{
+func SV3D_Conditioning(gr *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, video_frames int, elevation float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
+	nd := &Node{
 		Class: "SV3D_Conditioning",
 		Inputs: map[string]Value{
 			"clip_vision":  Link(clip_vision),
@@ -2019,12 +6471,12 @@ func SV3D_Conditioning(g *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae 
 			"elevation":    Float(elevation),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
 }
 
-func SVD_img2vid_Conditioning(g *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, video_frames, motion_bucket_id, fps int, augmentation_level float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
-	n := &Node{
+func SVD_img2vid_Conditioning(gr *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, video_frames, motion_bucket_id, fps int, augmentation_level float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
+	nd := &Node{
 		Class: "SVD_img2vid_Conditioning",
 		Inputs: map[string]Value{
 			"clip_vision":        Link(clip_vision),
@@ -2038,12 +6490,12 @@ func SVD_img2vid_Conditioning(g *Graph, clip_vision CLIP_VISION, init_image IMAG
 			"augmentation_level": Float(augmentation_level),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
 }
 
-func SamplerCustom(g *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, sampler SAMPLER, sigmas SIGMAS, latent_image LATENT, add_noise bool, noise_seed int, cfg float64) (_ *Node, output LATENT, denoised_output LATENT) {
-	n := &Node{
+func SamplerCustom(gr *Graph, model MODEL, positive CONDITIONING, negative CONDITIONING, sampler SAMPLER, sigmas SIGMAS, latent_image LATENT, add_noise bool, noise_seed int, cfg float64) (_ *Node, output LATENT, denoised_output LATENT) {
+	nd := &Node{
 		Class: "SamplerCustom",
 		Inputs: map[string]Value{
 			"model":        Link(model),
@@ -2057,12 +6509,12 @@ func SamplerCustom(g *Graph, model MODEL, positive CONDITIONING, negative CONDIT
 			"latent_image": Link(latent_image),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
 }
 
-func SamplerCustomAdvanced(g *Graph, noise NOISE, guider GUIDER, sampler SAMPLER, sigmas SIGMAS, latent_image LATENT) (_ *Node, output LATENT, denoised_output LATENT) {
-	n := &Node{
+func SamplerCustomAdvanced(gr *Graph, noise NOISE, guider GUIDER, sampler SAMPLER, sigmas SIGMAS, latent_image LATENT) (_ *Node, output LATENT, denoised_output LATENT) {
+	nd := &Node{
 		Class: "SamplerCustomAdvanced",
 		Inputs: map[string]Value{
 			"noise":        Link(noise),
@@ -2072,12 +6524,12 @@ func SamplerCustomAdvanced(g *Graph, noise NOISE, guider GUIDER, sampler SAMPLER
 			"latent_image": Link(latent_image),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
 }
 
-func SamplerDPMAdaptative(g *Graph, order int, rtol, atol, h_init, pcoeff, icoeff, dcoeff, accept_safety, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func SamplerDPMAdaptative(gr *Graph, order int, rtol, atol, h_init, pcoeff, icoeff, dcoeff, accept_safety, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerDPMAdaptative",
 		Inputs: map[string]Value{
 			"order":         Int(order),
@@ -2092,89 +6544,186 @@ func SamplerDPMAdaptative(g *Graph, order int, rtol, atol, h_init, pcoeff, icoef
 			"s_noise":       Float(s_noise),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerDPMPP_2M_SDE(g *Graph, solver_type string, eta, s_noise float64, noise_device string) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func SamplerDPMPP_2M_SDE(gr *Graph, solver_type COMBO, noise_device COMBO, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerDPMPP_2M_SDE",
 		Inputs: map[string]Value{
-			"solver_type":  String(solver_type),
+			"solver_type":  Link(solver_type),
 			"eta":          Float(eta),
 			"s_noise":      Float(s_noise),
-			"noise_device": String(noise_device),
+			"noise_device": Link(noise_device),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerDPMPP_3M_SDE(g *Graph, eta, s_noise float64, noise_device string) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func SamplerDPMPP_2S_Ancestral(gr *Graph, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
+		Class: "SamplerDPMPP_2S_Ancestral",
+		Inputs: map[string]Value{
+			"eta":     Float(eta),
+			"s_noise": Float(s_noise),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
+}
+
+func SamplerDPMPP_3M_SDE(gr *Graph, noise_device COMBO, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerDPMPP_3M_SDE",
 		Inputs: map[string]Value{
 			"eta":          Float(eta),
 			"s_noise":      Float(s_noise),
-			"noise_device": String(noise_device),
+			"noise_device": Link(noise_device),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerDPMPP_SDE(g *Graph, eta, s_noise, r float64, noise_device string) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func SamplerDPMPP_SDE(gr *Graph, noise_device COMBO, eta, s_noise, r float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerDPMPP_SDE",
 		Inputs: map[string]Value{
 			"eta":          Float(eta),
 			"s_noise":      Float(s_noise),
 			"r":            Float(r),
-			"noise_device": String(noise_device),
+			"noise_device": Link(noise_device),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerEulerAncestral(g *Graph, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func SamplerER_SDE(gr *Graph, solver_type COMBO, max_stage int, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
+		Class: "SamplerER_SDE",
+		Inputs: map[string]Value{
+			"solver_type": Link(solver_type),
+			"max_stage":   Int(max_stage),
+			"eta":         Float(eta),
+			"s_noise":     Float(s_noise),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
+}
+
+func SamplerEulerAncestral(gr *Graph, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerEulerAncestral",
 		Inputs: map[string]Value{
 			"eta":     Float(eta),
 			"s_noise": Float(s_noise),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerLCMUpscale(g *Graph, scale_ratio float64, scale_steps int, upscale_method string) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+// SamplerEulerAncestralCFGPP - SamplerEulerAncestralCFG++
+func SamplerEulerAncestralCFGPP(gr *Graph, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
+		Class: "SamplerEulerAncestralCFGPP",
+		Inputs: map[string]Value{
+			"eta":     Float(eta),
+			"s_noise": Float(s_noise),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
+}
+
+// SamplerEulerCFGpp - SamplerEulerCFG++
+func SamplerEulerCFGpp(gr *Graph, version COMBO) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
+		Class: "SamplerEulerCFGpp",
+		Inputs: map[string]Value{
+			"version": Link(version),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
+}
+
+func SamplerLCMUpscale(gr *Graph, upscale_method COMBO, scale_ratio float64, scale_steps int) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerLCMUpscale",
 		Inputs: map[string]Value{
 			"scale_ratio":    Float(scale_ratio),
 			"scale_steps":    Int(scale_steps),
-			"upscale_method": String(upscale_method),
+			"upscale_method": Link(upscale_method),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerLMS(g *Graph, order int) (_ *Node, sampler SAMPLER) {
-	n := &Node{
+func SamplerLMS(gr *Graph, order int) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
 		Class: "SamplerLMS",
 		Inputs: map[string]Value{
 			"order": Int(order),
 		},
 	}
-	id := g.Add(n)
-	return n, SAMPLER{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SaveAnimatedPNG(g *Graph, images IMAGE, filename_prefix string, fps float64, compress_level int) (_ *Node) {
-	n := &Node{
+func SamplerSASolver(gr *Graph, model MODEL, eta, sde_start_percent, sde_end_percent, s_noise float64, predictor_order, corrector_order int, use_pece, simple_order_2 bool) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
+		Class: "SamplerSASolver",
+		Inputs: map[string]Value{
+			"model":             Link(model),
+			"eta":               Float(eta),
+			"sde_start_percent": Float(sde_start_percent),
+			"sde_end_percent":   Float(sde_end_percent),
+			"s_noise":           Float(s_noise),
+			"predictor_order":   Int(predictor_order),
+			"corrector_order":   Int(corrector_order),
+			"use_pece":          Bool(use_pece),
+			"simple_order_2":    Bool(simple_order_2),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
+}
+
+func SamplerSEEDS2(gr *Graph, solver_type COMBO, eta, s_noise, r float64) (_ *Node, sampler SAMPLER) {
+	nd := &Node{
+		Class: "SamplerSEEDS2",
+		Inputs: map[string]Value{
+			"solver_type": Link(solver_type),
+			"eta":         Float(eta),
+			"s_noise":     Float(s_noise),
+			"r":           Float(r),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SAMPLER{NodeID: id, OutPort: 0}
+}
+
+func SamplingPercentToSigma(gr *Graph, model MODEL, sampling_percent float64, return_actual_sigma bool) (_ *Node, sigma_value FLOAT) {
+	nd := &Node{
+		Class: "SamplingPercentToSigma",
+		Inputs: map[string]Value{
+			"model":               Link(model),
+			"sampling_percent":    Float(sampling_percent),
+			"return_actual_sigma": Bool(return_actual_sigma),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, FLOAT{NodeID: id, OutPort: 0}
+}
+
+func SaveAnimatedPNG(gr *Graph, images IMAGE, filename_prefix string, fps float64, compress_level int) (_ *Node) {
+	nd := &Node{
 		Class: "SaveAnimatedPNG",
 		Inputs: map[string]Value{
 			"images":          Link(images),
@@ -2183,12 +6732,12 @@ func SaveAnimatedPNG(g *Graph, images IMAGE, filename_prefix string, fps float64
 			"compress_level":  Int(compress_level),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func SaveAnimatedWEBP(g *Graph, images IMAGE, filename_prefix string, fps float64, lossless bool, quality int, method string) (_ *Node) {
-	n := &Node{
+func SaveAnimatedWEBP(gr *Graph, images IMAGE, method COMBO, filename_prefix string, fps float64, lossless bool, quality int) (_ *Node) {
+	nd := &Node{
 		Class: "SaveAnimatedWEBP",
 		Inputs: map[string]Value{
 			"images":          Link(images),
@@ -2196,64 +6745,221 @@ func SaveAnimatedWEBP(g *Graph, images IMAGE, filename_prefix string, fps float6
 			"fps":             Float(fps),
 			"lossless":        Bool(lossless),
 			"quality":         Int(quality),
-			"method":          String(method),
+			"method":          Link(method),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func SaveAudio(g *Graph, audio AUDIO, filename_prefix string) (_ *Node) {
-	n := &Node{
+// SaveAudio - Save Audio (FLAC)
+func SaveAudio(gr *Graph, audio AUDIO, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "SaveAudio",
 		Inputs: map[string]Value{
 			"audio":           Link(audio),
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
+}
+
+// SaveAudioMP3 - Save Audio (MP3)
+func SaveAudioMP3(gr *Graph, audio AUDIO, quality COMBO, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveAudioMP3",
+		Inputs: map[string]Value{
+			"audio":           Link(audio),
+			"filename_prefix": String(filename_prefix),
+			"quality":         Link(quality),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// SaveAudioOpus - Save Audio (Opus)
+func SaveAudioOpus(gr *Graph, audio AUDIO, quality COMBO, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveAudioOpus",
+		Inputs: map[string]Value{
+			"audio":           Link(audio),
+			"filename_prefix": String(filename_prefix),
+			"quality":         Link(quality),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func SaveGLB(gr *Graph, mesh MESH, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveGLB",
+		Inputs: map[string]Value{
+			"mesh":            Link(mesh),
+			"filename_prefix": String(filename_prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
 }
 
 // SaveImage - Save Image
-func SaveImage(g *Graph, images IMAGE, filename_prefix string) (_ *Node) {
-	n := &Node{
+func SaveImage(gr *Graph, images IMAGE, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "SaveImage",
 		Inputs: map[string]Value{
 			"images":          Link(images),
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func SaveImageWebsocket(g *Graph, images IMAGE) (_ *Node) {
-	n := &Node{
+// SaveImageDataSetToFolder - Save Image Dataset to Folder
+func SaveImageDataSetToFolder(gr *Graph, images IMAGE, folder_name, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveImageDataSetToFolder",
+		Inputs: map[string]Value{
+			"images":          Link(images),
+			"folder_name":     String(folder_name),
+			"filename_prefix": String(filename_prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// SaveImageTextDataSetToFolder - Save Image and Text Dataset to Folder
+func SaveImageTextDataSetToFolder(gr *Graph, images IMAGE, texts, folder_name, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveImageTextDataSetToFolder",
+		Inputs: map[string]Value{
+			"images":          Link(images),
+			"texts":           String(texts),
+			"folder_name":     String(folder_name),
+			"filename_prefix": String(filename_prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func SaveImageWebsocket(gr *Graph, images IMAGE) (_ *Node) {
+	nd := &Node{
 		Class: "SaveImageWebsocket",
 		Inputs: map[string]Value{
 			"images": Link(images),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func SaveLatent(g *Graph, samples LATENT, filename_prefix string) (_ *Node) {
-	n := &Node{
+func SaveLatent(gr *Graph, samples LATENT, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "SaveLatent",
 		Inputs: map[string]Value{
 			"samples":         Link(samples),
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
+}
+
+// SaveLoRA - Save LoRA Weights
+func SaveLoRA(gr *Graph, lora LORA_MODEL, prefix string, steps int) (_ *Node) {
+	nd := &Node{
+		Class: "SaveLoRA",
+		Inputs: map[string]Value{
+			"lora":   Link(lora),
+			"prefix": String(prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func SaveSVGNode(gr *Graph, svg SVG, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveSVGNode",
+		Inputs: map[string]Value{
+			"svg":             Link(svg),
+			"filename_prefix": String(filename_prefix),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// SaveTrainingDataset - Save Training Dataset
+func SaveTrainingDataset(gr *Graph, latents LATENT, conditioning CONDITIONING, folder_name string, shard_size int) (_ *Node) {
+	nd := &Node{
+		Class: "SaveTrainingDataset",
+		Inputs: map[string]Value{
+			"latents":      Link(latents),
+			"conditioning": Link(conditioning),
+			"folder_name":  String(folder_name),
+			"shard_size":   Int(shard_size),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// SaveVideo - Save Video
+func SaveVideo(gr *Graph, video VIDEO, format COMBO, codec COMBO, filename_prefix string) (_ *Node) {
+	nd := &Node{
+		Class: "SaveVideo",
+		Inputs: map[string]Value{
+			"video":           Link(video),
+			"filename_prefix": String(filename_prefix),
+			"format":          Link(format),
+			"codec":           Link(codec),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func SaveWEBM(gr *Graph, images IMAGE, codec COMBO, filename_prefix string, fps, crf float64) (_ *Node) {
+	nd := &Node{
+		Class: "SaveWEBM",
+		Inputs: map[string]Value{
+			"images":          Link(images),
+			"filename_prefix": String(filename_prefix),
+			"codec":           Link(codec),
+			"fps":             Float(fps),
+			"crf":             Float(crf),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+func ScaleROPE(gr *Graph, model MODEL, scale_x, shift_x, scale_y, shift_y, scale_t, shift_t float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ScaleROPE",
+		Inputs: map[string]Value{
+			"model":   Link(model),
+			"scale_x": Float(scale_x),
+			"shift_x": Float(shift_x),
+			"scale_y": Float(scale_y),
+			"shift_y": Float(shift_y),
+			"scale_t": Float(scale_t),
+			"shift_t": Float(shift_t),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
 // SelfAttentionGuidance - Self-Attention Guidance
-func SelfAttentionGuidance(g *Graph, model MODEL, scale, blur_sigma float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func SelfAttentionGuidance(gr *Graph, model MODEL, scale, blur_sigma float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "SelfAttentionGuidance",
 		Inputs: map[string]Value{
 			"model":      Link(model),
@@ -2261,25 +6967,149 @@ func SelfAttentionGuidance(g *Graph, model MODEL, scale, blur_sigma float64) (_ 
 			"blur_sigma": Float(blur_sigma),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// SetClipHooks - Set CLIP Hooks
+func SetClipHooks(gr *Graph, clip CLIP, hooks HOOKS, apply_to_conds, schedule_clip bool) (_ *Node, out_clip CLIP) {
+	nd := &Node{
+		Class: "SetClipHooks",
+		Inputs: map[string]Value{
+			"clip":           Link(clip),
+			"apply_to_conds": Bool(apply_to_conds),
+			"schedule_clip":  Bool(schedule_clip),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
+}
+
+func SetFirstSigma(gr *Graph, sigmas SIGMAS, sigma float64) (_ *Node, out_sigmas SIGMAS) {
+	nd := &Node{
+		Class: "SetFirstSigma",
+		Inputs: map[string]Value{
+			"sigmas": Link(sigmas),
+			"sigma":  Float(sigma),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
+}
+
+// SetHookKeyframes - Set Hook Keyframes
+func SetHookKeyframes(gr *Graph, hooks HOOKS, hook_kf HOOK_KEYFRAMES) (_ *Node, out_hooks HOOKS) {
+	nd := &Node{
+		Class: "SetHookKeyframes",
+		Inputs: map[string]Value{
+			"hooks": Link(hooks),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, HOOKS{NodeID: id, OutPort: 0}
 }
 
 // SetLatentNoiseMask - Set Latent Noise Mask
-func SetLatentNoiseMask(g *Graph, samples LATENT, mask MASK) (_ *Node, latent LATENT) {
-	n := &Node{
+func SetLatentNoiseMask(gr *Graph, samples LATENT, mask MASK) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "SetLatentNoiseMask",
 		Inputs: map[string]Value{
 			"samples": Link(samples),
 			"mask":    Link(mask),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func SolidMask(g *Graph, value float64, width, height int) (_ *Node, mask MASK) {
-	n := &Node{
+func SetUnionControlNetType(gr *Graph, control_net CONTROL_NET, typ COMBO) (_ *Node, out_control_net CONTROL_NET) {
+	nd := &Node{
+		Class: "SetUnionControlNetType",
+		Inputs: map[string]Value{
+			"control_net": Link(control_net),
+			"type":        Link(typ),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONTROL_NET{NodeID: id, OutPort: 0}
+}
+
+// ShuffleDataset - Shuffle Image Dataset
+func ShuffleDataset(gr *Graph, images IMAGE, seed int) (_ *Node, out_images IMAGE) {
+	nd := &Node{
+		Class: "ShuffleDataset",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// ShuffleImageTextDataset - Shuffle Image-Text Dataset
+func ShuffleImageTextDataset(gr *Graph, images IMAGE, texts string, seed int) (_ *Node, out_images IMAGE, out_texts STRING) {
+	nd := &Node{
+		Class: "ShuffleImageTextDataset",
+		Inputs: map[string]Value{
+			"images": Link(images),
+			"texts":  String(texts),
+			"seed":   Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, STRING{NodeID: id, OutPort: 1}
+}
+
+func SkipLayerGuidanceDiT(gr *Graph, model MODEL, double_layers, single_layers string, scale, start_percent, end_percent, rescaling_scale float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "SkipLayerGuidanceDiT",
+		Inputs: map[string]Value{
+			"model":           Link(model),
+			"double_layers":   String(double_layers),
+			"single_layers":   String(single_layers),
+			"scale":           Float(scale),
+			"start_percent":   Float(start_percent),
+			"end_percent":     Float(end_percent),
+			"rescaling_scale": Float(rescaling_scale),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func SkipLayerGuidanceDiTSimple(gr *Graph, model MODEL, double_layers, single_layers string, start_percent, end_percent float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "SkipLayerGuidanceDiTSimple",
+		Inputs: map[string]Value{
+			"model":         Link(model),
+			"double_layers": String(double_layers),
+			"single_layers": String(single_layers),
+			"start_percent": Float(start_percent),
+			"end_percent":   Float(end_percent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func SkipLayerGuidanceSD3(gr *Graph, model MODEL, layers string, scale, start_percent, end_percent float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "SkipLayerGuidanceSD3",
+		Inputs: map[string]Value{
+			"model":         Link(model),
+			"layers":        String(layers),
+			"scale":         Float(scale),
+			"start_percent": Float(start_percent),
+			"end_percent":   Float(end_percent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func SolidMask(gr *Graph, value float64, width, height int) (_ *Node, mask MASK) {
+	nd := &Node{
 		Class: "SolidMask",
 		Inputs: map[string]Value{
 			"value":  Float(value),
@@ -2287,48 +7117,176 @@ func SolidMask(g *Graph, value float64, width, height int) (_ *Node, mask MASK) 
 			"height": Int(height),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
+}
+
+// SplitAudioChannels - Split Audio Channels
+func SplitAudioChannels(gr *Graph, audio AUDIO) (_ *Node, left AUDIO, right AUDIO) {
+	nd := &Node{
+		Class: "SplitAudioChannels",
+		Inputs: map[string]Value{
+			"audio": Link(audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}, AUDIO{NodeID: id, OutPort: 1}
 }
 
 // SplitImageWithAlpha - Split Image with Alpha
-func SplitImageWithAlpha(g *Graph, image IMAGE) (_ *Node, out_image IMAGE, mask MASK) {
-	n := &Node{
+func SplitImageWithAlpha(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE, mask MASK) {
+	nd := &Node{
 		Class: "SplitImageWithAlpha",
 		Inputs: map[string]Value{
 			"image": Link(image),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
 }
 
-func SplitSigmas(g *Graph, sigmas SIGMAS, step int) (_ *Node, high_sigmas SIGMAS, low_sigmas SIGMAS) {
-	n := &Node{
+func SplitSigmas(gr *Graph, sigmas SIGMAS, step int) (_ *Node, high_sigmas SIGMAS, low_sigmas SIGMAS) {
+	nd := &Node{
 		Class: "SplitSigmas",
 		Inputs: map[string]Value{
 			"sigmas": Link(sigmas),
 			"step":   Int(step),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}, SIGMAS{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}, SIGMAS{NodeID: id, OutPort: 1}
 }
 
-func SplitSigmasDenoise(g *Graph, sigmas SIGMAS, denoise float64) (_ *Node, high_sigmas SIGMAS, low_sigmas SIGMAS) {
-	n := &Node{
+func SplitSigmasDenoise(gr *Graph, sigmas SIGMAS, denoise float64) (_ *Node, high_sigmas SIGMAS, low_sigmas SIGMAS) {
+	nd := &Node{
 		Class: "SplitSigmasDenoise",
 		Inputs: map[string]Value{
 			"sigmas":  Link(sigmas),
 			"denoise": Float(denoise),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}, SIGMAS{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}, SIGMAS{NodeID: id, OutPort: 1}
 }
 
-func StableCascade_EmptyLatentImage(g *Graph, width, height, compression, batch_size int) (_ *Node, stage_c LATENT, stage_b LATENT) {
-	n := &Node{
+// StabilityAudioInpaint - Stability AI Audio Inpaint
+func StabilityAudioInpaint(gr *Graph, model COMBO, audio AUDIO, prompt string, duration, seed, steps, mask_start, mask_end int) (_ *Node, out_audio AUDIO) {
+	nd := &Node{
+		Class: "StabilityAudioInpaint",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"prompt": String(prompt),
+			"audio":  Link(audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+// StabilityAudioToAudio - Stability AI Audio To Audio
+func StabilityAudioToAudio(gr *Graph, model COMBO, audio AUDIO, prompt string, duration, seed, steps int, strength float64) (_ *Node, out_audio AUDIO) {
+	nd := &Node{
+		Class: "StabilityAudioToAudio",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"prompt": String(prompt),
+			"audio":  Link(audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+// StabilityStableImageSD_3_5Node - Stability AI Stable Diffusion 3.5 Image
+func StabilityStableImageSD_3_5Node(gr *Graph, model COMBO, aspect_ratio COMBO, style_preset COMBO, image IMAGE, prompt string, cfg_scale float64, seed int, negative_prompt string, image_denoise float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "StabilityStableImageSD_3_5Node",
+		Inputs: map[string]Value{
+			"prompt":       String(prompt),
+			"model":        Link(model),
+			"aspect_ratio": Link(aspect_ratio),
+			"style_preset": Link(style_preset),
+			"cfg_scale":    Float(cfg_scale),
+			"seed":         Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// StabilityStableImageUltraNode - Stability AI Stable Image Ultra
+func StabilityStableImageUltraNode(gr *Graph, aspect_ratio COMBO, style_preset COMBO, image IMAGE, prompt string, seed int, negative_prompt string, image_denoise float64) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "StabilityStableImageUltraNode",
+		Inputs: map[string]Value{
+			"prompt":       String(prompt),
+			"aspect_ratio": Link(aspect_ratio),
+			"style_preset": Link(style_preset),
+			"seed":         Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// StabilityTextToAudio - Stability AI Text To Audio
+func StabilityTextToAudio(gr *Graph, model COMBO, prompt string, duration, seed, steps int) (_ *Node, audio AUDIO) {
+	nd := &Node{
+		Class: "StabilityTextToAudio",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+// StabilityUpscaleConservativeNode - Stability AI Upscale Conservative
+func StabilityUpscaleConservativeNode(gr *Graph, image IMAGE, prompt string, creativity float64, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "StabilityUpscaleConservativeNode",
+		Inputs: map[string]Value{
+			"image":      Link(image),
+			"prompt":     String(prompt),
+			"creativity": Float(creativity),
+			"seed":       Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// StabilityUpscaleCreativeNode - Stability AI Upscale Creative
+func StabilityUpscaleCreativeNode(gr *Graph, image IMAGE, style_preset COMBO, prompt string, creativity float64, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "StabilityUpscaleCreativeNode",
+		Inputs: map[string]Value{
+			"image":        Link(image),
+			"prompt":       String(prompt),
+			"creativity":   Float(creativity),
+			"style_preset": Link(style_preset),
+			"seed":         Int(seed),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// StabilityUpscaleFastNode - Stability AI Upscale Fast
+func StabilityUpscaleFastNode(gr *Graph, image IMAGE) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "StabilityUpscaleFastNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func StableCascade_EmptyLatentImage(gr *Graph, width, height, compression, batch_size int) (_ *Node, stage_c LATENT, stage_b LATENT) {
+	nd := &Node{
 		Class: "StableCascade_EmptyLatentImage",
 		Inputs: map[string]Value{
 			"width":       Int(width),
@@ -2337,24 +7295,24 @@ func StableCascade_EmptyLatentImage(g *Graph, width, height, compression, batch_
 			"batch_size":  Int(batch_size),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
 }
 
-func StableCascade_StageB_Conditioning(g *Graph, conditioning CONDITIONING, stage_c LATENT) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func StableCascade_StageB_Conditioning(gr *Graph, conditioning CONDITIONING, stage_c LATENT) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "StableCascade_StageB_Conditioning",
 		Inputs: map[string]Value{
 			"conditioning": Link(conditioning),
 			"stage_c":      Link(stage_c),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func StableCascade_StageC_VAEEncode(g *Graph, image IMAGE, vae VAE, compression int) (_ *Node, stage_c LATENT, stage_b LATENT) {
-	n := &Node{
+func StableCascade_StageC_VAEEncode(gr *Graph, image IMAGE, vae VAE, compression int) (_ *Node, stage_c LATENT, stage_b LATENT) {
+	nd := &Node{
 		Class: "StableCascade_StageC_VAEEncode",
 		Inputs: map[string]Value{
 			"image":       Link(image),
@@ -2362,24 +7320,24 @@ func StableCascade_StageC_VAEEncode(g *Graph, image IMAGE, vae VAE, compression 
 			"compression": Int(compression),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}
 }
 
-func StableCascade_SuperResolutionControlnet(g *Graph, image IMAGE, vae VAE) (_ *Node, controlnet_input IMAGE, stage_c LATENT, stage_b LATENT) {
-	n := &Node{
+func StableCascade_SuperResolutionControlnet(gr *Graph, image IMAGE, vae VAE) (_ *Node, controlnet_input IMAGE, stage_c LATENT, stage_b LATENT) {
+	nd := &Node{
 		Class: "StableCascade_SuperResolutionControlnet",
 		Inputs: map[string]Value{
 			"image": Link(image),
 			"vae":   Link(vae),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}, LATENT{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
 }
 
-func StableZero123_Conditioning(g *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, batch_size int, elevation, azimuth float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
-	n := &Node{
+func StableZero123_Conditioning(gr *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, batch_size int, elevation, azimuth float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
+	nd := &Node{
 		Class: "StableZero123_Conditioning",
 		Inputs: map[string]Value{
 			"clip_vision": Link(clip_vision),
@@ -2392,12 +7350,12 @@ func StableZero123_Conditioning(g *Graph, clip_vision CLIP_VISION, init_image IM
 			"azimuth":     Float(azimuth),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
 }
 
-func StableZero123_Conditioning_Batched(g *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, batch_size int, elevation, azimuth, elevation_batch_increment, azimuth_batch_increment float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
-	n := &Node{
+func StableZero123_Conditioning_Batched(gr *Graph, clip_vision CLIP_VISION, init_image IMAGE, vae VAE, width, height, batch_size int, elevation, azimuth, elevation_batch_increment, azimuth_batch_increment float64) (_ *Node, positive CONDITIONING, negative CONDITIONING, latent LATENT) {
+	nd := &Node{
 		Class: "StableZero123_Conditioning_Batched",
 		Inputs: map[string]Value{
 			"clip_vision":               Link(clip_vision),
@@ -2412,86 +7370,518 @@ func StableZero123_Conditioning_Batched(g *Graph, clip_vision CLIP_VISION, init_
 			"azimuth_batch_increment":   Float(azimuth_batch_increment),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// StringCompare - Compare
+func StringCompare(gr *Graph, mode COMBO, string_a, string_b string, case_sensitive bool) (_ *Node, boolean BOOLEAN) {
+	nd := &Node{
+		Class: "StringCompare",
+		Inputs: map[string]Value{
+			"string_a":       String(string_a),
+			"string_b":       String(string_b),
+			"mode":           Link(mode),
+			"case_sensitive": Bool(case_sensitive),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, BOOLEAN{NodeID: id, OutPort: 0}
+}
+
+// StringConcatenate - Concatenate
+func StringConcatenate(gr *Graph, string_a, string_b, delimiter string) (_ *Node, str STRING) {
+	nd := &Node{
+		Class: "StringConcatenate",
+		Inputs: map[string]Value{
+			"string_a":  String(string_a),
+			"string_b":  String(string_b),
+			"delimiter": String(delimiter),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// StringContains - Contains
+func StringContains(gr *Graph, str, substring string, case_sensitive bool) (_ *Node, contains BOOLEAN) {
+	nd := &Node{
+		Class: "StringContains",
+		Inputs: map[string]Value{
+			"string":         String(str),
+			"substring":      String(substring),
+			"case_sensitive": Bool(case_sensitive),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, BOOLEAN{NodeID: id, OutPort: 0}
+}
+
+// StringLength - Length
+func StringLength(gr *Graph, str string) (_ *Node, length INT) {
+	nd := &Node{
+		Class: "StringLength",
+		Inputs: map[string]Value{
+			"string": String(str),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, INT{NodeID: id, OutPort: 0}
+}
+
+// StringReplace - Replace
+func StringReplace(gr *Graph, str, find, replace string) (_ *Node, out_str STRING) {
+	nd := &Node{
+		Class: "StringReplace",
+		Inputs: map[string]Value{
+			"string":  String(str),
+			"find":    String(find),
+			"replace": String(replace),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// StringSubstring - Substring
+func StringSubstring(gr *Graph, str string, start, end int) (_ *Node, out_str STRING) {
+	nd := &Node{
+		Class: "StringSubstring",
+		Inputs: map[string]Value{
+			"string": String(str),
+			"start":  Int(start),
+			"end":    Int(end),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// StringTrim - Trim
+func StringTrim(gr *Graph, mode COMBO, str string) (_ *Node, out_str STRING) {
+	nd := &Node{
+		Class: "StringTrim",
+		Inputs: map[string]Value{
+			"string": String(str),
+			"mode":   Link(mode),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// StripWhitespace - Strip Whitespace
+func StripWhitespace(gr *Graph, texts string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "StripWhitespace",
+		Inputs: map[string]Value{
+			"texts": String(texts),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
 }
 
 // StyleModelApply - Apply Style Model
-func StyleModelApply(g *Graph, conditioning CONDITIONING, style_model STYLE_MODEL, clip_vision_output CLIP_VISION_OUTPUT) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func StyleModelApply(gr *Graph, conditioning CONDITIONING, style_model STYLE_MODEL, clip_vision_output CLIP_VISION_OUTPUT, strength float64, strength_type string) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "StyleModelApply",
 		Inputs: map[string]Value{
 			"conditioning":       Link(conditioning),
 			"style_model":        Link(style_model),
 			"clip_vision_output": Link(clip_vision_output),
+			"strength":           Float(strength),
+			"strength_type":      String(strength_type),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
 // StyleModelLoader - Load Style Model
-func StyleModelLoader(g *Graph, style_model_name string) (_ *Node, style_model STYLE_MODEL) {
-	n := &Node{
+func StyleModelLoader(gr *Graph, style_model_name string) (_ *Node, style_model STYLE_MODEL) {
+	nd := &Node{
 		Class: "StyleModelLoader",
 		Inputs: map[string]Value{
 			"style_model_name": String(style_model_name),
 		},
 	}
-	id := g.Add(n)
-	return n, STYLE_MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, STYLE_MODEL{NodeID: id, OutPort: 0}
 }
 
-func ThresholdMask(g *Graph, mask MASK, value float64) (_ *Node, out_mask MASK) {
-	n := &Node{
+func T5TokenizerOptions(gr *Graph, clip CLIP, min_padding, min_length int) (_ *Node, out_clip CLIP) {
+	nd := &Node{
+		Class: "T5TokenizerOptions",
+		Inputs: map[string]Value{
+			"clip":        Link(clip),
+			"min_padding": Int(min_padding),
+			"min_length":  Int(min_length),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
+}
+
+// TCFG - Tangential Damping CFG
+func TCFG(gr *Graph, model MODEL) (_ *Node, patched_model MODEL) {
+	nd := &Node{
+		Class: "TCFG",
+		Inputs: map[string]Value{
+			"model": Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// TemporalScoreRescaling - TSR - Temporal Score Rescaling
+func TemporalScoreRescaling(gr *Graph, model MODEL, tsr_k, tsr_sigma float64) (_ *Node, patched_model MODEL) {
+	nd := &Node{
+		Class: "TemporalScoreRescaling",
+		Inputs: map[string]Value{
+			"model":     Link(model),
+			"tsr_k":     Float(tsr_k),
+			"tsr_sigma": Float(tsr_sigma),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func TextEncodeAceStepAudio(gr *Graph, clip CLIP, tags, lyrics string, lyrics_strength float64) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "TextEncodeAceStepAudio",
+		Inputs: map[string]Value{
+			"clip":            Link(clip),
+			"tags":            String(tags),
+			"lyrics":          String(lyrics),
+			"lyrics_strength": Float(lyrics_strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func TextEncodeHunyuanVideo_ImageToVideo(gr *Graph, clip CLIP, clip_vision_output CLIP_VISION_OUTPUT, prompt string, image_interleave int) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "TextEncodeHunyuanVideo_ImageToVideo",
+		Inputs: map[string]Value{
+			"clip":               Link(clip),
+			"clip_vision_output": Link(clip_vision_output),
+			"prompt":             String(prompt),
+			"image_interleave":   Int(image_interleave),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func TextEncodeQwenImageEdit(gr *Graph, clip CLIP, vae VAE, image IMAGE, prompt string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "TextEncodeQwenImageEdit",
+		Inputs: map[string]Value{
+			"clip":   Link(clip),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func TextEncodeQwenImageEditPlus(gr *Graph, clip CLIP, vae VAE, image1 IMAGE, image2 IMAGE, image3 IMAGE, prompt string) (_ *Node, conditioning CONDITIONING) {
+	nd := &Node{
+		Class: "TextEncodeQwenImageEditPlus",
+		Inputs: map[string]Value{
+			"clip":   Link(clip),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+// TextToLowercase - Text to Lowercase
+func TextToLowercase(gr *Graph, texts string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "TextToLowercase",
+		Inputs: map[string]Value{
+			"texts": String(texts),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// TextToUppercase - Text to Uppercase
+func TextToUppercase(gr *Graph, texts string) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "TextToUppercase",
+		Inputs: map[string]Value{
+			"texts": String(texts),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+func ThresholdMask(gr *Graph, mask MASK, value float64) (_ *Node, out_mask MASK) {
+	nd := &Node{
 		Class: "ThresholdMask",
 		Inputs: map[string]Value{
 			"mask":  Link(mask),
 			"value": Float(value),
 		},
 	}
-	id := g.Add(n)
-	return n, MASK{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MASK{NodeID: id, OutPort: 0}
 }
 
-func TomePatchModel(g *Graph, model MODEL, ratio float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func TomePatchModel(gr *Graph, model MODEL, ratio float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "TomePatchModel",
 		Inputs: map[string]Value{
 			"model": Link(model),
 			"ratio": Float(ratio),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func TripleCLIPLoader(g *Graph, clip_name1, clip_name2, clip_name3 string) (_ *Node, clip CLIP) {
-	n := &Node{
+// TopazImageEnhance - Topaz Image Enhance
+func TopazImageEnhance(gr *Graph, model COMBO, image IMAGE, subject_detection COMBO, prompt string, face_enhancement bool, face_enhancement_creativity, face_enhancement_strength float64, crop_to_fill bool, output_width, output_height, creativity int, face_preservation, color_preservation bool) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "TopazImageEnhance",
+		Inputs: map[string]Value{
+			"model": Link(model),
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// TopazVideoEnhance - Topaz Video Enhance
+func TopazVideoEnhance(gr *Graph, video VIDEO, upscaler_model COMBO, upscaler_resolution COMBO, upscaler_creativity COMBO, interpolation_model COMBO, dynamic_compression_level COMBO, upscaler_enabled bool, interpolation_enabled bool, interpolation_slowmo, interpolation_frame_rate int, interpolation_duplicate bool, interpolation_duplicate_threshold float64) (_ *Node, out_video VIDEO) {
+	nd := &Node{
+		Class: "TopazVideoEnhance",
+		Inputs: map[string]Value{
+			"video":               Link(video),
+			"upscaler_enabled":    Bool(upscaler_enabled),
+			"upscaler_model":      Link(upscaler_model),
+			"upscaler_resolution": Link(upscaler_resolution),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func TorchCompileModel(gr *Graph, model MODEL, backend COMBO) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "TorchCompileModel",
+		Inputs: map[string]Value{
+			"model":   Link(model),
+			"backend": Link(backend),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// TrainLoraNode - Train LoRA
+func TrainLoraNode(gr *Graph, model MODEL, latents LATENT, positive CONDITIONING, optimizer COMBO, loss_function COMBO, training_dtype COMBO, lora_dtype COMBO, algorithm COMBO, existing_lora COMBO, batch_size, grad_accumulation_steps, steps int, learning_rate float64, rank int, seed int, gradient_checkpointing bool, bucket_mode bool) (_ *Node, out_model MODEL, lora LORA_MODEL, loss_map LOSS_MAP, out_steps INT) {
+	nd := &Node{
+		Class: "TrainLoraNode",
+		Inputs: map[string]Value{
+			"model":                   Link(model),
+			"latents":                 Link(latents),
+			"positive":                Link(positive),
+			"batch_size":              Int(batch_size),
+			"grad_accumulation_steps": Int(grad_accumulation_steps),
+			"steps":                   Int(steps),
+			"learning_rate":           Float(learning_rate),
+			"rank":                    Int(rank),
+			"optimizer":               Link(optimizer),
+			"loss_function":           Link(loss_function),
+			"seed":                    Int(seed),
+			"training_dtype":          Link(training_dtype),
+			"lora_dtype":              Link(lora_dtype),
+			"algorithm":               Link(algorithm),
+			"gradient_checkpointing":  Bool(gradient_checkpointing),
+			"existing_lora":           Link(existing_lora),
+			"bucket_mode":             Bool(bucket_mode),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, LORA_MODEL{NodeID: id, OutPort: 1}, LOSS_MAP{NodeID: id, OutPort: 2}, INT{NodeID: id, OutPort: 3}
+}
+
+// TrimAudioDuration - Trim Audio Duration
+func TrimAudioDuration(gr *Graph, audio AUDIO, start_index, duration float64) (_ *Node, out_audio AUDIO) {
+	nd := &Node{
+		Class: "TrimAudioDuration",
+		Inputs: map[string]Value{
+			"audio":       Link(audio),
+			"start_index": Float(start_index),
+			"duration":    Float(duration),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+func TrimVideoLatent(gr *Graph, samples LATENT, trim_amount int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "TrimVideoLatent",
+		Inputs: map[string]Value{
+			"samples":     Link(samples),
+			"trim_amount": Int(trim_amount),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func TripleCLIPLoader(gr *Graph, clip_name1 COMBO, clip_name2 COMBO, clip_name3 COMBO) (_ *Node, clip CLIP) {
+	nd := &Node{
 		Class: "TripleCLIPLoader",
 		Inputs: map[string]Value{
-			"clip_name1": String(clip_name1),
-			"clip_name2": String(clip_name2),
-			"clip_name3": String(clip_name3),
+			"clip_name1": Link(clip_name1),
+			"clip_name2": Link(clip_name2),
+			"clip_name3": Link(clip_name3),
 		},
 	}
-	id := g.Add(n)
-	return n, CLIP{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CLIP{NodeID: id, OutPort: 0}
 }
 
-func UNETLoader(g *Graph, unet_name string) (_ *Node, model MODEL) {
-	n := &Node{
+// TripoConversionNode - Tripo: Convert model
+func TripoConversionNode(gr *Graph, original_model_task_id MODEL_TASK_ID, RIG_TASK_ID, RETARGET_TASK_ID, format COMBO, texture_format COMBO, fbx_preset COMBO, export_orientation COMBO, quad bool, face_limit, texture_size int, force_symmetry, flatten_bottom bool, flatten_bottom_threshold float64, pivot_to_center_bottom bool, scale_factor float64, with_animation, pack_uv, bake bool, part_names string, export_vertex_colors bool, animate_in_place bool) (_ *Node) {
+	nd := &Node{
+		Class: "TripoConversionNode",
+		Inputs: map[string]Value{
+			"original_model_task_id": Link(original_model_task_id),
+			"format":                 Link(format),
+		},
+	}
+	gr.Add(nd)
+	return nd
+}
+
+// TripoImageToModelNode - Tripo: Image to Model
+func TripoImageToModelNode(gr *Graph, image IMAGE, model_version COMBO, style COMBO, orientation COMBO, texture_quality COMBO, texture_alignment COMBO, geometry_quality COMBO, texture, pbr bool, model_seed int, texture_seed int, face_limit int, quad bool) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
+	nd := &Node{
+		Class: "TripoImageToModelNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MODEL_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TripoMultiviewToModelNode - Tripo: Multiview to Model
+func TripoMultiviewToModelNode(gr *Graph, image IMAGE, image_left IMAGE, image_back IMAGE, image_right IMAGE, model_version COMBO, orientation COMBO, texture_quality COMBO, texture_alignment COMBO, geometry_quality COMBO, texture, pbr bool, model_seed, texture_seed int, face_limit int, quad bool) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
+	nd := &Node{
+		Class: "TripoMultiviewToModelNode",
+		Inputs: map[string]Value{
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MODEL_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TripoRefineNode - Tripo: Refine Draft model
+func TripoRefineNode(gr *Graph, model_task_id MODEL_TASK_ID) (_ *Node, model_file STRING, out_model_task_id MODEL_TASK_ID) {
+	nd := &Node{
+		Class: "TripoRefineNode",
+		Inputs: map[string]Value{
+			"model_task_id": Link(model_task_id),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MODEL_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TripoRetargetNode - Tripo: Retarget rigged model
+func TripoRetargetNode(gr *Graph, original_model_task_id RIG_TASK_ID, animation COMBO) (_ *Node, model_file STRING, retarget_task_id RETARGET_TASK_ID) {
+	nd := &Node{
+		Class: "TripoRetargetNode",
+		Inputs: map[string]Value{
+			"original_model_task_id": Link(original_model_task_id),
+			"animation":              Link(animation),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, RETARGET_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TripoRigNode - Tripo: Rig model
+func TripoRigNode(gr *Graph, original_model_task_id MODEL_TASK_ID) (_ *Node, model_file STRING, rig_task_id RIG_TASK_ID) {
+	nd := &Node{
+		Class: "TripoRigNode",
+		Inputs: map[string]Value{
+			"original_model_task_id": Link(original_model_task_id),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, RIG_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TripoTextToModelNode - Tripo: Text to Model
+func TripoTextToModelNode(gr *Graph, model_version COMBO, style COMBO, texture_quality COMBO, geometry_quality COMBO, prompt, negative_prompt string, texture, pbr bool, image_seed, model_seed, texture_seed int, face_limit int, quad bool) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
+	nd := &Node{
+		Class: "TripoTextToModelNode",
+		Inputs: map[string]Value{
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MODEL_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TripoTextureNode - Tripo: Texture model
+func TripoTextureNode(gr *Graph, model_task_id MODEL_TASK_ID, texture_quality COMBO, texture_alignment COMBO, texture, pbr bool, texture_seed int) (_ *Node, model_file STRING, out_model_task_id MODEL_TASK_ID) {
+	nd := &Node{
+		Class: "TripoTextureNode",
+		Inputs: map[string]Value{
+			"model_task_id": Link(model_task_id),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}, MODEL_TASK_ID{NodeID: id, OutPort: 1}
+}
+
+// TruncateText - Truncate Text
+func TruncateText(gr *Graph, texts string, max_length int) (_ *Node, out_texts STRING) {
+	nd := &Node{
+		Class: "TruncateText",
+		Inputs: map[string]Value{
+			"texts":      String(texts),
+			"max_length": Int(max_length),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, STRING{NodeID: id, OutPort: 0}
+}
+
+// UNETLoader - Load Diffusion Model
+func UNETLoader(gr *Graph, unet_name, weight_dtype string) (_ *Node, model MODEL) {
+	nd := &Node{
 		Class: "UNETLoader",
 		Inputs: map[string]Value{
-			"unet_name": String(unet_name),
+			"unet_name":    String(unet_name),
+			"weight_dtype": String(weight_dtype),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func UNetCrossAttentionMultiply(g *Graph, model MODEL, q, k, v, out float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func UNetCrossAttentionMultiply(gr *Graph, model MODEL, q, k, v, out float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "UNetCrossAttentionMultiply",
 		Inputs: map[string]Value{
 			"model": Link(model),
@@ -2501,12 +7891,12 @@ func UNetCrossAttentionMultiply(g *Graph, model MODEL, q, k, v, out float64) (_ 
 			"out":   Float(out),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func UNetSelfAttentionMultiply(g *Graph, model MODEL, q, k, v, out float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func UNetSelfAttentionMultiply(gr *Graph, model MODEL, q, k, v, out float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "UNetSelfAttentionMultiply",
 		Inputs: map[string]Value{
 			"model": Link(model),
@@ -2516,12 +7906,12 @@ func UNetSelfAttentionMultiply(g *Graph, model MODEL, q, k, v, out float64) (_ *
 			"out":   Float(out),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func UNetTemporalAttentionMultiply(g *Graph, model MODEL, self_structural, self_temporal, cross_structural, cross_temporal float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func UNetTemporalAttentionMultiply(gr *Graph, model MODEL, self_structural, self_temporal, cross_structural, cross_temporal float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "UNetTemporalAttentionMultiply",
 		Inputs: map[string]Value{
 			"model":            Link(model),
@@ -2531,89 +7921,121 @@ func UNetTemporalAttentionMultiply(g *Graph, model MODEL, self_structural, self_
 			"cross_temporal":   Float(cross_temporal),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func USOStyleReference(gr *Graph, model MODEL, model_patch MODEL_PATCH, clip_vision_output CLIP_VISION_OUTPUT) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "USOStyleReference",
+		Inputs: map[string]Value{
+			"model":              Link(model),
+			"model_patch":        Link(model_patch),
+			"clip_vision_output": Link(clip_vision_output),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
 // UpscaleModelLoader - Load Upscale Model
-func UpscaleModelLoader(g *Graph, model_name string) (_ *Node, upscale_model UPSCALE_MODEL) {
-	n := &Node{
+func UpscaleModelLoader(gr *Graph, model_name COMBO) (_ *Node, upscale_model UPSCALE_MODEL) {
+	nd := &Node{
 		Class: "UpscaleModelLoader",
 		Inputs: map[string]Value{
-			"model_name": String(model_name),
+			"model_name": Link(model_name),
 		},
 	}
-	id := g.Add(n)
-	return n, UPSCALE_MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, UPSCALE_MODEL{NodeID: id, OutPort: 0}
 }
 
 // VAEDecode - VAE Decode
-func VAEDecode(g *Graph, samples LATENT, vae VAE) (_ *Node, image IMAGE) {
-	n := &Node{
+func VAEDecode(gr *Graph, samples LATENT, vae VAE) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "VAEDecode",
 		Inputs: map[string]Value{
 			"samples": Link(samples),
 			"vae":     Link(vae),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func VAEDecodeAudio(g *Graph, samples LATENT, vae VAE) (_ *Node, audio AUDIO) {
-	n := &Node{
+// VAEDecodeAudio - VAE Decode Audio
+func VAEDecodeAudio(gr *Graph, samples LATENT, vae VAE) (_ *Node, audio AUDIO) {
+	nd := &Node{
 		Class: "VAEDecodeAudio",
 		Inputs: map[string]Value{
 			"samples": Link(samples),
 			"vae":     Link(vae),
 		},
 	}
-	id := g.Add(n)
-	return n, AUDIO{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, AUDIO{NodeID: id, OutPort: 0}
+}
+
+func VAEDecodeHunyuan3D(gr *Graph, samples LATENT, vae VAE, num_chunks, octree_resolution int) (_ *Node, voxel VOXEL) {
+	nd := &Node{
+		Class: "VAEDecodeHunyuan3D",
+		Inputs: map[string]Value{
+			"samples":           Link(samples),
+			"vae":               Link(vae),
+			"num_chunks":        Int(num_chunks),
+			"octree_resolution": Int(octree_resolution),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VOXEL{NodeID: id, OutPort: 0}
 }
 
 // VAEDecodeTiled - VAE Decode (Tiled)
-func VAEDecodeTiled(g *Graph, samples LATENT, vae VAE, tile_size int) (_ *Node, image IMAGE) {
-	n := &Node{
+func VAEDecodeTiled(gr *Graph, samples LATENT, vae VAE, tile_size, overlap, temporal_size, temporal_overlap int) (_ *Node, image IMAGE) {
+	nd := &Node{
 		Class: "VAEDecodeTiled",
 		Inputs: map[string]Value{
-			"samples":   Link(samples),
-			"vae":       Link(vae),
-			"tile_size": Int(tile_size),
+			"samples":          Link(samples),
+			"vae":              Link(vae),
+			"tile_size":        Int(tile_size),
+			"overlap":          Int(overlap),
+			"temporal_size":    Int(temporal_size),
+			"temporal_overlap": Int(temporal_overlap),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
 // VAEEncode - VAE Encode
-func VAEEncode(g *Graph, pixels IMAGE, vae VAE) (_ *Node, latent LATENT) {
-	n := &Node{
+func VAEEncode(gr *Graph, pixels IMAGE, vae VAE) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "VAEEncode",
 		Inputs: map[string]Value{
 			"pixels": Link(pixels),
 			"vae":    Link(vae),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func VAEEncodeAudio(g *Graph, audio AUDIO, vae VAE) (_ *Node, latent LATENT) {
-	n := &Node{
+// VAEEncodeAudio - VAE Encode Audio
+func VAEEncodeAudio(gr *Graph, audio AUDIO, vae VAE) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "VAEEncodeAudio",
 		Inputs: map[string]Value{
 			"audio": Link(audio),
 			"vae":   Link(vae),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // VAEEncodeForInpaint - VAE Encode (for Inpainting)
-func VAEEncodeForInpaint(g *Graph, pixels IMAGE, vae VAE, mask MASK, grow_mask_by int) (_ *Node, latent LATENT) {
-	n := &Node{
+func VAEEncodeForInpaint(gr *Graph, pixels IMAGE, vae VAE, mask MASK, grow_mask_by int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "VAEEncodeForInpaint",
 		Inputs: map[string]Value{
 			"pixels":       Link(pixels),
@@ -2622,50 +8044,53 @@ func VAEEncodeForInpaint(g *Graph, pixels IMAGE, vae VAE, mask MASK, grow_mask_b
 			"grow_mask_by": Int(grow_mask_by),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // VAEEncodeTiled - VAE Encode (Tiled)
-func VAEEncodeTiled(g *Graph, pixels IMAGE, vae VAE, tile_size int) (_ *Node, latent LATENT) {
-	n := &Node{
+func VAEEncodeTiled(gr *Graph, pixels IMAGE, vae VAE, tile_size, overlap, temporal_size, temporal_overlap int) (_ *Node, latent LATENT) {
+	nd := &Node{
 		Class: "VAEEncodeTiled",
 		Inputs: map[string]Value{
-			"pixels":    Link(pixels),
-			"vae":       Link(vae),
-			"tile_size": Int(tile_size),
+			"pixels":           Link(pixels),
+			"vae":              Link(vae),
+			"tile_size":        Int(tile_size),
+			"overlap":          Int(overlap),
+			"temporal_size":    Int(temporal_size),
+			"temporal_overlap": Int(temporal_overlap),
 		},
 	}
-	id := g.Add(n)
-	return n, LATENT{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
 // VAELoader - Load VAE
-func VAELoader(g *Graph, vae_name string) (_ *Node, vae VAE) {
-	n := &Node{
+func VAELoader(gr *Graph, vae_name string) (_ *Node, vae VAE) {
+	nd := &Node{
 		Class: "VAELoader",
 		Inputs: map[string]Value{
 			"vae_name": String(vae_name),
 		},
 	}
-	id := g.Add(n)
-	return n, VAE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, VAE{NodeID: id, OutPort: 0}
 }
 
-func VAESave(g *Graph, vae VAE, filename_prefix string) (_ *Node) {
-	n := &Node{
+func VAESave(gr *Graph, vae VAE, filename_prefix string) (_ *Node) {
+	nd := &Node{
 		Class: "VAESave",
 		Inputs: map[string]Value{
 			"vae":             Link(vae),
 			"filename_prefix": String(filename_prefix),
 		},
 	}
-	g.Add(n)
-	return n
+	gr.Add(nd)
+	return nd
 }
 
-func VPScheduler(g *Graph, steps int, beta_d, beta_min, eps_s float64) (_ *Node, sigmas SIGMAS) {
-	n := &Node{
+func VPScheduler(gr *Graph, steps int, beta_d, beta_min, eps_s float64) (_ *Node, sigmas SIGMAS) {
+	nd := &Node{
 		Class: "VPScheduler",
 		Inputs: map[string]Value{
 			"steps":    Int(steps),
@@ -2674,37 +8099,640 @@ func VPScheduler(g *Graph, steps int, beta_d, beta_min, eps_s float64) (_ *Node,
 			"eps_s":    Float(eps_s),
 		},
 	}
-	id := g.Add(n)
-	return n, SIGMAS{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func VideoLinearCFGGuidance(g *Graph, model MODEL, min_cfg float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+// Veo3FirstLastFrameNode - Google Veo 3 First-Last-Frame to Video
+func Veo3FirstLastFrameNode(gr *Graph, resolution COMBO, aspect_ratio COMBO, first_frame IMAGE, last_frame IMAGE, model COMBO, prompt, negative_prompt string, duration, seed int, generate_audio bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "Veo3FirstLastFrameNode",
+		Inputs: map[string]Value{
+			"prompt":          String(prompt),
+			"negative_prompt": String(negative_prompt),
+			"resolution":      Link(resolution),
+			"aspect_ratio":    Link(aspect_ratio),
+			"duration":        Int(duration),
+			"seed":            Int(seed),
+			"first_frame":     Link(first_frame),
+			"last_frame":      Link(last_frame),
+			"model":           Link(model),
+			"generate_audio":  Bool(generate_audio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// Veo3VideoGenerationNode - Google Veo 3 Video Generation
+func Veo3VideoGenerationNode(gr *Graph, aspect_ratio COMBO, person_generation COMBO, image IMAGE, model COMBO, prompt string, negative_prompt string, duration_seconds int, enhance_prompt bool, seed int, generate_audio bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "Veo3VideoGenerationNode",
+		Inputs: map[string]Value{
+			"prompt":       String(prompt),
+			"aspect_ratio": Link(aspect_ratio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// VeoVideoGenerationNode - Google Veo 2 Video Generation
+func VeoVideoGenerationNode(gr *Graph, aspect_ratio COMBO, person_generation COMBO, image IMAGE, model COMBO, prompt string, negative_prompt string, duration_seconds int, enhance_prompt bool, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "VeoVideoGenerationNode",
+		Inputs: map[string]Value{
+			"prompt":       String(prompt),
+			"aspect_ratio": Link(aspect_ratio),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func VideoLinearCFGGuidance(gr *Graph, model MODEL, min_cfg float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "VideoLinearCFGGuidance",
 		Inputs: map[string]Value{
 			"model":   Link(model),
 			"min_cfg": Float(min_cfg),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func VideoTriangleCFGGuidance(g *Graph, model MODEL, min_cfg float64) (_ *Node, out_model MODEL) {
-	n := &Node{
+func VideoTriangleCFGGuidance(gr *Graph, model MODEL, min_cfg float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
 		Class: "VideoTriangleCFGGuidance",
 		Inputs: map[string]Value{
 			"model":   Link(model),
 			"min_cfg": Float(min_cfg),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+// Vidu2ImageToVideoNode - Vidu2 Image-to-Video Generation
+func Vidu2ImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "Vidu2ImageToVideoNode",
+		Inputs: map[string]Value{
+			"model":              Link(model),
+			"image":              Link(image),
+			"prompt":             String(prompt),
+			"duration":           Int(duration),
+			"seed":               Int(seed),
+			"resolution":         Link(resolution),
+			"movement_amplitude": Link(movement_amplitude),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// Vidu2ReferenceVideoNode - Vidu2 Reference-to-Video Generation
+func Vidu2ReferenceVideoNode(gr *Graph, model COMBO, subjects COMFY_AUTOGROW_V3, aspect_ratio COMBO, resolution COMBO, movement_amplitude COMBO, prompt string, audio bool, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "Vidu2ReferenceVideoNode",
+		Inputs: map[string]Value{
+			"model":              Link(model),
+			"subjects":           Link(subjects),
+			"prompt":             String(prompt),
+			"audio":              Bool(audio),
+			"duration":           Int(duration),
+			"seed":               Int(seed),
+			"aspect_ratio":       Link(aspect_ratio),
+			"resolution":         Link(resolution),
+			"movement_amplitude": Link(movement_amplitude),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// Vidu2StartEndToVideoNode - Vidu2 Start/End Frame-to-Video Generation
+func Vidu2StartEndToVideoNode(gr *Graph, model COMBO, first_frame IMAGE, end_frame IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "Vidu2StartEndToVideoNode",
+		Inputs: map[string]Value{
+			"model":              Link(model),
+			"first_frame":        Link(first_frame),
+			"end_frame":          Link(end_frame),
+			"prompt":             String(prompt),
+			"duration":           Int(duration),
+			"seed":               Int(seed),
+			"resolution":         Link(resolution),
+			"movement_amplitude": Link(movement_amplitude),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// Vidu2TextToVideoNode - Vidu2 Text-to-Video Generation
+func Vidu2TextToVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, prompt string, duration, seed int, background_music bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "Vidu2TextToVideoNode",
+		Inputs: map[string]Value{
+			"model":            Link(model),
+			"prompt":           String(prompt),
+			"duration":         Int(duration),
+			"seed":             Int(seed),
+			"aspect_ratio":     Link(aspect_ratio),
+			"resolution":       Link(resolution),
+			"background_music": Bool(background_music),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ViduImageToVideoNode - Vidu Image To Video Generation
+func ViduImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ViduImageToVideoNode",
+		Inputs: map[string]Value{
+			"model": Link(model),
+			"image": Link(image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ViduReferenceVideoNode - Vidu Reference To Video Generation
+func ViduReferenceVideoNode(gr *Graph, model COMBO, images IMAGE, aspect_ratio COMBO, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ViduReferenceVideoNode",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"images": Link(images),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ViduStartEndToVideoNode - Vidu Start End To Video Generation
+func ViduStartEndToVideoNode(gr *Graph, model COMBO, first_frame IMAGE, end_frame IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ViduStartEndToVideoNode",
+		Inputs: map[string]Value{
+			"model":       Link(model),
+			"first_frame": Link(first_frame),
+			"end_frame":   Link(end_frame),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+// ViduTextToVideoNode - Vidu Text To Video Generation
+func ViduTextToVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "ViduTextToVideoNode",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func VoxelToMesh(gr *Graph, voxel VOXEL, algorithm COMBO, threshold float64) (_ *Node, mesh MESH) {
+	nd := &Node{
+		Class: "VoxelToMesh",
+		Inputs: map[string]Value{
+			"voxel":     Link(voxel),
+			"algorithm": Link(algorithm),
+			"threshold": Float(threshold),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MESH{NodeID: id, OutPort: 0}
+}
+
+func VoxelToMeshBasic(gr *Graph, voxel VOXEL, threshold float64) (_ *Node, mesh MESH) {
+	nd := &Node{
+		Class: "VoxelToMeshBasic",
+		Inputs: map[string]Value{
+			"voxel":     Link(voxel),
+			"threshold": Float(threshold),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MESH{NodeID: id, OutPort: 0}
+}
+
+func Wan22FunControlToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, ref_image IMAGE, control_video IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "Wan22FunControlToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func Wan22ImageToVideoLatent(gr *Graph, vae VAE, start_image IMAGE, width, height, length, batch_size int) (_ *Node, latent LATENT) {
+	nd := &Node{
+		Class: "Wan22ImageToVideoLatent",
+		Inputs: map[string]Value{
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, LATENT{NodeID: id, OutPort: 0}
+}
+
+func WanAnimateToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, clip_vision_output CLIP_VISION_OUTPUT, reference_image IMAGE, face_video IMAGE, pose_video IMAGE, background_video IMAGE, character_mask MASK, continue_motion IMAGE, width, height, length, batch_size, continue_motion_max_frames, video_frame_offset int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT, trim_latent INT, trim_image INT, out_video_frame_offset INT) {
+	nd := &Node{
+		Class: "WanAnimateToVideo",
+		Inputs: map[string]Value{
+			"positive":                   Link(positive),
+			"negative":                   Link(negative),
+			"vae":                        Link(vae),
+			"width":                      Int(width),
+			"height":                     Int(height),
+			"length":                     Int(length),
+			"batch_size":                 Int(batch_size),
+			"continue_motion_max_frames": Int(continue_motion_max_frames),
+			"video_frame_offset":         Int(video_frame_offset),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}, INT{NodeID: id, OutPort: 3}, INT{NodeID: id, OutPort: 4}, INT{NodeID: id, OutPort: 5}
+}
+
+func WanCameraEmbedding(gr *Graph, camera_pose COMBO, width, height, length int, speed, fx, fy, cx, cy float64) (_ *Node, camera_embedding WAN_CAMERA_EMBEDDING, out_width INT, out_height INT, out_length INT) {
+	nd := &Node{
+		Class: "WanCameraEmbedding",
+		Inputs: map[string]Value{
+			"camera_pose": Link(camera_pose),
+			"width":       Int(width),
+			"height":      Int(height),
+			"length":      Int(length),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, WAN_CAMERA_EMBEDDING{NodeID: id, OutPort: 0}, INT{NodeID: id, OutPort: 1}, INT{NodeID: id, OutPort: 2}, INT{NodeID: id, OutPort: 3}
+}
+
+func WanCameraImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, clip_vision_output CLIP_VISION_OUTPUT, start_image IMAGE, camera_conditions WAN_CAMERA_EMBEDDING, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanCameraImageToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// WanContextWindowsManual - WAN Context Windows (Manual)
+func WanContextWindowsManual(gr *Graph, model MODEL, context_schedule COMBO, fuse_method COMBO, context_length, context_overlap int, context_stride int, closed_loop bool, freenoise bool) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "WanContextWindowsManual",
+		Inputs: map[string]Value{
+			"model":            Link(model),
+			"context_length":   Int(context_length),
+			"context_overlap":  Int(context_overlap),
+			"context_schedule": Link(context_schedule),
+			"context_stride":   Int(context_stride),
+			"closed_loop":      Bool(closed_loop),
+			"fuse_method":      Link(fuse_method),
+			"freenoise":        Bool(freenoise),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
+}
+
+func WanFirstLastFrameToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, clip_vision_start_image CLIP_VISION_OUTPUT, clip_vision_end_image CLIP_VISION_OUTPUT, start_image IMAGE, end_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanFirstLastFrameToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func WanFunControlToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, clip_vision_output CLIP_VISION_OUTPUT, start_image IMAGE, control_video IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanFunControlToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func WanFunInpaintToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, clip_vision_output CLIP_VISION_OUTPUT, start_image IMAGE, end_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanFunInpaintToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func WanHuMoImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, audio_encoder_output AUDIO_ENCODER_OUTPUT, ref_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanHuMoImageToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// WanImageToImageApi - Wan Image to Image
+func WanImageToImageApi(gr *Graph, model COMBO, image IMAGE, prompt, negative_prompt string, seed int, watermark bool) (_ *Node, out_image IMAGE) {
+	nd := &Node{
+		Class: "WanImageToImageApi",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"image":  Link(image),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func WanImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, clip_vision_output CLIP_VISION_OUTPUT, start_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanImageToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// WanImageToVideoApi - Wan Image to Video
+func WanImageToVideoApi(gr *Graph, model COMBO, image IMAGE, resolution COMBO, audio AUDIO, shot_type COMBO, prompt, negative_prompt string, duration int, seed int, generate_audio, prompt_extend, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "WanImageToVideoApi",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"image":  Link(image),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func WanMoveConcatTrack(gr *Graph, tracks_1 TRACKS, tracks_2 TRACKS) (_ *Node, tracks TRACKS) {
+	nd := &Node{
+		Class: "WanMoveConcatTrack",
+		Inputs: map[string]Value{
+			"tracks_1": Link(tracks_1),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, TRACKS{NodeID: id, OutPort: 0}
+}
+
+func WanMoveTrackToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, start_image IMAGE, tracks TRACKS, clip_vision_output CLIP_VISION_OUTPUT, strength float64, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanMoveTrackToVideo",
+		Inputs: map[string]Value{
+			"positive":    Link(positive),
+			"negative":    Link(negative),
+			"vae":         Link(vae),
+			"strength":    Float(strength),
+			"width":       Int(width),
+			"height":      Int(height),
+			"length":      Int(length),
+			"batch_size":  Int(batch_size),
+			"start_image": Link(start_image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func WanMoveTracksFromCoords(gr *Graph, track_mask MASK, track_coords string) (_ *Node, tracks TRACKS, track_length INT) {
+	nd := &Node{
+		Class:  "WanMoveTracksFromCoords",
+		Inputs: map[string]Value{},
+	}
+	id := gr.Add(nd)
+	return nd, TRACKS{NodeID: id, OutPort: 0}, INT{NodeID: id, OutPort: 1}
+}
+
+func WanMoveVisualizeTracks(gr *Graph, images IMAGE, tracks TRACKS, line_resolution, circle_size int, opacity float64, line_width int) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "WanMoveVisualizeTracks",
+		Inputs: map[string]Value{
+			"images":          Link(images),
+			"line_resolution": Int(line_resolution),
+			"circle_size":     Int(circle_size),
+			"opacity":         Float(opacity),
+			"line_width":      Int(line_width),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func WanPhantomSubjectToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, images IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, negative_text CONDITIONING, negative_img_text CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanPhantomSubjectToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, CONDITIONING{NodeID: id, OutPort: 2}, LATENT{NodeID: id, OutPort: 3}
+}
+
+// WanReferenceVideoApi - Wan Reference to Video
+func WanReferenceVideoApi(gr *Graph, model COMBO, reference_videos COMFY_AUTOGROW_V3, size COMBO, shot_type COMBO, prompt, negative_prompt string, duration, seed int, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "WanReferenceVideoApi",
+		Inputs: map[string]Value{
+			"model":            Link(model),
+			"prompt":           String(prompt),
+			"negative_prompt":  String(negative_prompt),
+			"reference_videos": Link(reference_videos),
+			"size":             Link(size),
+			"duration":         Int(duration),
+			"seed":             Int(seed),
+			"shot_type":        Link(shot_type),
+			"watermark":        Bool(watermark),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func WanSoundImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, audio_encoder_output AUDIO_ENCODER_OUTPUT, ref_image IMAGE, control_video IMAGE, ref_motion IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanSoundImageToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func WanSoundImageToVideoExtend(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, video_latent LATENT, audio_encoder_output AUDIO_ENCODER_OUTPUT, ref_image IMAGE, control_video IMAGE, length int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanSoundImageToVideoExtend",
+		Inputs: map[string]Value{
+			"positive":     Link(positive),
+			"negative":     Link(negative),
+			"vae":          Link(vae),
+			"length":       Int(length),
+			"video_latent": Link(video_latent),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+// WanTextToImageApi - Wan Text to Image
+func WanTextToImageApi(gr *Graph, model COMBO, prompt, negative_prompt string, width, height, seed int, prompt_extend, watermark bool) (_ *Node, image IMAGE) {
+	nd := &Node{
+		Class: "WanTextToImageApi",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+// WanTextToVideoApi - Wan Text to Video
+func WanTextToVideoApi(gr *Graph, model COMBO, size COMBO, audio AUDIO, shot_type COMBO, prompt, negative_prompt string, duration int, seed int, generate_audio, prompt_extend, watermark bool) (_ *Node, video VIDEO) {
+	nd := &Node{
+		Class: "WanTextToVideoApi",
+		Inputs: map[string]Value{
+			"model":  Link(model),
+			"prompt": String(prompt),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, VIDEO{NodeID: id, OutPort: 0}
+}
+
+func WanTrackToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, start_image IMAGE, clip_vision_output CLIP_VISION_OUTPUT, tracks string, width, height, length, batch_size int, temperature float64, topk int) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT) {
+	nd := &Node{
+		Class: "WanTrackToVideo",
+		Inputs: map[string]Value{
+			"positive":    Link(positive),
+			"negative":    Link(negative),
+			"vae":         Link(vae),
+			"tracks":      String(tracks),
+			"width":       Int(width),
+			"height":      Int(height),
+			"length":      Int(length),
+			"batch_size":  Int(batch_size),
+			"temperature": Float(temperature),
+			"topk":        Int(topk),
+			"start_image": Link(start_image),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}
+}
+
+func WanVaceToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, vae VAE, control_video IMAGE, control_masks MASK, reference_image IMAGE, width, height, length, batch_size int, strength float64) (_ *Node, out_positive CONDITIONING, out_negative CONDITIONING, latent LATENT, trim_latent INT) {
+	nd := &Node{
+		Class: "WanVaceToVideo",
+		Inputs: map[string]Value{
+			"positive":   Link(positive),
+			"negative":   Link(negative),
+			"vae":        Link(vae),
+			"width":      Int(width),
+			"height":     Int(height),
+			"length":     Int(length),
+			"batch_size": Int(batch_size),
+			"strength":   Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}, INT{NodeID: id, OutPort: 3}
 }
 
 // WebcamCapture - Webcam Capture
-func WebcamCapture(g *Graph, image WEBCAM, width, height int, capture_on_queue bool) (_ *Node, out_image IMAGE) {
-	n := &Node{
+func WebcamCapture(gr *Graph, image WEBCAM, width, height int, capture_on_queue bool) (_ *Node, out_image IMAGE) {
+	nd := &Node{
 		Class: "WebcamCapture",
 		Inputs: map[string]Value{
 			"image":            Link(image),
@@ -2713,25 +8741,39 @@ func WebcamCapture(g *Graph, image WEBCAM, width, height int, capture_on_queue b
 			"capture_on_queue": Bool(capture_on_queue),
 		},
 	}
-	id := g.Add(n)
-	return n, IMAGE{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, IMAGE{NodeID: id, OutPort: 0}
+}
+
+func ZImageFunControlnet(gr *Graph, model MODEL, model_patch MODEL_PATCH, vae VAE, image IMAGE, inpaint_image IMAGE, mask MASK, strength float64) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "ZImageFunControlnet",
+		Inputs: map[string]Value{
+			"model":       Link(model),
+			"model_patch": Link(model_patch),
+			"vae":         Link(vae),
+			"strength":    Float(strength),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
 // UnCLIPCheckpointLoader - unCLIPCheckpointLoader
-func UnCLIPCheckpointLoader(g *Graph, ckpt_name string) (_ *Node, model MODEL, clip CLIP, vae VAE, clip_vision CLIP_VISION) {
-	n := &Node{
+func UnCLIPCheckpointLoader(gr *Graph, ckpt_name string) (_ *Node, model MODEL, clip CLIP, vae VAE, clip_vision CLIP_VISION) {
+	nd := &Node{
 		Class: "unCLIPCheckpointLoader",
 		Inputs: map[string]Value{
 			"ckpt_name": String(ckpt_name),
 		},
 	}
-	id := g.Add(n)
-	return n, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}, CLIP_VISION{NodeID: id, OutPort: 3}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}, CLIP{NodeID: id, OutPort: 1}, VAE{NodeID: id, OutPort: 2}, CLIP_VISION{NodeID: id, OutPort: 3}
 }
 
 // UnCLIPConditioning - unCLIPConditioning
-func UnCLIPConditioning(g *Graph, conditioning CONDITIONING, clip_vision_output CLIP_VISION_OUTPUT, strength, noise_augmentation float64) (_ *Node, out_conditioning CONDITIONING) {
-	n := &Node{
+func UnCLIPConditioning(gr *Graph, conditioning CONDITIONING, clip_vision_output CLIP_VISION_OUTPUT, strength, noise_augmentation float64) (_ *Node, out_conditioning CONDITIONING) {
+	nd := &Node{
 		Class: "unCLIPConditioning",
 		Inputs: map[string]Value{
 			"conditioning":       Link(conditioning),
@@ -2740,6 +8782,17 @@ func UnCLIPConditioning(g *Graph, conditioning CONDITIONING, clip_vision_output 
 			"noise_augmentation": Float(noise_augmentation),
 		},
 	}
-	id := g.Add(n)
-	return n, CONDITIONING{NodeID: id, OutPort: 0}
+	id := gr.Add(nd)
+	return nd, CONDITIONING{NodeID: id, OutPort: 0}
+}
+
+func WanBlockSwap(gr *Graph, model MODEL) (_ *Node, out_model MODEL) {
+	nd := &Node{
+		Class: "wanBlockSwap",
+		Inputs: map[string]Value{
+			"model": Link(model),
+		},
+	}
+	id := gr.Add(nd)
+	return nd, MODEL{NodeID: id, OutPort: 0}
 }

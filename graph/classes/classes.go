@@ -9,9 +9,17 @@ import (
 )
 
 func Decode(r io.Reader) (Classes, error) {
-	var res map[types.NodeClass]jsonClass
-	if err := json.NewDecoder(r).Decode(&res); err != nil {
+	var raw map[types.NodeClass]json.RawMessage
+	if err := json.NewDecoder(r).Decode(&raw); err != nil {
 		return nil, err
+	}
+	res := make(map[types.NodeClass]jsonClass, len(raw))
+	for k, v := range raw {
+		var c jsonClass
+		if err := json.Unmarshal(v, &c); err != nil {
+			return nil, fmt.Errorf("%s: %w", k, err)
+		}
+		res[k] = c
 	}
 	return convertClasses(res)
 }
@@ -72,6 +80,7 @@ type Output struct {
 
 type jsonClass struct {
 	Name      types.NodeClass  `json:"name"`
+	Module    string           `json:"python_module"`
 	Title     string           `json:"display_name"`
 	Desc      string           `json:"description"`
 	Category  string           `json:"category"`
@@ -80,16 +89,22 @@ type jsonClass struct {
 	OutNames  []string         `json:"output_name"`
 	OutIsList []bool           `json:"output_is_list"`
 	Input     struct {
-		Required jsonMap[string, jsonTypeInput]  `json:"required"`
-		Optional jsonMap[string, jsonTypeInput]  `json:"optional"`
-		Hidden   jsonMap[string, types.TypeName] `json:"hidden"`
+		Required jsonMap[string, jsonTypeInput] `json:"required"`
+		Optional jsonMap[string, jsonTypeInput] `json:"optional"`
+		Hidden   jsonMap[string, jsonTypeInput] `json:"hidden"`
 	} `json:"input"`
+	InputOrder struct {
+		Required []string `json:"required"`
+		Optional []string `json:"optional"`
+		Hidden   []string `json:"hidden"`
+	} `json:"input_order"`
 }
 
 var _ json.Unmarshaler = (*jsonOption)(nil)
 
 type jsonOption struct {
 	Name   string
+	Val    json.Number
 	Inputs jsonMap[string, jsonTypeInput]
 }
 
@@ -98,6 +113,11 @@ func (v *jsonOption) UnmarshalJSON(data []byte) error {
 	var name string
 	if err := json.Unmarshal(data, &name); err == nil {
 		v.Name = name
+		return nil
+	}
+	var val json.Number
+	if err := json.Unmarshal(data, &val); err == nil {
+		v.Val = val
 		return nil
 	}
 	var arr []json.RawMessage
@@ -167,10 +187,16 @@ func (v *jsonTypeInput) UnmarshalJSONArray(arr []json.RawMessage) error {
 func (v *jsonTypeInput) UnmarshalJSON(data []byte) error {
 	*v = jsonTypeInput{}
 	var arr []json.RawMessage
-	if err := json.Unmarshal(data, &arr); err != nil {
-		return err
+	err := json.Unmarshal(data, &arr)
+	if err == nil {
+		return v.UnmarshalJSONArray(arr)
 	}
-	return v.UnmarshalJSONArray(arr)
+	var name json.RawMessage
+	err = json.Unmarshal(data, &name)
+	if err == nil {
+		return v.UnmarshalJSONArray([]json.RawMessage{name})
+	}
+	return err
 }
 
 func (v *jsonTypeInput) Convert(name string, kind InputKind) Input {
@@ -247,11 +273,7 @@ func convertClasses(res map[types.NodeClass]jsonClass) (map[types.NodeClass]*Cla
 			obj.Inputs = append(obj.Inputs, kv.Val.Convert(kv.Key, InputOptional))
 		}
 		for _, kv := range jobj.Input.Hidden {
-			obj.Inputs = append(obj.Inputs, Input{
-				Name: kv.Key,
-				Kind: InputHidden,
-				Type: kv.Val,
-			})
+			obj.Inputs = append(obj.Inputs, kv.Val.Convert(kv.Key, InputHidden))
 		}
 		for i, typ := range jobj.OutTypes {
 			obj.Outputs = append(obj.Outputs, Output{
