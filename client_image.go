@@ -6,54 +6,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
+	"image/jpeg"
 	"image/png"
 	"io"
+	"iter"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"net/url"
+	"strconv"
+
+	"github.com/dennwc/gocomfy/types"
 )
 
-type ImageType string
+type ImageType = types.ImageType
 
 const (
-	ImageInput  = ImageType("input")
-	ImageTemp   = ImageType("temp")
-	ImageOutput = ImageType("output")
+	ImageInput  = types.ImageInput
+	ImageTemp   = types.ImageTemp
+	ImageOutput = types.ImageOutput
 )
 
-type ImageRef struct {
-	Filename  string    `json:"filename"`
-	Subfolder string    `json:"subfolder"`
-	Type      ImageType `json:"type"`
-}
+type ImageRef = types.ImageRef
 
-func (r ImageRef) setURL(vals url.Values) {
-	vals.Set("filename", r.Filename)
-	vals.Set("subfolder", r.Subfolder)
-	vals.Set("type", string(r.Type))
-}
-
-// AnnotatedPath returns annotated path that is accepted by ComfyUI image load nodes.
-func (r ImageRef) AnnotatedPath() string {
-	if r.Subfolder != "" {
-		return fmt.Sprintf("%s/%s [%s]", r.Subfolder, r.Filename, r.Type)
-	}
-	return fmt.Sprintf("%s [%s]", r.Filename, r.Type)
-}
-
-func (c *Client) GetImageFile(ctx context.Context, ref ImageRef) (io.ReadCloser, error) {
+func (c *Client) GetImageFile(ctx context.Context, ref ImageRef) (io.ReadCloser, string, error) {
 	vals := make(url.Values)
-	ref.setURL(vals)
+	ref.SetURL(vals)
 	return c.get(ctx, "/view?"+vals.Encode())
 }
 
 func (c *Client) GetImage(ctx context.Context, ref ImageRef) (image.Image, error) {
-	rc, err := c.GetImageFile(ctx, ref)
+	rc, typ, err := c.GetImageFile(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	defer rc.Close()
+	switch typ {
+	case "image/png":
+		return png.Decode(rc)
+	case "image/jpeg":
+		return jpeg.Decode(rc)
+	}
 	return png.Decode(rc)
 }
 
@@ -118,4 +111,67 @@ func (c *Client) UploadImage(ctx context.Context, ref ImageRef, img image.Image,
 		return nil, err
 	}
 	return c.UploadImageFile(ctx, ref, &buf, overwrite)
+}
+
+type ListAssetsOpts struct {
+	Offset int
+	Limit  int
+}
+
+type Asset struct {
+	ID         string   `json:"id"`
+	Name       string   `json:"name"`
+	Hash       string   `json:"asset_hash"`
+	Size       int64    `json:"size"`
+	Mime       int64    `json:"mime_type"`
+	Tags       []string `json:"tags"`
+	UserMeta   string   `json:"user_metadata"`
+	PreviewID  string   `json:"preview_id"`
+	PreviewURL string   `json:"preview_url"`
+	PromptID   string   `json:"prompt_id"`
+}
+
+func (c *Client) ListAssetsPage(ctx context.Context, opts *ListAssetsOpts) ([]Asset, error) {
+	if opts == nil {
+		opts = &ListAssetsOpts{}
+	}
+	if opts.Limit <= 0 {
+		opts.Limit = 20
+	}
+	qu := make(url.Values)
+	qu.Set("offset", strconv.Itoa(opts.Offset))
+	qu.Set("limit", strconv.Itoa(opts.Limit))
+
+	var out struct {
+		Items []Asset `json:"assets"`
+	}
+	err := c.getJSON(ctx, "/api/assets?"+qu.Encode(), out)
+	if err != nil {
+		return nil, err
+	}
+	return out.Items, nil
+}
+
+func (c *Client) ListAssetsSeq(ctx context.Context, opts *ListAssetsOpts) iter.Seq2[Asset, error] {
+	return func(yield func(Asset, error) bool) {
+		if opts == nil {
+			opts = &ListAssetsOpts{}
+		}
+		for {
+			list, err := c.ListAssetsPage(ctx, opts)
+			if err != nil {
+				yield(Asset{}, err)
+				return
+			}
+			if len(list) == 0 {
+				return
+			}
+			opts.Offset += len(list)
+			for _, a := range list {
+				if !yield(a, nil) {
+					return
+				}
+			}
+		}
+	}
 }

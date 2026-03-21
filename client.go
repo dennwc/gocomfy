@@ -3,7 +3,6 @@ package gocomfy
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,14 +12,14 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/dennwc/gocomfy/wsconn"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 )
 
 type clientOptions struct {
 	Log         *slog.Logger
 	NoWebSocket bool
-	WSDialer    *websocket.Dialer
+	WSOptions   []wsconn.DialOption
 	HTTPClient  *http.Client
 	OnQueueSize func(queue int)
 }
@@ -35,9 +34,9 @@ func (f clientOptionFunc) applyToClient(c *clientOptions) {
 	f(c)
 }
 
-func WithWSDialer(dialer *websocket.Dialer) ClientOption {
+func WithWSDialOptions(opts ...wsconn.DialOption) ClientOption {
 	return clientOptionFunc(func(c *clientOptions) {
-		c.WSDialer = dialer
+		c.WSOptions = append(c.WSOptions, opts...)
 	})
 }
 
@@ -67,9 +66,6 @@ func NewClient(ctx context.Context, host string, opts ...ClientOption) (*Client,
 	if opt.Log == nil {
 		opt.Log = slog.Default()
 	}
-	if opt.WSDialer == nil {
-		opt.WSDialer = websocket.DefaultDialer
-	}
 	if opt.HTTPClient == nil {
 		opt.HTTPClient = http.DefaultClient
 	}
@@ -80,10 +76,9 @@ func NewClient(ctx context.Context, host string, opts ...ClientOption) (*Client,
 	}
 	sid := id.String()
 	opt.Log = opt.Log.With("clientId", sid)
-	var conn *websocket.Conn
+	var conn *wsconn.Conn
 	if !opt.NoWebSocket {
-		wsurl := fmt.Sprintf("ws://%s/ws?clientId=%s", host, sid)
-		conn, _, err = opt.WSDialer.DialContext(ctx, wsurl, nil)
+		conn, err = wsconn.Dial(ctx, host, sid, opt.WSOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +107,7 @@ type Client struct {
 	onQueueSize func(queue int)
 
 	mu      sync.RWMutex
-	conn    *websocket.Conn
+	conn    *wsconn.Conn
 	prompts map[string]*Prompt
 }
 
@@ -152,74 +147,41 @@ func (c *Client) delPrompt(pid string) {
 func (c *Client) readEvents() {
 	defer c.killPrompts()
 	for {
-		typ, r, err := c.conn.NextReader()
-		if errors.Is(err, net.ErrClosed) {
+		m, err := c.conn.ReadMsg()
+		if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
 			return
 		} else if err != nil {
 			c.log.Error("websocket error", "err", err, "type", fmt.Sprintf("%T", err))
 			return
 		}
-		switch typ {
-		case websocket.CloseMessage:
-			return
-		case websocket.TextMessage:
-			c.procTextEvent(r)
-		case websocket.BinaryMessage:
-			var buf [64]byte
-			n1, _ := r.Read(buf[:])
-			n2, _ := io.Copy(io.Discard, r)
-			data := buf[:n1]
-			c.log.Info("websocket binary data", "size", n1+int(n2), "data", hex.EncodeToString(data))
+		switch m := m.(type) {
+		case *wsconn.EventMsg:
+			c.procEvent(m.Event)
 		}
 	}
 }
 
-func (c *Client) procTextEvent(r io.Reader) {
-	var ev struct {
-		Type string          `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}
-	if err := json.NewDecoder(r).Decode(&ev); err != nil {
-		c.log.Error("cannot decode websocket event", "err", err)
-		return
-	}
-	log := c.log.With("type", ev.Type)
-	var pe struct {
-		PromptID string `json:"prompt_id"`
-	}
-	if err := json.Unmarshal(ev.Data, &pe); err == nil && pe.PromptID != "" {
-		log = log.With("promptID", pe.PromptID)
-	}
-	log.Debug("websocket event", "data", ev.Data)
-	if pe.PromptID != "" {
-		c.procPromptEvent(log, pe.PromptID, ev.Type, ev.Data)
+func (c *Client) procEvent(ev wsconn.Event) {
+	log := c.log.With("type", ev.EventType())
+	log.Debug("websocket event", "data", ev)
+	if pe, ok := ev.(wsconn.PromptEvent); ok {
+		c.procPromptEvent(log, pe)
 	} else {
-		c.procClientEvent(log, ev.Type, ev.Data)
+		c.procClientEvent(log, ev)
 	}
 }
 
-func (c *Client) procClientEvent(log *slog.Logger, typ string, raw json.RawMessage) {
-	switch typ {
-	case "status":
-		c.procStatus(log, raw)
+func (c *Client) procClientEvent(log *slog.Logger, ev wsconn.Event) {
+	switch ev := ev.(type) {
+	case *wsconn.StatusEvent:
+		c.procStatus(log, ev)
 	default:
 		log.Debug("unknown client event")
 	}
 }
 
-func (c *Client) procStatus(log *slog.Logger, raw json.RawMessage) {
+func (c *Client) procStatus(log *slog.Logger, ev *wsconn.StatusEvent) {
 	if c.onQueueSize == nil {
-		return
-	}
-	var ev struct {
-		Status struct {
-			Exec struct {
-				Queue *int `json:"queue_remaining"`
-			} `json:"exec_info"`
-		} `json:"status"`
-	}
-	if err := json.Unmarshal(raw, &ev); err != nil {
-		log.Error("cannot decode status event", "err", err)
 		return
 	}
 	if q := ev.Status.Exec.Queue; q != nil {
@@ -227,25 +189,25 @@ func (c *Client) procStatus(log *slog.Logger, raw json.RawMessage) {
 	}
 }
 
-func (c *Client) get(ctx context.Context, path string) (io.ReadCloser, error) {
+func (c *Client) get(ctx context.Context, path string) (io.ReadCloser, string, error) {
 	addr := fmt.Sprintf("http://%s%s", c.host, path)
 	req, err := http.NewRequestWithContext(ctx, "GET", addr, nil)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	resp, err := c.hcli.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if resp.StatusCode != http.StatusOK {
 		_ = resp.Body.Close()
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	return resp.Body, nil
+	return resp.Body, resp.Header.Get("Content-Type"), nil
 }
 
 func (c *Client) getJSON(ctx context.Context, path string, out any) error {
-	rc, err := c.get(ctx, path)
+	rc, _, err := c.get(ctx, path)
 	if err != nil {
 		return err
 	}

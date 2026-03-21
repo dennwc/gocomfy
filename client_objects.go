@@ -8,7 +8,8 @@ import (
 )
 
 func (c *Client) ObjectsInfoRaw(ctx context.Context) (io.ReadCloser, error) {
-	return c.get(ctx, "/object_info")
+	rc, _, err := c.get(ctx, "/object_info")
+	return rc, err
 }
 
 func (c *Client) ObjectsInfo(ctx context.Context) (classes.Classes, error) {

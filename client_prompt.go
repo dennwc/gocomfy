@@ -4,13 +4,74 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"iter"
 	"log/slog"
+	"net/url"
+	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/dennwc/gocomfy/graph/apigraph"
 	"github.com/dennwc/gocomfy/graph/types"
+	"github.com/dennwc/gocomfy/wsconn"
 )
+
+type ListJobsOpts struct {
+	Offset int
+	Limit  int
+}
+
+type Job struct {
+	ID            string    `json:"id"`
+	Status        string    `json:"status"`
+	WorkflowID    string    `json:"workflow_id"`
+	PreviewOutput *ImageRef `json:"preview_output"`
+}
+
+func (c *Client) ListJobsPage(ctx context.Context, opts *ListJobsOpts) ([]Job, error) {
+	if opts == nil {
+		opts = &ListJobsOpts{}
+	}
+	if opts.Limit <= 0 {
+		opts.Limit = 20
+	}
+	qu := make(url.Values)
+	qu.Set("offset", strconv.Itoa(opts.Offset))
+	qu.Set("limit", strconv.Itoa(opts.Limit))
+
+	var out struct {
+		Items []Job `json:"jobs"`
+	}
+	err := c.getJSON(ctx, "/api/jobs?"+qu.Encode(), &out)
+	if err != nil {
+		return nil, err
+	}
+	return out.Items, nil
+}
+
+func (c *Client) ListJobsSeq(ctx context.Context, opts *ListJobsOpts) iter.Seq2[Job, error] {
+	return func(yield func(Job, error) bool) {
+		if opts == nil {
+			opts = &ListJobsOpts{}
+		}
+		for {
+			list, err := c.ListJobsPage(ctx, opts)
+			if err != nil {
+				yield(Job{}, err)
+				return
+			}
+			if len(list) == 0 {
+				return
+			}
+			opts.Offset += len(list)
+			for _, a := range list {
+				if !yield(a, nil) {
+					return
+				}
+			}
+		}
+	}
+}
 
 func (c *Client) cancelAllPrompts(ctx context.Context) error {
 	return c.postJSON(ctx, "/queue", struct {
@@ -148,13 +209,13 @@ func (c *Client) RunPrompt(ctx context.Context, prompt *apigraph.Graph) (Results
 	return c.runPrompt(ctx, prompt)
 }
 
-func (c *Client) procPromptEvent(log *slog.Logger, pid string, typ string, raw json.RawMessage) {
-	p := c.getPrompt(pid)
+func (c *Client) procPromptEvent(log *slog.Logger, ev wsconn.PromptEvent) {
+	p := c.getPrompt(ev.GetPromptID())
 	if p == nil {
 		log.Error("cannot find prompt")
 		return
 	}
-	if err := p.processEvent(typ, raw); err != nil {
+	if err := p.processEvent(ev); err != nil {
 		p.log.Error("cannot process event", "err", err)
 	}
 }
@@ -212,21 +273,21 @@ func (p *Prompt) Results(ctx context.Context) (Results, error) {
 	return p.c.PromptResults(ctx, p.pid)
 }
 
-func (p *Prompt) processEvent(typ string, raw json.RawMessage) error {
+func (p *Prompt) processEvent(ev wsconn.PromptEvent) error {
 	if p.closed.Load() {
 		return nil
 	}
-	switch typ {
-	case "execution_start":
-		return p.procExecStart(raw)
-	case "execution_cached":
-		return p.procExecCached(raw)
-	case "executing":
-		return p.procExecuting(raw)
-	case "progress":
-		return p.procProgress(raw)
-	case "executed":
-		return p.procExecuted(raw)
+	switch ev := ev.(type) {
+	case *wsconn.ExecStart:
+		return p.procExecStart(ev)
+	case *wsconn.ExecCached:
+		return p.procExecCached(ev)
+	case *wsconn.ExecNode:
+		return p.procExecuting(ev)
+	case *wsconn.Progress:
+		return p.procProgress(ev)
+	case *wsconn.ExecNodeDone:
+		return p.procExecuted(ev)
 	default:
 		p.log.Debug("unknown event")
 		return nil
@@ -246,21 +307,15 @@ func (p *Prompt) event(e Event) error {
 	}
 }
 
-func (p *Prompt) procExecStart(raw json.RawMessage) error {
+func (p *Prompt) procExecStart(ev *wsconn.ExecStart) error {
 	return p.event(ExecStart{})
 }
 
-func (p *Prompt) procExecCached(raw json.RawMessage) error {
-	var ev struct {
-		Nodes []string `json:"nodes"`
-	}
-	if err := json.Unmarshal(raw, &ev); err != nil {
-		return err
-	}
+func (p *Prompt) procExecCached(ev *wsconn.ExecCached) error {
 	var e ExecCache
 	for _, node := range ev.Nodes {
 		var id NodeID
-		if err := id.Parse(node); err != nil {
+		if err := id.Parse(string(node)); err != nil {
 			return err
 		}
 		e.Nodes = append(e.Nodes, id)
@@ -277,13 +332,7 @@ func (p *Prompt) curDone() error {
 	return err
 }
 
-func (p *Prompt) procExecuting(raw json.RawMessage) error {
-	var ev struct {
-		Node *string `json:"node"`
-	}
-	if err := json.Unmarshal(raw, &ev); err != nil {
-		return err
-	}
+func (p *Prompt) procExecuting(ev *wsconn.ExecNode) error {
 	if err := p.curDone(); err != nil {
 		return err
 	}
@@ -293,45 +342,28 @@ func (p *Prompt) procExecuting(raw json.RawMessage) error {
 		return err
 	}
 	var id NodeID
-	if err := id.Parse(*ev.Node); err != nil {
+	if err := id.Parse(string(*ev.Node)); err != nil {
 		return err
 	}
 	p.curNode = id
 	return p.event(NodeStart{Node: id})
 }
 
-func (p *Prompt) procProgress(raw json.RawMessage) error {
-	var ev struct {
-		Node  string `json:"node"`
-		Value int    `json:"value"`
-		Max   int    `json:"max"`
-	}
-	if err := json.Unmarshal(raw, &ev); err != nil {
-		return err
-	}
+func (p *Prompt) procProgress(ev *wsconn.Progress) error {
 	var id NodeID
-	if err := id.Parse(ev.Node); err != nil {
+	if err := id.Parse(string(ev.Node)); err != nil {
 		return err
 	}
 	return p.event(NodeProg{
 		Node:  id,
-		Value: ev.Value,
-		Max:   ev.Max,
+		Value: int(ev.Value),
+		Max:   int(ev.Max),
 	})
 }
 
-func (p *Prompt) procExecuted(raw json.RawMessage) error {
-	var ev struct {
-		Node   string `json:"node"`
-		Output struct {
-			Images []ImageRef `json:"images"`
-		} `json:"output"`
-	}
-	if err := json.Unmarshal(raw, &ev); err != nil {
-		return err
-	}
+func (p *Prompt) procExecuted(ev *wsconn.ExecNodeDone) error {
 	var id NodeID
-	if err := id.Parse(ev.Node); err != nil {
+	if err := id.Parse(string(ev.Node)); err != nil {
 		return err
 	}
 	if p.curNode == id {
