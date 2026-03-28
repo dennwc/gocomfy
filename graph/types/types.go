@@ -25,7 +25,7 @@ type TypeName string
 
 func (t TypeName) IsScalar() bool {
 	switch t {
-	case IntType, FloatType, StringType, BoolType:
+	case IntType, FloatType, StringType, BoolType, ComboType:
 		return true
 	}
 	return false
@@ -36,4 +36,5 @@ const (
 	StringType = TypeName("STRING")
 	FloatType  = TypeName("FLOAT")
 	BoolType   = TypeName("BOOLEAN")
+	ComboType  = TypeName("COMBO")
 )

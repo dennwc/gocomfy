@@ -148,11 +148,11 @@ func AdjustContrast(gr *Graph, images IMAGE, factor float64) (_ *Node, out_image
 	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func AlignYourStepsScheduler(gr *Graph, model_type COMBO, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+func AlignYourStepsScheduler(gr *Graph, model_type string, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
 	nd := &Node{
 		Class: "AlignYourStepsScheduler",
 		Inputs: map[string]Value{
-			"model_type": Link(model_type),
+			"model_type": String(model_type),
 			"steps":      Int(steps),
 			"denoise":    Float(denoise),
 		},
@@ -175,13 +175,13 @@ func AudioAdjustVolume(gr *Graph, audio AUDIO, volume int) (_ *Node, out_audio A
 }
 
 // AudioConcat - Audio Concat
-func AudioConcat(gr *Graph, audio1 AUDIO, audio2 AUDIO, direction COMBO) (_ *Node, audio AUDIO) {
+func AudioConcat(gr *Graph, audio1 AUDIO, audio2 AUDIO, direction string) (_ *Node, audio AUDIO) {
 	nd := &Node{
 		Class: "AudioConcat",
 		Inputs: map[string]Value{
 			"audio1":    Link(audio1),
 			"audio2":    Link(audio2),
-			"direction": Link(direction),
+			"direction": String(direction),
 		},
 	}
 	id := gr.Add(nd)
@@ -200,11 +200,11 @@ func AudioEncoderEncode(gr *Graph, audio_encoder AUDIO_ENCODER, audio AUDIO) (_ 
 	return nd, AUDIO_ENCODER_OUTPUT{NodeID: id, OutPort: 0}
 }
 
-func AudioEncoderLoader(gr *Graph, audio_encoder_name COMBO) (_ *Node, audio_encoder AUDIO_ENCODER) {
+func AudioEncoderLoader(gr *Graph, audio_encoder_name string) (_ *Node, audio_encoder AUDIO_ENCODER) {
 	nd := &Node{
 		Class: "AudioEncoderLoader",
 		Inputs: map[string]Value{
-			"audio_encoder_name": Link(audio_encoder_name),
+			"audio_encoder_name": String(audio_encoder_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -212,13 +212,13 @@ func AudioEncoderLoader(gr *Graph, audio_encoder_name COMBO) (_ *Node, audio_enc
 }
 
 // AudioMerge - Audio Merge
-func AudioMerge(gr *Graph, audio1 AUDIO, audio2 AUDIO, merge_method COMBO) (_ *Node, audio AUDIO) {
+func AudioMerge(gr *Graph, audio1 AUDIO, audio2 AUDIO, merge_method string) (_ *Node, audio AUDIO) {
 	nd := &Node{
 		Class: "AudioMerge",
 		Inputs: map[string]Value{
 			"audio1":       Link(audio1),
 			"audio2":       Link(audio2),
-			"merge_method": Link(merge_method),
+			"merge_method": String(merge_method),
 		},
 	}
 	id := gr.Add(nd)
@@ -237,12 +237,12 @@ func BasicGuider(gr *Graph, model MODEL, conditioning CONDITIONING) (_ *Node, gu
 	return nd, GUIDER{NodeID: id, OutPort: 0}
 }
 
-func BasicScheduler(gr *Graph, model MODEL, scheduler COMBO, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+func BasicScheduler(gr *Graph, model MODEL, scheduler string, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
 	nd := &Node{
 		Class: "BasicScheduler",
 		Inputs: map[string]Value{
 			"model":     Link(model),
-			"scheduler": Link(scheduler),
+			"scheduler": String(scheduler),
 			"steps":     Int(steps),
 			"denoise":   Float(denoise),
 		},
@@ -302,16 +302,16 @@ func BetaSamplingScheduler(gr *Graph, model MODEL, steps int, alpha, beta float6
 }
 
 // ByteDanceFirstLastFrameNode - ByteDance First-Last-Frame to Video
-func ByteDanceFirstLastFrameNode(gr *Graph, model COMBO, first_frame IMAGE, last_frame IMAGE, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
+func ByteDanceFirstLastFrameNode(gr *Graph, first_frame IMAGE, last_frame IMAGE, model string, prompt string, resolution, aspect_ratio string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ByteDanceFirstLastFrameNode",
 		Inputs: map[string]Value{
-			"model":        Link(model),
+			"model":        String(model),
 			"prompt":       String(prompt),
 			"first_frame":  Link(first_frame),
 			"last_frame":   Link(last_frame),
-			"resolution":   Link(resolution),
-			"aspect_ratio": Link(aspect_ratio),
+			"resolution":   String(resolution),
+			"aspect_ratio": String(aspect_ratio),
 			"duration":     Int(duration),
 		},
 	}
@@ -320,11 +320,11 @@ func ByteDanceFirstLastFrameNode(gr *Graph, model COMBO, first_frame IMAGE, last
 }
 
 // ByteDanceImageEditNode - ByteDance Image Edit
-func ByteDanceImageEditNode(gr *Graph, model COMBO, image IMAGE, prompt string, seed int, guidance_scale float64, watermark bool) (_ *Node, out_image IMAGE) {
+func ByteDanceImageEditNode(gr *Graph, image IMAGE, model string, prompt string, seed int, guidance_scale float64, watermark bool) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ByteDanceImageEditNode",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"image":  Link(image),
 			"prompt": String(prompt),
 		},
@@ -334,13 +334,13 @@ func ByteDanceImageEditNode(gr *Graph, model COMBO, image IMAGE, prompt string, 
 }
 
 // ByteDanceImageNode - ByteDance Image
-func ByteDanceImageNode(gr *Graph, model COMBO, size_preset COMBO, prompt string, width, height, seed int, guidance_scale float64, watermark bool) (_ *Node, image IMAGE) {
+func ByteDanceImageNode(gr *Graph, model string, prompt string, size_preset string, width, height, seed int, guidance_scale float64, watermark bool) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "ByteDanceImageNode",
 		Inputs: map[string]Value{
-			"model":       Link(model),
+			"model":       String(model),
 			"prompt":      String(prompt),
-			"size_preset": Link(size_preset),
+			"size_preset": String(size_preset),
 			"width":       Int(width),
 			"height":      Int(height),
 		},
@@ -350,15 +350,15 @@ func ByteDanceImageNode(gr *Graph, model COMBO, size_preset COMBO, prompt string
 }
 
 // ByteDanceImageReferenceNode - ByteDance Reference Images to Video
-func ByteDanceImageReferenceNode(gr *Graph, model COMBO, images IMAGE, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, watermark bool) (_ *Node, video VIDEO) {
+func ByteDanceImageReferenceNode(gr *Graph, images IMAGE, model string, prompt string, resolution, aspect_ratio string, duration, seed int, watermark bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ByteDanceImageReferenceNode",
 		Inputs: map[string]Value{
-			"model":        Link(model),
+			"model":        String(model),
 			"prompt":       String(prompt),
 			"images":       Link(images),
-			"resolution":   Link(resolution),
-			"aspect_ratio": Link(aspect_ratio),
+			"resolution":   String(resolution),
+			"aspect_ratio": String(aspect_ratio),
 			"duration":     Int(duration),
 		},
 	}
@@ -367,15 +367,15 @@ func ByteDanceImageReferenceNode(gr *Graph, model COMBO, images IMAGE, resolutio
 }
 
 // ByteDanceImageToVideoNode - ByteDance Image to Video
-func ByteDanceImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
+func ByteDanceImageToVideoNode(gr *Graph, image IMAGE, model string, prompt string, resolution, aspect_ratio string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ByteDanceImageToVideoNode",
 		Inputs: map[string]Value{
-			"model":        Link(model),
+			"model":        String(model),
 			"prompt":       String(prompt),
 			"image":        Link(image),
-			"resolution":   Link(resolution),
-			"aspect_ratio": Link(aspect_ratio),
+			"resolution":   String(resolution),
+			"aspect_ratio": String(aspect_ratio),
 			"duration":     Int(duration),
 		},
 	}
@@ -384,13 +384,13 @@ func ByteDanceImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution C
 }
 
 // ByteDanceSeedreamNode - ByteDance Seedream 4.5
-func ByteDanceSeedreamNode(gr *Graph, model COMBO, size_preset COMBO, image IMAGE, sequential_image_generation COMBO, prompt string, width, height int, max_images, seed int, watermark, fail_on_partial bool) (_ *Node, out_image IMAGE) {
+func ByteDanceSeedreamNode(gr *Graph, image IMAGE, model string, prompt string, size_preset string, width, height int, sequential_image_generation string, max_images, seed int, watermark, fail_on_partial bool) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ByteDanceSeedreamNode",
 		Inputs: map[string]Value{
-			"model":       Link(model),
+			"model":       String(model),
 			"prompt":      String(prompt),
-			"size_preset": Link(size_preset),
+			"size_preset": String(size_preset),
 		},
 	}
 	id := gr.Add(nd)
@@ -398,14 +398,14 @@ func ByteDanceSeedreamNode(gr *Graph, model COMBO, size_preset COMBO, image IMAG
 }
 
 // ByteDanceTextToVideoNode - ByteDance Text to Video
-func ByteDanceTextToVideoNode(gr *Graph, model COMBO, resolution COMBO, aspect_ratio COMBO, prompt string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
+func ByteDanceTextToVideoNode(gr *Graph, model string, prompt string, resolution, aspect_ratio string, duration, seed int, camera_fixed, watermark bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ByteDanceTextToVideoNode",
 		Inputs: map[string]Value{
-			"model":        Link(model),
+			"model":        String(model),
 			"prompt":       String(prompt),
-			"resolution":   Link(resolution),
-			"aspect_ratio": Link(aspect_ratio),
+			"resolution":   String(resolution),
+			"aspect_ratio": String(aspect_ratio),
 			"duration":     Int(duration),
 		},
 	}
@@ -623,11 +623,11 @@ func CLIPTextEncodeKandinsky5(gr *Graph, clip CLIP, clip_l, qwen25_7b string) (_
 }
 
 // CLIPTextEncodeLumina2 - CLIP Text Encode for Lumina2
-func CLIPTextEncodeLumina2(gr *Graph, system_prompt COMBO, clip CLIP, user_prompt string) (_ *Node, conditioning CONDITIONING) {
+func CLIPTextEncodeLumina2(gr *Graph, clip CLIP, system_prompt string, user_prompt string) (_ *Node, conditioning CONDITIONING) {
 	nd := &Node{
 		Class: "CLIPTextEncodeLumina2",
 		Inputs: map[string]Value{
-			"system_prompt": Link(system_prompt),
+			"system_prompt": String(system_prompt),
 			"user_prompt":   String(user_prompt),
 			"clip":          Link(clip),
 		},
@@ -650,7 +650,7 @@ func CLIPTextEncodePixArtAlpha(gr *Graph, clip CLIP, width, height int, text str
 	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func CLIPTextEncodeSD3(gr *Graph, clip CLIP, empty_padding COMBO, clip_l, clip_g, t5xxl string) (_ *Node, conditioning CONDITIONING) {
+func CLIPTextEncodeSD3(gr *Graph, clip CLIP, clip_l, clip_g, t5xxl string, empty_padding string) (_ *Node, conditioning CONDITIONING) {
 	nd := &Node{
 		Class: "CLIPTextEncodeSD3",
 		Inputs: map[string]Value{
@@ -658,7 +658,7 @@ func CLIPTextEncodeSD3(gr *Graph, clip CLIP, empty_padding COMBO, clip_l, clip_g
 			"clip_l":        String(clip_l),
 			"clip_g":        String(clip_g),
 			"t5xxl":         String(t5xxl),
-			"empty_padding": Link(empty_padding),
+			"empty_padding": String(empty_padding),
 		},
 	}
 	id := gr.Add(nd)
@@ -739,12 +739,12 @@ func Canny(gr *Graph, image IMAGE, low_threshold, high_threshold float64) (_ *No
 }
 
 // CaseConverter - Case Converter
-func CaseConverter(gr *Graph, mode COMBO, str string) (_ *Node, out_str STRING) {
+func CaseConverter(gr *Graph, str string, mode string) (_ *Node, out_str STRING) {
 	nd := &Node{
 		Class: "CaseConverter",
 		Inputs: map[string]Value{
 			"string": String(str),
-			"mode":   Link(mode),
+			"mode":   String(mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -1076,17 +1076,17 @@ func ConditioningZeroOut(gr *Graph, conditioning CONDITIONING) (_ *Node, out_con
 }
 
 // ContextWindowsManual - Context Windows (Manual)
-func ContextWindowsManual(gr *Graph, model MODEL, context_schedule COMBO, fuse_method COMBO, context_length, context_overlap int, context_stride int, closed_loop bool, dim int, freenoise bool) (_ *Node, out_model MODEL) {
+func ContextWindowsManual(gr *Graph, model MODEL, context_length, context_overlap int, context_schedule string, context_stride int, closed_loop bool, fuse_method string, dim int, freenoise bool) (_ *Node, out_model MODEL) {
 	nd := &Node{
 		Class: "ContextWindowsManual",
 		Inputs: map[string]Value{
 			"model":            Link(model),
 			"context_length":   Int(context_length),
 			"context_overlap":  Int(context_overlap),
-			"context_schedule": Link(context_schedule),
+			"context_schedule": String(context_schedule),
 			"context_stride":   Int(context_stride),
 			"closed_loop":      Bool(closed_loop),
-			"fuse_method":      Link(fuse_method),
+			"fuse_method":      String(fuse_method),
 			"dim":              Int(dim),
 			"freenoise":        Bool(freenoise),
 		},
@@ -1337,11 +1337,11 @@ func CropMask(gr *Graph, mask MASK, x, y, width, height int) (_ *Node, out_mask 
 }
 
 // CustomCombo - Custom Combo
-func CustomCombo(gr *Graph, choice COMBO) (_ *Node, str STRING) {
+func CustomCombo(gr *Graph, choice string) (_ *Node, str STRING) {
 	nd := &Node{
 		Class: "CustomCombo",
 		Inputs: map[string]Value{
-			"choice": Link(choice),
+			"choice": String(choice),
 		},
 	}
 	id := gr.Add(nd)
@@ -1393,7 +1393,7 @@ func DisableNoise(gr *Graph) (_ *Node, noise NOISE) {
 	return nd, NOISE{NodeID: id, OutPort: 0}
 }
 
-func DualCFGGuider(gr *Graph, model MODEL, cond1 CONDITIONING, cond2 CONDITIONING, negative CONDITIONING, style COMBO, cfg_conds, cfg_cond2_negative float64) (_ *Node, guider GUIDER) {
+func DualCFGGuider(gr *Graph, model MODEL, cond1 CONDITIONING, cond2 CONDITIONING, negative CONDITIONING, cfg_conds, cfg_cond2_negative float64, style string) (_ *Node, guider GUIDER) {
 	nd := &Node{
 		Class: "DualCFGGuider",
 		Inputs: map[string]Value{
@@ -1403,7 +1403,7 @@ func DualCFGGuider(gr *Graph, model MODEL, cond1 CONDITIONING, cond2 CONDITIONIN
 			"negative":           Link(negative),
 			"cfg_conds":          Float(cfg_conds),
 			"cfg_cond2_negative": Float(cfg_cond2_negative),
-			"style":              Link(style),
+			"style":              String(style),
 		},
 	}
 	id := gr.Add(nd)
@@ -1682,7 +1682,7 @@ func ExponentialScheduler(gr *Graph, steps int, sigma_max, sigma_min float64) (_
 	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func ExtendIntermediateSigmas(gr *Graph, sigmas SIGMAS, spacing COMBO, steps int, start_at_sigma, end_at_sigma float64) (_ *Node, out_sigmas SIGMAS) {
+func ExtendIntermediateSigmas(gr *Graph, sigmas SIGMAS, steps int, start_at_sigma, end_at_sigma float64, spacing string) (_ *Node, out_sigmas SIGMAS) {
 	nd := &Node{
 		Class: "ExtendIntermediateSigmas",
 		Inputs: map[string]Value{
@@ -1690,7 +1690,7 @@ func ExtendIntermediateSigmas(gr *Graph, sigmas SIGMAS, spacing COMBO, steps int
 			"steps":          Int(steps),
 			"start_at_sigma": Float(start_at_sigma),
 			"end_at_sigma":   Float(end_at_sigma),
-			"spacing":        Link(spacing),
+			"spacing":        String(spacing),
 		},
 	}
 	id := gr.Add(nd)
@@ -1820,12 +1820,12 @@ func FluxKontextMaxImageNode(gr *Graph, input_image IMAGE, prompt, aspect_ratio 
 }
 
 // FluxKontextMultiReferenceLatentMethod - Edit Model Reference Method
-func FluxKontextMultiReferenceLatentMethod(gr *Graph, conditioning CONDITIONING, reference_latents_method COMBO) (_ *Node, out_conditioning CONDITIONING) {
+func FluxKontextMultiReferenceLatentMethod(gr *Graph, conditioning CONDITIONING, reference_latents_method string) (_ *Node, out_conditioning CONDITIONING) {
 	nd := &Node{
 		Class: "FluxKontextMultiReferenceLatentMethod",
 		Inputs: map[string]Value{
 			"conditioning":             Link(conditioning),
-			"reference_latents_method": Link(reference_latents_method),
+			"reference_latents_method": String(reference_latents_method),
 		},
 	}
 	id := gr.Add(nd)
@@ -1991,16 +1991,16 @@ func GLIGENTextBoxApply(gr *Graph, conditioning_to CONDITIONING, clip CLIP, glig
 }
 
 // GeminiImage2Node - Nano Banana Pro (Google Gemini Image)
-func GeminiImage2Node(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, response_modalities COMBO, images IMAGE, files GEMINI_INPUT_FILES, prompt string, seed int, system_prompt string) (_ *Node, image IMAGE, str STRING) {
+func GeminiImage2Node(gr *Graph, images IMAGE, files GEMINI_INPUT_FILES, prompt string, model string, seed int, aspect_ratio, resolution, response_modalities string, system_prompt string) (_ *Node, image IMAGE, str STRING) {
 	nd := &Node{
 		Class: "GeminiImage2Node",
 		Inputs: map[string]Value{
 			"prompt":              String(prompt),
-			"model":               Link(model),
+			"model":               String(model),
 			"seed":                Int(seed),
-			"aspect_ratio":        Link(aspect_ratio),
-			"resolution":          Link(resolution),
-			"response_modalities": Link(response_modalities),
+			"aspect_ratio":        String(aspect_ratio),
+			"resolution":          String(resolution),
+			"response_modalities": String(response_modalities),
 		},
 	}
 	id := gr.Add(nd)
@@ -2008,12 +2008,12 @@ func GeminiImage2Node(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COM
 }
 
 // GeminiImageNode - Nano Banana (Google Gemini Image)
-func GeminiImageNode(gr *Graph, model COMBO, images IMAGE, files GEMINI_INPUT_FILES, aspect_ratio COMBO, response_modalities COMBO, prompt string, seed int, system_prompt string) (_ *Node, image IMAGE, str STRING) {
+func GeminiImageNode(gr *Graph, images IMAGE, files GEMINI_INPUT_FILES, prompt string, model string, seed int, aspect_ratio, response_modalities string, system_prompt string) (_ *Node, image IMAGE, str STRING) {
 	nd := &Node{
 		Class: "GeminiImageNode",
 		Inputs: map[string]Value{
 			"prompt": String(prompt),
-			"model":  Link(model),
+			"model":  String(model),
 			"seed":   Int(seed),
 		},
 	}
@@ -2022,11 +2022,11 @@ func GeminiImageNode(gr *Graph, model COMBO, images IMAGE, files GEMINI_INPUT_FI
 }
 
 // GeminiInputFiles - Gemini Input Files
-func GeminiInputFiles(gr *Graph, file COMBO, gemini_input_files GEMINI_INPUT_FILES) (_ *Node, out_gemini_input_files GEMINI_INPUT_FILES) {
+func GeminiInputFiles(gr *Graph, gemini_input_files GEMINI_INPUT_FILES, file string) (_ *Node, out_gemini_input_files GEMINI_INPUT_FILES) {
 	nd := &Node{
 		Class: "GeminiInputFiles",
 		Inputs: map[string]Value{
-			"file": Link(file),
+			"file": String(file),
 		},
 	}
 	id := gr.Add(nd)
@@ -2034,12 +2034,12 @@ func GeminiInputFiles(gr *Graph, file COMBO, gemini_input_files GEMINI_INPUT_FIL
 }
 
 // GeminiNode - Google Gemini
-func GeminiNode(gr *Graph, model COMBO, images IMAGE, audio AUDIO, video VIDEO, files GEMINI_INPUT_FILES, prompt string, seed int, system_prompt string) (_ *Node, str STRING) {
+func GeminiNode(gr *Graph, images IMAGE, audio AUDIO, video VIDEO, files GEMINI_INPUT_FILES, prompt string, model string, seed int, system_prompt string) (_ *Node, str STRING) {
 	nd := &Node{
 		Class: "GeminiNode",
 		Inputs: map[string]Value{
 			"prompt": String(prompt),
-			"model":  Link(model),
+			"model":  String(model),
 			"seed":   Int(seed),
 		},
 	}
@@ -2047,7 +2047,7 @@ func GeminiNode(gr *Graph, model COMBO, images IMAGE, audio AUDIO, video VIDEO, 
 	return nd, STRING{NodeID: id, OutPort: 0}
 }
 
-func GenerateTracks(gr *Graph, interpolation COMBO, track_mask MASK, width, height int, start_x, start_y, end_x, end_y float64, num_frames, num_tracks int, track_spread float64, bezier bool, mid_x, mid_y float64) (_ *Node, tracks TRACKS, track_length INT) {
+func GenerateTracks(gr *Graph, track_mask MASK, width, height int, start_x, start_y, end_x, end_y float64, num_frames, num_tracks int, track_spread float64, bezier bool, mid_x, mid_y float64, interpolation string) (_ *Node, tracks TRACKS, track_length INT) {
 	nd := &Node{
 		Class: "GenerateTracks",
 		Inputs: map[string]Value{
@@ -2063,7 +2063,7 @@ func GenerateTracks(gr *Graph, interpolation COMBO, track_mask MASK, width, heig
 			"bezier":        Bool(bezier),
 			"mid_x":         Float(mid_x),
 			"mid_y":         Float(mid_y),
-			"interpolation": Link(interpolation),
+			"interpolation": String(interpolation),
 		},
 	}
 	id := gr.Add(nd)
@@ -2128,7 +2128,7 @@ func Hunyuan3Dv2ConditioningMultiView(gr *Graph, front CLIP_VISION_OUTPUT, left 
 	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}
 }
 
-func HunyuanImageToVideo(gr *Graph, positive CONDITIONING, vae VAE, guidance_type COMBO, start_image IMAGE, width, height, length, batch_size int) (_ *Node, out_positive CONDITIONING, latent LATENT) {
+func HunyuanImageToVideo(gr *Graph, positive CONDITIONING, vae VAE, start_image IMAGE, width, height, length, batch_size int, guidance_type string) (_ *Node, out_positive CONDITIONING, latent LATENT) {
 	nd := &Node{
 		Class: "HunyuanImageToVideo",
 		Inputs: map[string]Value{
@@ -2138,7 +2138,7 @@ func HunyuanImageToVideo(gr *Graph, positive CONDITIONING, vae VAE, guidance_typ
 			"height":        Int(height),
 			"length":        Int(length),
 			"batch_size":    Int(batch_size),
-			"guidance_type": Link(guidance_type),
+			"guidance_type": String(guidance_type),
 		},
 	}
 	id := gr.Add(nd)
@@ -2177,16 +2177,16 @@ func HunyuanVideo15ImageToVideo(gr *Graph, positive CONDITIONING, negative CONDI
 }
 
 // HunyuanVideo15LatentUpscaleWithModel - Hunyuan Video 15 Latent Upscale With Model
-func HunyuanVideo15LatentUpscaleWithModel(gr *Graph, model LATENT_UPSCALE_MODEL, samples LATENT, upscale_method COMBO, crop COMBO, width, height int) (_ *Node, latent LATENT) {
+func HunyuanVideo15LatentUpscaleWithModel(gr *Graph, model LATENT_UPSCALE_MODEL, samples LATENT, upscale_method string, width, height int, crop string) (_ *Node, latent LATENT) {
 	nd := &Node{
 		Class: "HunyuanVideo15LatentUpscaleWithModel",
 		Inputs: map[string]Value{
 			"model":          Link(model),
 			"samples":        Link(samples),
-			"upscale_method": Link(upscale_method),
+			"upscale_method": String(upscale_method),
 			"width":          Int(width),
 			"height":         Int(height),
-			"crop":           Link(crop),
+			"crop":           String(crop),
 		},
 	}
 	id := gr.Add(nd)
@@ -2222,12 +2222,12 @@ func HyperTile(gr *Graph, model MODEL, tile_size, swap_size, max_depth int, scal
 	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func HypernetworkLoader(gr *Graph, model MODEL, hypernetwork_name COMBO, strength float64) (_ *Node, out_model MODEL) {
+func HypernetworkLoader(gr *Graph, model MODEL, hypernetwork_name string, strength float64) (_ *Node, out_model MODEL) {
 	nd := &Node{
 		Class: "HypernetworkLoader",
 		Inputs: map[string]Value{
 			"model":             Link(model),
-			"hypernetwork_name": Link(hypernetwork_name),
+			"hypernetwork_name": String(hypernetwork_name),
 			"strength":          Float(strength),
 		},
 	}
@@ -2236,7 +2236,7 @@ func HypernetworkLoader(gr *Graph, model MODEL, hypernetwork_name COMBO, strengt
 }
 
 // IdeogramV1 - Ideogram V1
-func IdeogramV1(gr *Graph, aspect_ratio COMBO, magic_prompt_option COMBO, prompt string, turbo bool, seed int, negative_prompt string, num_images int) (_ *Node, image IMAGE) {
+func IdeogramV1(gr *Graph, prompt string, turbo bool, aspect_ratio, magic_prompt_option string, seed int, negative_prompt string, num_images int) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "IdeogramV1",
 		Inputs: map[string]Value{
@@ -2249,7 +2249,7 @@ func IdeogramV1(gr *Graph, aspect_ratio COMBO, magic_prompt_option COMBO, prompt
 }
 
 // IdeogramV2 - Ideogram V2
-func IdeogramV2(gr *Graph, aspect_ratio COMBO, resolution COMBO, magic_prompt_option COMBO, style_type COMBO, prompt string, turbo bool, seed int, negative_prompt string, num_images int) (_ *Node, image IMAGE) {
+func IdeogramV2(gr *Graph, prompt string, turbo bool, aspect_ratio, resolution, magic_prompt_option string, seed int, style_type string, negative_prompt string, num_images int) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "IdeogramV2",
 		Inputs: map[string]Value{
@@ -2262,7 +2262,7 @@ func IdeogramV2(gr *Graph, aspect_ratio COMBO, resolution COMBO, magic_prompt_op
 }
 
 // IdeogramV3 - Ideogram V3
-func IdeogramV3(gr *Graph, image IMAGE, mask MASK, aspect_ratio COMBO, resolution COMBO, magic_prompt_option COMBO, rendering_speed COMBO, character_image IMAGE, character_mask MASK, prompt string, seed, num_images int) (_ *Node, out_image IMAGE) {
+func IdeogramV3(gr *Graph, image IMAGE, mask MASK, character_image IMAGE, character_mask MASK, prompt string, aspect_ratio, resolution, magic_prompt_option string, seed, num_images int, rendering_speed string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "IdeogramV3",
 		Inputs: map[string]Value{
@@ -2299,14 +2299,14 @@ func ImageBatch(gr *Graph, image1 IMAGE, image2 IMAGE) (_ *Node, image IMAGE) {
 	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageBlend(gr *Graph, image1 IMAGE, image2 IMAGE, blend_mode COMBO, blend_factor float64) (_ *Node, image IMAGE) {
+func ImageBlend(gr *Graph, image1 IMAGE, image2 IMAGE, blend_factor float64, blend_mode string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "ImageBlend",
 		Inputs: map[string]Value{
 			"image1":       Link(image1),
 			"image2":       Link(image2),
 			"blend_factor": Float(blend_factor),
-			"blend_mode":   Link(blend_mode),
+			"blend_mode":   String(blend_mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -2394,12 +2394,12 @@ func ImageDeduplication(gr *Graph, images IMAGE, similarity_threshold float64) (
 	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageFlip(gr *Graph, image IMAGE, flip_method COMBO) (_ *Node, out_image IMAGE) {
+func ImageFlip(gr *Graph, image IMAGE, flip_method string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ImageFlip",
 		Inputs: map[string]Value{
 			"image":       Link(image),
-			"flip_method": Link(flip_method),
+			"flip_method": String(flip_method),
 		},
 	}
 	id := gr.Add(nd)
@@ -2490,13 +2490,13 @@ func ImagePadForOutpaint(gr *Graph, image IMAGE, left, top, right, bottom, feath
 	return nd, IMAGE{NodeID: id, OutPort: 0}, MASK{NodeID: id, OutPort: 1}
 }
 
-func ImageQuantize(gr *Graph, image IMAGE, dither COMBO, colors int) (_ *Node, out_image IMAGE) {
+func ImageQuantize(gr *Graph, image IMAGE, colors int, dither string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ImageQuantize",
 		Inputs: map[string]Value{
 			"image":  Link(image),
 			"colors": Int(colors),
-			"dither": Link(dither),
+			"dither": String(dither),
 		},
 	}
 	id := gr.Add(nd)
@@ -2514,12 +2514,12 @@ func ImageRGBToYUV(gr *Graph, image IMAGE) (_ *Node, y IMAGE, u IMAGE, v IMAGE) 
 	return nd, IMAGE{NodeID: id, OutPort: 0}, IMAGE{NodeID: id, OutPort: 1}, IMAGE{NodeID: id, OutPort: 2}
 }
 
-func ImageRotate(gr *Graph, image IMAGE, rotation COMBO) (_ *Node, out_image IMAGE) {
+func ImageRotate(gr *Graph, image IMAGE, rotation string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ImageRotate",
 		Inputs: map[string]Value{
 			"image":    Link(image),
-			"rotation": Link(rotation),
+			"rotation": String(rotation),
 		},
 	}
 	id := gr.Add(nd)
@@ -2556,12 +2556,12 @@ func ImageScaleBy(gr *Graph, image IMAGE, upscale_method string, scale_by float6
 	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageScaleToMaxDimension(gr *Graph, image IMAGE, upscale_method COMBO, largest_size int) (_ *Node, out_image IMAGE) {
+func ImageScaleToMaxDimension(gr *Graph, image IMAGE, upscale_method string, largest_size int) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ImageScaleToMaxDimension",
 		Inputs: map[string]Value{
 			"image":          Link(image),
-			"upscale_method": Link(upscale_method),
+			"upscale_method": String(upscale_method),
 			"largest_size":   Int(largest_size),
 		},
 	}
@@ -2569,12 +2569,12 @@ func ImageScaleToMaxDimension(gr *Graph, image IMAGE, upscale_method COMBO, larg
 	return nd, IMAGE{NodeID: id, OutPort: 0}
 }
 
-func ImageScaleToTotalPixels(gr *Graph, image IMAGE, upscale_method COMBO, megapixels float64, resolution_steps int) (_ *Node, out_image IMAGE) {
+func ImageScaleToTotalPixels(gr *Graph, image IMAGE, upscale_method string, megapixels float64, resolution_steps int) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ImageScaleToTotalPixels",
 		Inputs: map[string]Value{
 			"image":            Link(image),
-			"upscale_method":   Link(upscale_method),
+			"upscale_method":   String(upscale_method),
 			"megapixels":       Float(megapixels),
 			"resolution_steps": Int(resolution_steps),
 		},
@@ -2598,15 +2598,15 @@ func ImageSharpen(gr *Graph, image IMAGE, sharpen_radius int, sigma, alpha float
 }
 
 // ImageStitch - Image Stitch
-func ImageStitch(gr *Graph, image1 IMAGE, direction COMBO, spacing_color COMBO, image2 IMAGE, match_image_size bool, spacing_width int) (_ *Node, image IMAGE) {
+func ImageStitch(gr *Graph, image1 IMAGE, image2 IMAGE, direction string, match_image_size bool, spacing_width int, spacing_color string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "ImageStitch",
 		Inputs: map[string]Value{
 			"image1":           Link(image1),
-			"direction":        Link(direction),
+			"direction":        String(direction),
 			"match_image_size": Bool(match_image_size),
 			"spacing_width":    Int(spacing_width),
-			"spacing_color":    Link(spacing_color),
+			"spacing_color":    String(spacing_color),
 		},
 	}
 	id := gr.Add(nd)
@@ -2614,12 +2614,12 @@ func ImageStitch(gr *Graph, image1 IMAGE, direction COMBO, spacing_color COMBO, 
 }
 
 // ImageToMask - Convert Image to Mask
-func ImageToMask(gr *Graph, image IMAGE, channel COMBO) (_ *Node, mask MASK) {
+func ImageToMask(gr *Graph, image IMAGE, channel string) (_ *Node, mask MASK) {
 	nd := &Node{
 		Class: "ImageToMask",
 		Inputs: map[string]Value{
 			"image":   Link(image),
-			"channel": Link(channel),
+			"channel": String(channel),
 		},
 	}
 	id := gr.Add(nd)
@@ -2763,11 +2763,11 @@ func KSamplerAdvanced(gr *Graph, model MODEL, positive CONDITIONING, negative CO
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func KSamplerSelect(gr *Graph, sampler_name COMBO) (_ *Node, sampler SAMPLER) {
+func KSamplerSelect(gr *Graph, sampler_name string) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "KSamplerSelect",
 		Inputs: map[string]Value{
-			"sampler_name": Link(sampler_name),
+			"sampler_name": String(sampler_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -2806,7 +2806,7 @@ func KarrasScheduler(gr *Graph, steps int, sigma_max, sigma_min, rho float64) (_
 }
 
 // KlingCameraControlI2VNode - Kling Image to Video (Camera Control)
-func KlingCameraControlI2VNode(gr *Graph, start_frame IMAGE, aspect_ratio COMBO, camera_control CAMERA_CONTROL, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+func KlingCameraControlI2VNode(gr *Graph, start_frame IMAGE, camera_control CAMERA_CONTROL, prompt, negative_prompt string, cfg_scale float64, aspect_ratio string) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
 	nd := &Node{
 		Class: "KlingCameraControlI2VNode",
 		Inputs: map[string]Value{
@@ -2814,7 +2814,7 @@ func KlingCameraControlI2VNode(gr *Graph, start_frame IMAGE, aspect_ratio COMBO,
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
 			"cfg_scale":       Float(cfg_scale),
-			"aspect_ratio":    Link(aspect_ratio),
+			"aspect_ratio":    String(aspect_ratio),
 			"camera_control":  Link(camera_control),
 		},
 	}
@@ -2823,14 +2823,14 @@ func KlingCameraControlI2VNode(gr *Graph, start_frame IMAGE, aspect_ratio COMBO,
 }
 
 // KlingCameraControlT2VNode - Kling Text to Video (Camera Control)
-func KlingCameraControlT2VNode(gr *Graph, aspect_ratio COMBO, camera_control CAMERA_CONTROL, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+func KlingCameraControlT2VNode(gr *Graph, camera_control CAMERA_CONTROL, prompt, negative_prompt string, cfg_scale float64, aspect_ratio string) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
 	nd := &Node{
 		Class: "KlingCameraControlT2VNode",
 		Inputs: map[string]Value{
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
 			"cfg_scale":       Float(cfg_scale),
-			"aspect_ratio":    Link(aspect_ratio),
+			"aspect_ratio":    String(aspect_ratio),
 			"camera_control":  Link(camera_control),
 		},
 	}
@@ -2839,11 +2839,11 @@ func KlingCameraControlT2VNode(gr *Graph, aspect_ratio COMBO, camera_control CAM
 }
 
 // KlingCameraControls - Kling Camera Controls
-func KlingCameraControls(gr *Graph, camera_control_type COMBO, horizontal_movement, vertical_movement, pan, tilt, roll, zoom float64) (_ *Node, camera_control CAMERA_CONTROL) {
+func KlingCameraControls(gr *Graph, camera_control_type string, horizontal_movement, vertical_movement, pan, tilt, roll, zoom float64) (_ *Node, camera_control CAMERA_CONTROL) {
 	nd := &Node{
 		Class: "KlingCameraControls",
 		Inputs: map[string]Value{
-			"camera_control_type": Link(camera_control_type),
+			"camera_control_type": String(camera_control_type),
 			"horizontal_movement": Float(horizontal_movement),
 			"vertical_movement":   Float(vertical_movement),
 			"pan":                 Float(pan),
@@ -2857,16 +2857,16 @@ func KlingCameraControls(gr *Graph, camera_control_type COMBO, horizontal_moveme
 }
 
 // KlingDualCharacterVideoEffectNode - Kling Dual Character Video Effects
-func KlingDualCharacterVideoEffectNode(gr *Graph, image_left IMAGE, image_right IMAGE, effect_scene COMBO, model_name COMBO, mode COMBO, duration COMBO) (_ *Node, video VIDEO, out_duration STRING) {
+func KlingDualCharacterVideoEffectNode(gr *Graph, image_left IMAGE, image_right IMAGE, effect_scene, model_name, mode, duration string) (_ *Node, video VIDEO, out_duration STRING) {
 	nd := &Node{
 		Class: "KlingDualCharacterVideoEffectNode",
 		Inputs: map[string]Value{
 			"image_left":   Link(image_left),
 			"image_right":  Link(image_right),
-			"effect_scene": Link(effect_scene),
-			"model_name":   Link(model_name),
-			"mode":         Link(mode),
-			"duration":     Link(duration),
+			"effect_scene": String(effect_scene),
+			"model_name":   String(model_name),
+			"mode":         String(mode),
+			"duration":     String(duration),
 		},
 	}
 	id := gr.Add(nd)
@@ -2874,18 +2874,18 @@ func KlingDualCharacterVideoEffectNode(gr *Graph, image_left IMAGE, image_right 
 }
 
 // KlingImage2VideoNode - Kling Image(First Frame) to Video
-func KlingImage2VideoNode(gr *Graph, start_frame IMAGE, model_name COMBO, mode COMBO, aspect_ratio COMBO, duration COMBO, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, out_duration STRING) {
+func KlingImage2VideoNode(gr *Graph, start_frame IMAGE, prompt, negative_prompt string, model_name string, cfg_scale float64, mode, aspect_ratio, duration string) (_ *Node, video VIDEO, video_id STRING, out_duration STRING) {
 	nd := &Node{
 		Class: "KlingImage2VideoNode",
 		Inputs: map[string]Value{
 			"start_frame":     Link(start_frame),
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
-			"model_name":      Link(model_name),
+			"model_name":      String(model_name),
 			"cfg_scale":       Float(cfg_scale),
-			"mode":            Link(mode),
-			"aspect_ratio":    Link(aspect_ratio),
-			"duration":        Link(duration),
+			"mode":            String(mode),
+			"aspect_ratio":    String(aspect_ratio),
+			"duration":        String(duration),
 		},
 	}
 	id := gr.Add(nd)
@@ -2893,17 +2893,17 @@ func KlingImage2VideoNode(gr *Graph, start_frame IMAGE, model_name COMBO, mode C
 }
 
 // KlingImageGenerationNode - Kling Image Generation
-func KlingImageGenerationNode(gr *Graph, image_type COMBO, model_name COMBO, aspect_ratio COMBO, image IMAGE, prompt, negative_prompt string, image_fidelity, human_fidelity float64, n int) (_ *Node, out_image IMAGE) {
+func KlingImageGenerationNode(gr *Graph, image IMAGE, prompt, negative_prompt string, image_type string, image_fidelity, human_fidelity float64, model_name, aspect_ratio string, n int) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "KlingImageGenerationNode",
 		Inputs: map[string]Value{
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
-			"image_type":      Link(image_type),
+			"image_type":      String(image_type),
 			"image_fidelity":  Float(image_fidelity),
 			"human_fidelity":  Float(human_fidelity),
-			"model_name":      Link(model_name),
-			"aspect_ratio":    Link(aspect_ratio),
+			"model_name":      String(model_name),
+			"aspect_ratio":    String(aspect_ratio),
 			"n":               Int(n),
 		},
 	}
@@ -2912,15 +2912,15 @@ func KlingImageGenerationNode(gr *Graph, image_type COMBO, model_name COMBO, asp
 }
 
 // KlingImageToVideoWithAudio - Kling Image(First Frame) to Video with Audio
-func KlingImageToVideoWithAudio(gr *Graph, model_name COMBO, start_frame IMAGE, mode COMBO, duration COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+func KlingImageToVideoWithAudio(gr *Graph, start_frame IMAGE, model_name string, prompt string, mode, duration string, generate_audio bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingImageToVideoWithAudio",
 		Inputs: map[string]Value{
-			"model_name":     Link(model_name),
+			"model_name":     String(model_name),
 			"start_frame":    Link(start_frame),
 			"prompt":         String(prompt),
-			"mode":           Link(mode),
-			"duration":       Link(duration),
+			"mode":           String(mode),
+			"duration":       String(duration),
 			"generate_audio": Bool(generate_audio),
 		},
 	}
@@ -2929,13 +2929,13 @@ func KlingImageToVideoWithAudio(gr *Graph, model_name COMBO, start_frame IMAGE, 
 }
 
 // KlingLipSyncAudioToVideoNode - Kling Lip Sync Video with Audio
-func KlingLipSyncAudioToVideoNode(gr *Graph, video VIDEO, audio AUDIO, voice_language COMBO) (_ *Node, out_video VIDEO, video_id STRING, duration STRING) {
+func KlingLipSyncAudioToVideoNode(gr *Graph, video VIDEO, audio AUDIO, voice_language string) (_ *Node, out_video VIDEO, video_id STRING, duration STRING) {
 	nd := &Node{
 		Class: "KlingLipSyncAudioToVideoNode",
 		Inputs: map[string]Value{
 			"video":          Link(video),
 			"audio":          Link(audio),
-			"voice_language": Link(voice_language),
+			"voice_language": String(voice_language),
 		},
 	}
 	id := gr.Add(nd)
@@ -2943,13 +2943,13 @@ func KlingLipSyncAudioToVideoNode(gr *Graph, video VIDEO, audio AUDIO, voice_lan
 }
 
 // KlingLipSyncTextToVideoNode - Kling Lip Sync Video with Text
-func KlingLipSyncTextToVideoNode(gr *Graph, video VIDEO, voice COMBO, text string, voice_speed float64) (_ *Node, out_video VIDEO, video_id STRING, duration STRING) {
+func KlingLipSyncTextToVideoNode(gr *Graph, video VIDEO, text string, voice string, voice_speed float64) (_ *Node, out_video VIDEO, video_id STRING, duration STRING) {
 	nd := &Node{
 		Class: "KlingLipSyncTextToVideoNode",
 		Inputs: map[string]Value{
 			"video":       Link(video),
 			"text":        String(text),
-			"voice":       Link(voice),
+			"voice":       String(voice),
 			"voice_speed": Float(voice_speed),
 		},
 	}
@@ -2958,7 +2958,7 @@ func KlingLipSyncTextToVideoNode(gr *Graph, video VIDEO, voice COMBO, text strin
 }
 
 // KlingMotionControl - Kling Motion Control
-func KlingMotionControl(gr *Graph, reference_image IMAGE, reference_video VIDEO, character_orientation COMBO, mode COMBO, prompt string, keep_original_sound bool) (_ *Node, video VIDEO) {
+func KlingMotionControl(gr *Graph, reference_image IMAGE, reference_video VIDEO, prompt string, keep_original_sound bool, character_orientation, mode string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingMotionControl",
 		Inputs: map[string]Value{
@@ -2966,8 +2966,8 @@ func KlingMotionControl(gr *Graph, reference_image IMAGE, reference_video VIDEO,
 			"reference_image":       Link(reference_image),
 			"reference_video":       Link(reference_video),
 			"keep_original_sound":   Bool(keep_original_sound),
-			"character_orientation": Link(character_orientation),
-			"mode":                  Link(mode),
+			"character_orientation": String(character_orientation),
+			"mode":                  String(mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -2975,11 +2975,11 @@ func KlingMotionControl(gr *Graph, reference_image IMAGE, reference_video VIDEO,
 }
 
 // KlingOmniProEditVideoNode - Kling Omni Edit Video (Pro)
-func KlingOmniProEditVideoNode(gr *Graph, model_name COMBO, video VIDEO, reference_images IMAGE, resolution COMBO, prompt string, keep_original_sound bool) (_ *Node, out_video VIDEO) {
+func KlingOmniProEditVideoNode(gr *Graph, video VIDEO, reference_images IMAGE, model_name string, prompt string, keep_original_sound bool, resolution string) (_ *Node, out_video VIDEO) {
 	nd := &Node{
 		Class: "KlingOmniProEditVideoNode",
 		Inputs: map[string]Value{
-			"model_name":          Link(model_name),
+			"model_name":          String(model_name),
 			"prompt":              String(prompt),
 			"video":               Link(video),
 			"keep_original_sound": Bool(keep_original_sound),
@@ -2990,11 +2990,11 @@ func KlingOmniProEditVideoNode(gr *Graph, model_name COMBO, video VIDEO, referen
 }
 
 // KlingOmniProFirstLastFrameNode - Kling Omni First-Last-Frame to Video (Pro)
-func KlingOmniProFirstLastFrameNode(gr *Graph, model_name COMBO, first_frame IMAGE, end_frame IMAGE, reference_images IMAGE, resolution COMBO, prompt string, duration int) (_ *Node, video VIDEO) {
+func KlingOmniProFirstLastFrameNode(gr *Graph, first_frame IMAGE, end_frame IMAGE, reference_images IMAGE, model_name string, prompt string, duration int, resolution string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingOmniProFirstLastFrameNode",
 		Inputs: map[string]Value{
-			"model_name":  Link(model_name),
+			"model_name":  String(model_name),
 			"prompt":      String(prompt),
 			"duration":    Int(duration),
 			"first_frame": Link(first_frame),
@@ -3005,14 +3005,14 @@ func KlingOmniProFirstLastFrameNode(gr *Graph, model_name COMBO, first_frame IMA
 }
 
 // KlingOmniProImageNode - Kling Omni Image (Pro)
-func KlingOmniProImageNode(gr *Graph, model_name COMBO, resolution COMBO, aspect_ratio COMBO, reference_images IMAGE, prompt string) (_ *Node, image IMAGE) {
+func KlingOmniProImageNode(gr *Graph, reference_images IMAGE, model_name string, prompt string, resolution, aspect_ratio string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "KlingOmniProImageNode",
 		Inputs: map[string]Value{
-			"model_name":   Link(model_name),
+			"model_name":   String(model_name),
 			"prompt":       String(prompt),
-			"resolution":   Link(resolution),
-			"aspect_ratio": Link(aspect_ratio),
+			"resolution":   String(resolution),
+			"aspect_ratio": String(aspect_ratio),
 		},
 	}
 	id := gr.Add(nd)
@@ -3020,13 +3020,13 @@ func KlingOmniProImageNode(gr *Graph, model_name COMBO, resolution COMBO, aspect
 }
 
 // KlingOmniProImageToVideoNode - Kling Omni Image to Video (Pro)
-func KlingOmniProImageToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO, reference_images IMAGE, resolution COMBO, prompt string, duration int) (_ *Node, video VIDEO) {
+func KlingOmniProImageToVideoNode(gr *Graph, reference_images IMAGE, model_name string, prompt string, aspect_ratio string, duration int, resolution string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingOmniProImageToVideoNode",
 		Inputs: map[string]Value{
-			"model_name":       Link(model_name),
+			"model_name":       String(model_name),
 			"prompt":           String(prompt),
-			"aspect_ratio":     Link(aspect_ratio),
+			"aspect_ratio":     String(aspect_ratio),
 			"duration":         Int(duration),
 			"reference_images": Link(reference_images),
 		},
@@ -3036,14 +3036,14 @@ func KlingOmniProImageToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMB
 }
 
 // KlingOmniProTextToVideoNode - Kling Omni Text to Video (Pro)
-func KlingOmniProTextToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO, duration COMBO, resolution COMBO, prompt string) (_ *Node, video VIDEO) {
+func KlingOmniProTextToVideoNode(gr *Graph, model_name string, prompt string, aspect_ratio, duration, resolution string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingOmniProTextToVideoNode",
 		Inputs: map[string]Value{
-			"model_name":   Link(model_name),
+			"model_name":   String(model_name),
 			"prompt":       String(prompt),
-			"aspect_ratio": Link(aspect_ratio),
-			"duration":     Link(duration),
+			"aspect_ratio": String(aspect_ratio),
+			"duration":     String(duration),
 		},
 	}
 	id := gr.Add(nd)
@@ -3051,13 +3051,13 @@ func KlingOmniProTextToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO
 }
 
 // KlingOmniProVideoToVideoNode - Kling Omni Video to Video (Pro)
-func KlingOmniProVideoToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMBO, reference_video VIDEO, reference_images IMAGE, resolution COMBO, prompt string, duration int, keep_original_sound bool) (_ *Node, video VIDEO) {
+func KlingOmniProVideoToVideoNode(gr *Graph, reference_video VIDEO, reference_images IMAGE, model_name string, prompt string, aspect_ratio string, duration int, keep_original_sound bool, resolution string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingOmniProVideoToVideoNode",
 		Inputs: map[string]Value{
-			"model_name":          Link(model_name),
+			"model_name":          String(model_name),
 			"prompt":              String(prompt),
-			"aspect_ratio":        Link(aspect_ratio),
+			"aspect_ratio":        String(aspect_ratio),
 			"duration":            Int(duration),
 			"reference_video":     Link(reference_video),
 			"keep_original_sound": Bool(keep_original_sound),
@@ -3068,14 +3068,14 @@ func KlingOmniProVideoToVideoNode(gr *Graph, model_name COMBO, aspect_ratio COMB
 }
 
 // KlingSingleImageVideoEffectNode - Kling Video Effects
-func KlingSingleImageVideoEffectNode(gr *Graph, image IMAGE, effect_scene COMBO, model_name COMBO, duration COMBO) (_ *Node, video VIDEO, video_id STRING, out_duration STRING) {
+func KlingSingleImageVideoEffectNode(gr *Graph, image IMAGE, effect_scene, model_name, duration string) (_ *Node, video VIDEO, video_id STRING, out_duration STRING) {
 	nd := &Node{
 		Class: "KlingSingleImageVideoEffectNode",
 		Inputs: map[string]Value{
 			"image":        Link(image),
-			"effect_scene": Link(effect_scene),
-			"model_name":   Link(model_name),
-			"duration":     Link(duration),
+			"effect_scene": String(effect_scene),
+			"model_name":   String(model_name),
+			"duration":     String(duration),
 		},
 	}
 	id := gr.Add(nd)
@@ -3083,7 +3083,7 @@ func KlingSingleImageVideoEffectNode(gr *Graph, image IMAGE, effect_scene COMBO,
 }
 
 // KlingStartEndFrameNode - Kling Start-End Frame to Video
-func KlingStartEndFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, aspect_ratio COMBO, mode COMBO, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+func KlingStartEndFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, prompt, negative_prompt string, cfg_scale float64, aspect_ratio, mode string) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
 	nd := &Node{
 		Class: "KlingStartEndFrameNode",
 		Inputs: map[string]Value{
@@ -3092,8 +3092,8 @@ func KlingStartEndFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, aspec
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
 			"cfg_scale":       Float(cfg_scale),
-			"aspect_ratio":    Link(aspect_ratio),
-			"mode":            Link(mode),
+			"aspect_ratio":    String(aspect_ratio),
+			"mode":            String(mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -3101,15 +3101,15 @@ func KlingStartEndFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, aspec
 }
 
 // KlingTextToVideoNode - Kling Text to Video
-func KlingTextToVideoNode(gr *Graph, aspect_ratio COMBO, mode COMBO, prompt, negative_prompt string, cfg_scale float64) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
+func KlingTextToVideoNode(gr *Graph, prompt, negative_prompt string, cfg_scale float64, aspect_ratio, mode string) (_ *Node, video VIDEO, video_id STRING, duration STRING) {
 	nd := &Node{
 		Class: "KlingTextToVideoNode",
 		Inputs: map[string]Value{
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
 			"cfg_scale":       Float(cfg_scale),
-			"aspect_ratio":    Link(aspect_ratio),
-			"mode":            Link(mode),
+			"aspect_ratio":    String(aspect_ratio),
+			"mode":            String(mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -3117,15 +3117,15 @@ func KlingTextToVideoNode(gr *Graph, aspect_ratio COMBO, mode COMBO, prompt, neg
 }
 
 // KlingTextToVideoWithAudio - Kling Text to Video with Audio
-func KlingTextToVideoWithAudio(gr *Graph, model_name COMBO, mode COMBO, aspect_ratio COMBO, duration COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+func KlingTextToVideoWithAudio(gr *Graph, model_name string, prompt string, mode, aspect_ratio, duration string, generate_audio bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "KlingTextToVideoWithAudio",
 		Inputs: map[string]Value{
-			"model_name":     Link(model_name),
+			"model_name":     String(model_name),
 			"prompt":         String(prompt),
-			"mode":           Link(mode),
-			"aspect_ratio":   Link(aspect_ratio),
-			"duration":       Link(duration),
+			"mode":           String(mode),
+			"aspect_ratio":   String(aspect_ratio),
+			"duration":       String(duration),
 			"generate_audio": Bool(generate_audio),
 		},
 	}
@@ -3149,13 +3149,13 @@ func KlingVideoExtendNode(gr *Graph, prompt, negative_prompt string, cfg_scale f
 }
 
 // KlingVirtualTryOnNode - Kling Virtual Try On
-func KlingVirtualTryOnNode(gr *Graph, human_image IMAGE, cloth_image IMAGE, model_name COMBO) (_ *Node, image IMAGE) {
+func KlingVirtualTryOnNode(gr *Graph, human_image IMAGE, cloth_image IMAGE, model_name string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "KlingVirtualTryOnNode",
 		Inputs: map[string]Value{
 			"human_image": Link(human_image),
 			"cloth_image": Link(cloth_image),
-			"model_name":  Link(model_name),
+			"model_name":  String(model_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -3163,13 +3163,13 @@ func KlingVirtualTryOnNode(gr *Graph, human_image IMAGE, cloth_image IMAGE, mode
 }
 
 // LTXAVTextEncoderLoader - LTXV Audio Text Encoder Loader
-func LTXAVTextEncoderLoader(gr *Graph, text_encoder COMBO, ckpt_name COMBO, device COMBO) (_ *Node, clip CLIP) {
+func LTXAVTextEncoderLoader(gr *Graph, text_encoder, ckpt_name, device string) (_ *Node, clip CLIP) {
 	nd := &Node{
 		Class: "LTXAVTextEncoderLoader",
 		Inputs: map[string]Value{
-			"text_encoder": Link(text_encoder),
-			"ckpt_name":    Link(ckpt_name),
-			"device":       Link(device),
+			"text_encoder": String(text_encoder),
+			"ckpt_name":    String(ckpt_name),
+			"device":       String(device),
 		},
 	}
 	id := gr.Add(nd)
@@ -3220,11 +3220,11 @@ func LTXVAudioVAEEncode(gr *Graph, audio AUDIO, audio_vae VAE) (_ *Node, audio_l
 }
 
 // LTXVAudioVAELoader - LTXV Audio VAE Loader
-func LTXVAudioVAELoader(gr *Graph, ckpt_name COMBO) (_ *Node, audio_vae VAE) {
+func LTXVAudioVAELoader(gr *Graph, ckpt_name string) (_ *Node, audio_vae VAE) {
 	nd := &Node{
 		Class: "LTXVAudioVAELoader",
 		Inputs: map[string]Value{
-			"ckpt_name": Link(ckpt_name),
+			"ckpt_name": String(ckpt_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -3432,12 +3432,12 @@ func LatentBatch(gr *Graph, samples1 LATENT, samples2 LATENT) (_ *Node, latent L
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentBatchSeedBehavior(gr *Graph, samples LATENT, seed_behavior COMBO) (_ *Node, latent LATENT) {
+func LatentBatchSeedBehavior(gr *Graph, samples LATENT, seed_behavior string) (_ *Node, latent LATENT) {
 	nd := &Node{
 		Class: "LatentBatchSeedBehavior",
 		Inputs: map[string]Value{
 			"samples":       Link(samples),
-			"seed_behavior": Link(seed_behavior),
+			"seed_behavior": String(seed_behavior),
 		},
 	}
 	id := gr.Add(nd)
@@ -3489,13 +3489,13 @@ func LatentCompositeMasked(gr *Graph, destination LATENT, source LATENT, mask MA
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentConcat(gr *Graph, samples1 LATENT, samples2 LATENT, dim COMBO) (_ *Node, latent LATENT) {
+func LatentConcat(gr *Graph, samples1 LATENT, samples2 LATENT, dim string) (_ *Node, latent LATENT) {
 	nd := &Node{
 		Class: "LatentConcat",
 		Inputs: map[string]Value{
 			"samples1": Link(samples1),
 			"samples2": Link(samples2),
-			"dim":      Link(dim),
+			"dim":      String(dim),
 		},
 	}
 	id := gr.Add(nd)
@@ -3518,12 +3518,12 @@ func LatentCrop(gr *Graph, samples LATENT, width, height, x, y int) (_ *Node, la
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentCut(gr *Graph, samples LATENT, dim COMBO, index, amount int) (_ *Node, latent LATENT) {
+func LatentCut(gr *Graph, samples LATENT, dim string, index, amount int) (_ *Node, latent LATENT) {
 	nd := &Node{
 		Class: "LatentCut",
 		Inputs: map[string]Value{
 			"samples": Link(samples),
-			"dim":     Link(dim),
+			"dim":     String(dim),
 			"index":   Int(index),
 			"amount":  Int(amount),
 		},
@@ -3532,12 +3532,12 @@ func LatentCut(gr *Graph, samples LATENT, dim COMBO, index, amount int) (_ *Node
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func LatentCutToBatch(gr *Graph, samples LATENT, dim COMBO, slice_size int) (_ *Node, latent LATENT) {
+func LatentCutToBatch(gr *Graph, samples LATENT, dim string, slice_size int) (_ *Node, latent LATENT) {
 	nd := &Node{
 		Class: "LatentCutToBatch",
 		Inputs: map[string]Value{
 			"samples":    Link(samples),
-			"dim":        Link(dim),
+			"dim":        String(dim),
 			"slice_size": Int(slice_size),
 		},
 	}
@@ -3677,11 +3677,11 @@ func LatentUpscaleBy(gr *Graph, samples LATENT, upscale_method string, scale_by 
 }
 
 // LatentUpscaleModelLoader - Load Latent Upscale Model
-func LatentUpscaleModelLoader(gr *Graph, model_name COMBO) (_ *Node, latent_upscale_model LATENT_UPSCALE_MODEL) {
+func LatentUpscaleModelLoader(gr *Graph, model_name string) (_ *Node, latent_upscale_model LATENT_UPSCALE_MODEL) {
 	nd := &Node{
 		Class: "LatentUpscaleModelLoader",
 		Inputs: map[string]Value{
-			"model_name": Link(model_name),
+			"model_name": String(model_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -3704,11 +3704,11 @@ func LazyCache(gr *Graph, model MODEL, reuse_threshold, start_percent, end_perce
 }
 
 // Load3D - Load 3D & Animation
-func Load3D(gr *Graph, model_file COMBO, image LOAD_3D, width, height int) (_ *Node, out_image IMAGE, mask MASK, mesh_path STRING, normal IMAGE, camera_info LOAD3D_CAMERA, recording_video VIDEO) {
+func Load3D(gr *Graph, image LOAD_3D, model_file string, width, height int) (_ *Node, out_image IMAGE, mask MASK, mesh_path STRING, normal IMAGE, camera_info LOAD3D_CAMERA, recording_video VIDEO) {
 	nd := &Node{
 		Class: "Load3D",
 		Inputs: map[string]Value{
-			"model_file": Link(model_file),
+			"model_file": String(model_file),
 			"image":      Link(image),
 			"width":      Int(width),
 			"height":     Int(height),
@@ -3719,11 +3719,11 @@ func Load3D(gr *Graph, model_file COMBO, image LOAD_3D, width, height int) (_ *N
 }
 
 // LoadAudio - Load Audio
-func LoadAudio(gr *Graph, audio COMBO) (_ *Node, out_audio AUDIO) {
+func LoadAudio(gr *Graph, audio string) (_ *Node, out_audio AUDIO) {
 	nd := &Node{
 		Class: "LoadAudio",
 		Inputs: map[string]Value{
-			"audio": Link(audio),
+			"audio": String(audio),
 		},
 	}
 	id := gr.Add(nd)
@@ -3743,11 +3743,11 @@ func LoadImage(gr *Graph, image string) (_ *Node, out_image IMAGE, mask MASK) {
 }
 
 // LoadImageDataSetFromFolder - Load Image Dataset from Folder
-func LoadImageDataSetFromFolder(gr *Graph, folder COMBO) (_ *Node, images IMAGE) {
+func LoadImageDataSetFromFolder(gr *Graph, folder string) (_ *Node, images IMAGE) {
 	nd := &Node{
 		Class: "LoadImageDataSetFromFolder",
 		Inputs: map[string]Value{
-			"folder": Link(folder),
+			"folder": String(folder),
 		},
 	}
 	id := gr.Add(nd)
@@ -3768,11 +3768,11 @@ func LoadImageMask(gr *Graph, image, channel string) (_ *Node, mask MASK) {
 }
 
 // LoadImageOutput - Load Image (from Outputs)
-func LoadImageOutput(gr *Graph, image COMBO) (_ *Node, out_image IMAGE, mask MASK) {
+func LoadImageOutput(gr *Graph, image string) (_ *Node, out_image IMAGE, mask MASK) {
 	nd := &Node{
 		Class: "LoadImageOutput",
 		Inputs: map[string]Value{
-			"image": Link(image),
+			"image": String(image),
 		},
 	}
 	id := gr.Add(nd)
@@ -3780,11 +3780,11 @@ func LoadImageOutput(gr *Graph, image COMBO) (_ *Node, out_image IMAGE, mask MAS
 }
 
 // LoadImageTextDataSetFromFolder - Load Image and Text Dataset from Folder
-func LoadImageTextDataSetFromFolder(gr *Graph, folder COMBO) (_ *Node, images IMAGE, texts STRING) {
+func LoadImageTextDataSetFromFolder(gr *Graph, folder string) (_ *Node, images IMAGE, texts STRING) {
 	nd := &Node{
 		Class: "LoadImageTextDataSetFromFolder",
 		Inputs: map[string]Value{
-			"folder": Link(folder),
+			"folder": String(folder),
 		},
 	}
 	id := gr.Add(nd)
@@ -3815,11 +3815,11 @@ func LoadTrainingDataset(gr *Graph, folder_name string) (_ *Node, latents LATENT
 }
 
 // LoadVideo - Load Video
-func LoadVideo(gr *Graph, file COMBO) (_ *Node, video VIDEO) {
+func LoadVideo(gr *Graph, file string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "LoadVideo",
 		Inputs: map[string]Value{
-			"file": Link(file),
+			"file": String(file),
 		},
 	}
 	id := gr.Add(nd)
@@ -3870,13 +3870,13 @@ func LoraModelLoader(gr *Graph, model MODEL, lora LORA_MODEL, strength_model flo
 }
 
 // LoraSave - Extract and Save Lora
-func LoraSave(gr *Graph, lora_type COMBO, model_diff MODEL, text_encoder_diff CLIP, filename_prefix string, rank int, bias_diff bool) (_ *Node) {
+func LoraSave(gr *Graph, model_diff MODEL, text_encoder_diff CLIP, filename_prefix string, rank int, lora_type string, bias_diff bool) (_ *Node) {
 	nd := &Node{
 		Class: "LoraSave",
 		Inputs: map[string]Value{
 			"filename_prefix": String(filename_prefix),
 			"rank":            Int(rank),
-			"lora_type":       Link(lora_type),
+			"lora_type":       String(lora_type),
 			"bias_diff":       Bool(bias_diff),
 		},
 	}
@@ -3907,16 +3907,16 @@ func LotusConditioning(gr *Graph) (_ *Node, conditioning CONDITIONING) {
 }
 
 // LtxvApiImageToVideo - LTXV Image To Video
-func LtxvApiImageToVideo(gr *Graph, image IMAGE, model COMBO, duration COMBO, resolution COMBO, fps COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+func LtxvApiImageToVideo(gr *Graph, image IMAGE, model string, prompt string, duration, resolution, fps string, generate_audio bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "LtxvApiImageToVideo",
 		Inputs: map[string]Value{
 			"image":      Link(image),
-			"model":      Link(model),
+			"model":      String(model),
 			"prompt":     String(prompt),
-			"duration":   Link(duration),
-			"resolution": Link(resolution),
-			"fps":        Link(fps),
+			"duration":   String(duration),
+			"resolution": String(resolution),
+			"fps":        String(fps),
 		},
 	}
 	id := gr.Add(nd)
@@ -3924,15 +3924,15 @@ func LtxvApiImageToVideo(gr *Graph, image IMAGE, model COMBO, duration COMBO, re
 }
 
 // LtxvApiTextToVideo - LTXV Text To Video
-func LtxvApiTextToVideo(gr *Graph, model COMBO, duration COMBO, resolution COMBO, fps COMBO, prompt string, generate_audio bool) (_ *Node, video VIDEO) {
+func LtxvApiTextToVideo(gr *Graph, model string, prompt string, duration, resolution, fps string, generate_audio bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "LtxvApiTextToVideo",
 		Inputs: map[string]Value{
-			"model":      Link(model),
+			"model":      String(model),
 			"prompt":     String(prompt),
-			"duration":   Link(duration),
-			"resolution": Link(resolution),
-			"fps":        Link(fps),
+			"duration":   String(duration),
+			"resolution": String(resolution),
+			"fps":        String(fps),
 		},
 	}
 	id := gr.Add(nd)
@@ -3940,14 +3940,14 @@ func LtxvApiTextToVideo(gr *Graph, model COMBO, duration COMBO, resolution COMBO
 }
 
 // LumaConceptsNode - Luma Concepts
-func LumaConceptsNode(gr *Graph, concept1 COMBO, concept2 COMBO, concept3 COMBO, concept4 COMBO, luma_concepts LUMA_CONCEPTS) (_ *Node, out_luma_concepts LUMA_CONCEPTS) {
+func LumaConceptsNode(gr *Graph, luma_concepts LUMA_CONCEPTS, concept1, concept2, concept3, concept4 string) (_ *Node, out_luma_concepts LUMA_CONCEPTS) {
 	nd := &Node{
 		Class: "LumaConceptsNode",
 		Inputs: map[string]Value{
-			"concept1": Link(concept1),
-			"concept2": Link(concept2),
-			"concept3": Link(concept3),
-			"concept4": Link(concept4),
+			"concept1": String(concept1),
+			"concept2": String(concept2),
+			"concept3": String(concept3),
+			"concept4": String(concept4),
 		},
 	}
 	id := gr.Add(nd)
@@ -3955,14 +3955,14 @@ func LumaConceptsNode(gr *Graph, concept1 COMBO, concept2 COMBO, concept3 COMBO,
 }
 
 // LumaImageModifyNode - Luma Image to Image
-func LumaImageModifyNode(gr *Graph, image IMAGE, model COMBO, prompt string, image_weight float64, seed int) (_ *Node, out_image IMAGE) {
+func LumaImageModifyNode(gr *Graph, image IMAGE, prompt string, image_weight float64, model string, seed int) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "LumaImageModifyNode",
 		Inputs: map[string]Value{
 			"image":        Link(image),
 			"prompt":       String(prompt),
 			"image_weight": Float(image_weight),
-			"model":        Link(model),
+			"model":        String(model),
 			"seed":         Int(seed),
 		},
 	}
@@ -3971,13 +3971,13 @@ func LumaImageModifyNode(gr *Graph, image IMAGE, model COMBO, prompt string, ima
 }
 
 // LumaImageNode - Luma Text to Image
-func LumaImageNode(gr *Graph, model COMBO, aspect_ratio COMBO, image_luma_ref LUMA_REF, style_image IMAGE, character_image IMAGE, prompt string, seed int, style_image_weight float64) (_ *Node, image IMAGE) {
+func LumaImageNode(gr *Graph, image_luma_ref LUMA_REF, style_image IMAGE, character_image IMAGE, prompt string, model, aspect_ratio string, seed int, style_image_weight float64) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "LumaImageNode",
 		Inputs: map[string]Value{
 			"prompt":             String(prompt),
-			"model":              Link(model),
-			"aspect_ratio":       Link(aspect_ratio),
+			"model":              String(model),
+			"aspect_ratio":       String(aspect_ratio),
 			"seed":               Int(seed),
 			"style_image_weight": Float(style_image_weight),
 		},
@@ -3987,14 +3987,14 @@ func LumaImageNode(gr *Graph, model COMBO, aspect_ratio COMBO, image_luma_ref LU
 }
 
 // LumaImageToVideoNode - Luma Image to Video
-func LumaImageToVideoNode(gr *Graph, model COMBO, resolution COMBO, duration COMBO, first_image IMAGE, last_image IMAGE, luma_concepts LUMA_CONCEPTS, prompt string, loop bool, seed int) (_ *Node, video VIDEO) {
+func LumaImageToVideoNode(gr *Graph, first_image IMAGE, last_image IMAGE, luma_concepts LUMA_CONCEPTS, prompt string, model, resolution, duration string, loop bool, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "LumaImageToVideoNode",
 		Inputs: map[string]Value{
 			"prompt":     String(prompt),
-			"model":      Link(model),
-			"resolution": Link(resolution),
-			"duration":   Link(duration),
+			"model":      String(model),
+			"resolution": String(resolution),
+			"duration":   String(duration),
 			"loop":       Bool(loop),
 			"seed":       Int(seed),
 		},
@@ -4017,15 +4017,15 @@ func LumaReferenceNode(gr *Graph, image IMAGE, luma_ref LUMA_REF, weight float64
 }
 
 // LumaVideoNode - Luma Text to Video
-func LumaVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, duration COMBO, luma_concepts LUMA_CONCEPTS, prompt string, loop bool, seed int) (_ *Node, video VIDEO) {
+func LumaVideoNode(gr *Graph, luma_concepts LUMA_CONCEPTS, prompt string, model, aspect_ratio, resolution, duration string, loop bool, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "LumaVideoNode",
 		Inputs: map[string]Value{
 			"prompt":       String(prompt),
-			"model":        Link(model),
-			"aspect_ratio": Link(aspect_ratio),
-			"resolution":   Link(resolution),
-			"duration":     Link(duration),
+			"model":        String(model),
+			"aspect_ratio": String(aspect_ratio),
+			"resolution":   String(resolution),
+			"duration":     String(duration),
 			"loop":         Bool(loop),
 			"seed":         Int(seed),
 		},
@@ -4071,7 +4071,7 @@ func ManualSigmas(gr *Graph, sigmas string) (_ *Node, out_sigmas SIGMAS) {
 	return nd, SIGMAS{NodeID: id, OutPort: 0}
 }
 
-func MaskComposite(gr *Graph, destination MASK, source MASK, operation COMBO, x, y int) (_ *Node, mask MASK) {
+func MaskComposite(gr *Graph, destination MASK, source MASK, x, y int, operation string) (_ *Node, mask MASK) {
 	nd := &Node{
 		Class: "MaskComposite",
 		Inputs: map[string]Value{
@@ -4079,7 +4079,7 @@ func MaskComposite(gr *Graph, destination MASK, source MASK, operation COMBO, x,
 			"source":      Link(source),
 			"x":           Int(x),
 			"y":           Int(y),
-			"operation":   Link(operation),
+			"operation":   String(operation),
 		},
 	}
 	id := gr.Add(nd)
@@ -4148,16 +4148,16 @@ func MeshyAnimateModelNode(gr *Graph, rig_task_id MESHY_RIGGED_TASK_ID, action_i
 }
 
 // MeshyImageToModelNode - Meshy: Image to Model
-func MeshyImageToModelNode(gr *Graph, model COMBO, image IMAGE, should_remesh COMFY_DYNAMICCOMBO_V3, symmetry_mode COMBO, should_texture COMFY_DYNAMICCOMBO_V3, pose_mode COMBO, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
+func MeshyImageToModelNode(gr *Graph, image IMAGE, should_remesh COMFY_DYNAMICCOMBO_V3, should_texture COMFY_DYNAMICCOMBO_V3, model string, symmetry_mode string, pose_mode string, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
 	nd := &Node{
 		Class: "MeshyImageToModelNode",
 		Inputs: map[string]Value{
-			"model":          Link(model),
+			"model":          String(model),
 			"image":          Link(image),
 			"should_remesh":  Link(should_remesh),
-			"symmetry_mode":  Link(symmetry_mode),
+			"symmetry_mode":  String(symmetry_mode),
 			"should_texture": Link(should_texture),
-			"pose_mode":      Link(pose_mode),
+			"pose_mode":      String(pose_mode),
 			"seed":           Int(seed),
 		},
 	}
@@ -4166,16 +4166,16 @@ func MeshyImageToModelNode(gr *Graph, model COMBO, image IMAGE, should_remesh CO
 }
 
 // MeshyMultiImageToModelNode - Meshy: Multi-Image to Model
-func MeshyMultiImageToModelNode(gr *Graph, model COMBO, images COMFY_AUTOGROW_V3, should_remesh COMFY_DYNAMICCOMBO_V3, symmetry_mode COMBO, should_texture COMFY_DYNAMICCOMBO_V3, pose_mode COMBO, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
+func MeshyMultiImageToModelNode(gr *Graph, images COMFY_AUTOGROW_V3, should_remesh COMFY_DYNAMICCOMBO_V3, should_texture COMFY_DYNAMICCOMBO_V3, model string, symmetry_mode string, pose_mode string, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
 	nd := &Node{
 		Class: "MeshyMultiImageToModelNode",
 		Inputs: map[string]Value{
-			"model":          Link(model),
+			"model":          String(model),
 			"images":         Link(images),
 			"should_remesh":  Link(should_remesh),
-			"symmetry_mode":  Link(symmetry_mode),
+			"symmetry_mode":  String(symmetry_mode),
 			"should_texture": Link(should_texture),
-			"pose_mode":      Link(pose_mode),
+			"pose_mode":      String(pose_mode),
 			"seed":           Int(seed),
 		},
 	}
@@ -4184,11 +4184,11 @@ func MeshyMultiImageToModelNode(gr *Graph, model COMBO, images COMFY_AUTOGROW_V3
 }
 
 // MeshyRefineNode - Meshy: Refine Draft Model
-func MeshyRefineNode(gr *Graph, model COMBO, meshy_task_id MESHY_TASK_ID, texture_image IMAGE, enable_pbr bool, texture_prompt string) (_ *Node, model_file STRING, out_meshy_task_id MESHY_TASK_ID) {
+func MeshyRefineNode(gr *Graph, meshy_task_id MESHY_TASK_ID, texture_image IMAGE, model string, enable_pbr bool, texture_prompt string) (_ *Node, model_file STRING, out_meshy_task_id MESHY_TASK_ID) {
 	nd := &Node{
 		Class: "MeshyRefineNode",
 		Inputs: map[string]Value{
-			"model":          Link(model),
+			"model":          String(model),
 			"meshy_task_id":  Link(meshy_task_id),
 			"enable_pbr":     Bool(enable_pbr),
 			"texture_prompt": String(texture_prompt),
@@ -4212,16 +4212,16 @@ func MeshyRigModelNode(gr *Graph, meshy_task_id MESHY_TASK_ID, texture_image IMA
 }
 
 // MeshyTextToModelNode - Meshy: Text to Model
-func MeshyTextToModelNode(gr *Graph, model COMBO, style COMBO, should_remesh COMFY_DYNAMICCOMBO_V3, symmetry_mode COMBO, pose_mode COMBO, prompt string, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
+func MeshyTextToModelNode(gr *Graph, should_remesh COMFY_DYNAMICCOMBO_V3, model string, prompt string, style string, symmetry_mode, pose_mode string, seed int) (_ *Node, model_file STRING, meshy_task_id MESHY_TASK_ID) {
 	nd := &Node{
 		Class: "MeshyTextToModelNode",
 		Inputs: map[string]Value{
-			"model":         Link(model),
+			"model":         String(model),
 			"prompt":        String(prompt),
-			"style":         Link(style),
+			"style":         String(style),
 			"should_remesh": Link(should_remesh),
-			"symmetry_mode": Link(symmetry_mode),
-			"pose_mode":     Link(pose_mode),
+			"symmetry_mode": String(symmetry_mode),
+			"pose_mode":     String(pose_mode),
 			"seed":          Int(seed),
 		},
 	}
@@ -4230,11 +4230,11 @@ func MeshyTextToModelNode(gr *Graph, model COMBO, style COMBO, should_remesh COM
 }
 
 // MeshyTextureNode - Meshy: Texture Model
-func MeshyTextureNode(gr *Graph, model COMBO, meshy_task_id MESHY_TASK_ID, image_style IMAGE, enable_original_uv, pbr bool, text_style_prompt string) (_ *Node, model_file STRING, out_meshy_task_id MODEL_TASK_ID) {
+func MeshyTextureNode(gr *Graph, meshy_task_id MESHY_TASK_ID, image_style IMAGE, model string, enable_original_uv, pbr bool, text_style_prompt string) (_ *Node, model_file STRING, out_meshy_task_id MODEL_TASK_ID) {
 	nd := &Node{
 		Class: "MeshyTextureNode",
 		Inputs: map[string]Value{
-			"model":              Link(model),
+			"model":              String(model),
 			"meshy_task_id":      Link(meshy_task_id),
 			"enable_original_uv": Bool(enable_original_uv),
 			"pbr":                Bool(pbr),
@@ -4246,7 +4246,7 @@ func MeshyTextureNode(gr *Graph, model COMBO, meshy_task_id MESHY_TASK_ID, image
 }
 
 // MinimaxHailuoVideoNode - MiniMax Hailuo Video
-func MinimaxHailuoVideoNode(gr *Graph, first_frame_image IMAGE, duration COMBO, resolution COMBO, prompt_text string, seed int, prompt_optimizer bool) (_ *Node, video VIDEO) {
+func MinimaxHailuoVideoNode(gr *Graph, first_frame_image IMAGE, prompt_text string, seed int, prompt_optimizer bool, duration, resolution string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "MinimaxHailuoVideoNode",
 		Inputs: map[string]Value{
@@ -4258,13 +4258,13 @@ func MinimaxHailuoVideoNode(gr *Graph, first_frame_image IMAGE, duration COMBO, 
 }
 
 // MinimaxImageToVideoNode - MiniMax Image to Video
-func MinimaxImageToVideoNode(gr *Graph, image IMAGE, model COMBO, prompt_text string, seed int) (_ *Node, video VIDEO) {
+func MinimaxImageToVideoNode(gr *Graph, image IMAGE, prompt_text string, model string, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "MinimaxImageToVideoNode",
 		Inputs: map[string]Value{
 			"image":       Link(image),
 			"prompt_text": String(prompt_text),
-			"model":       Link(model),
+			"model":       String(model),
 		},
 	}
 	id := gr.Add(nd)
@@ -4272,12 +4272,12 @@ func MinimaxImageToVideoNode(gr *Graph, image IMAGE, model COMBO, prompt_text st
 }
 
 // MinimaxTextToVideoNode - MiniMax Text to Video
-func MinimaxTextToVideoNode(gr *Graph, model COMBO, prompt_text string, seed int) (_ *Node, video VIDEO) {
+func MinimaxTextToVideoNode(gr *Graph, prompt_text string, model string, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "MinimaxTextToVideoNode",
 		Inputs: map[string]Value{
 			"prompt_text": String(prompt_text),
-			"model":       Link(model),
+			"model":       String(model),
 		},
 	}
 	id := gr.Add(nd)
@@ -5270,14 +5270,14 @@ func ModelSave(gr *Graph, model MODEL, filename_prefix string) (_ *Node) {
 }
 
 // MoonvalleyImg2VideoNode - Moonvalley Marey Image to Video
-func MoonvalleyImg2VideoNode(gr *Graph, image IMAGE, resolution COMBO, prompt, negative_prompt string, prompt_adherence float64, seed, steps int) (_ *Node, video VIDEO) {
+func MoonvalleyImg2VideoNode(gr *Graph, image IMAGE, prompt, negative_prompt string, resolution string, prompt_adherence float64, seed, steps int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "MoonvalleyImg2VideoNode",
 		Inputs: map[string]Value{
 			"image":            Link(image),
 			"prompt":           String(prompt),
 			"negative_prompt":  String(negative_prompt),
-			"resolution":       Link(resolution),
+			"resolution":       String(resolution),
 			"prompt_adherence": Float(prompt_adherence),
 			"seed":             Int(seed),
 			"steps":            Int(steps),
@@ -5288,13 +5288,13 @@ func MoonvalleyImg2VideoNode(gr *Graph, image IMAGE, resolution COMBO, prompt, n
 }
 
 // MoonvalleyTxt2VideoNode - Moonvalley Marey Text to Video
-func MoonvalleyTxt2VideoNode(gr *Graph, resolution COMBO, prompt, negative_prompt string, prompt_adherence float64, seed, steps int) (_ *Node, video VIDEO) {
+func MoonvalleyTxt2VideoNode(gr *Graph, prompt, negative_prompt string, resolution string, prompt_adherence float64, seed, steps int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "MoonvalleyTxt2VideoNode",
 		Inputs: map[string]Value{
 			"prompt":           String(prompt),
 			"negative_prompt":  String(negative_prompt),
-			"resolution":       Link(resolution),
+			"resolution":       String(resolution),
 			"prompt_adherence": Float(prompt_adherence),
 			"seed":             Int(seed),
 			"steps":            Int(steps),
@@ -5305,7 +5305,7 @@ func MoonvalleyTxt2VideoNode(gr *Graph, resolution COMBO, prompt, negative_promp
 }
 
 // MoonvalleyVideo2VideoNode - Moonvalley Marey Video to Video
-func MoonvalleyVideo2VideoNode(gr *Graph, video VIDEO, control_type COMBO, prompt, negative_prompt string, seed int, steps int, motion_intensity int) (_ *Node, out_video VIDEO) {
+func MoonvalleyVideo2VideoNode(gr *Graph, video VIDEO, prompt, negative_prompt string, seed int, steps int, control_type string, motion_intensity int) (_ *Node, out_video VIDEO) {
 	nd := &Node{
 		Class: "MoonvalleyVideo2VideoNode",
 		Inputs: map[string]Value{
@@ -5321,12 +5321,12 @@ func MoonvalleyVideo2VideoNode(gr *Graph, video VIDEO, control_type COMBO, promp
 }
 
 // Morphology - ImageMorphology
-func Morphology(gr *Graph, image IMAGE, operation COMBO, kernel_size int) (_ *Node, out_image IMAGE) {
+func Morphology(gr *Graph, image IMAGE, operation string, kernel_size int) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "Morphology",
 		Inputs: map[string]Value{
 			"image":       Link(image),
-			"operation":   Link(operation),
+			"operation":   String(operation),
 			"kernel_size": Int(kernel_size),
 		},
 	}
@@ -5362,11 +5362,11 @@ func NormalizeVideoLatentStart(gr *Graph, latent LATENT, start_frame_count, refe
 }
 
 // OpenAIChatConfig - OpenAI ChatGPT Advanced Options
-func OpenAIChatConfig(gr *Graph, truncation COMBO, max_output_tokens int, instructions string) (_ *Node, openai_chat_config OPENAI_CHAT_CONFIG) {
+func OpenAIChatConfig(gr *Graph, truncation string, max_output_tokens int, instructions string) (_ *Node, openai_chat_config OPENAI_CHAT_CONFIG) {
 	nd := &Node{
 		Class: "OpenAIChatConfig",
 		Inputs: map[string]Value{
-			"truncation": Link(truncation),
+			"truncation": String(truncation),
 		},
 	}
 	id := gr.Add(nd)
@@ -5374,13 +5374,13 @@ func OpenAIChatConfig(gr *Graph, truncation COMBO, max_output_tokens int, instru
 }
 
 // OpenAIChatNode - OpenAI ChatGPT
-func OpenAIChatNode(gr *Graph, model COMBO, images IMAGE, files OPENAI_INPUT_FILES, advanced_options OPENAI_CHAT_CONFIG, prompt string, persist_context bool) (_ *Node, str STRING) {
+func OpenAIChatNode(gr *Graph, images IMAGE, files OPENAI_INPUT_FILES, advanced_options OPENAI_CHAT_CONFIG, prompt string, persist_context bool, model string) (_ *Node, str STRING) {
 	nd := &Node{
 		Class: "OpenAIChatNode",
 		Inputs: map[string]Value{
 			"prompt":          String(prompt),
 			"persist_context": Bool(persist_context),
-			"model":           Link(model),
+			"model":           String(model),
 		},
 	}
 	id := gr.Add(nd)
@@ -5388,7 +5388,7 @@ func OpenAIChatNode(gr *Graph, model COMBO, images IMAGE, files OPENAI_INPUT_FIL
 }
 
 // OpenAIDalle2 - OpenAI DALL·E 2
-func OpenAIDalle2(gr *Graph, size COMBO, image IMAGE, mask MASK, prompt string, seed int, n int) (_ *Node, out_image IMAGE) {
+func OpenAIDalle2(gr *Graph, image IMAGE, mask MASK, prompt string, seed int, size string, n int) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "OpenAIDalle2",
 		Inputs: map[string]Value{
@@ -5400,7 +5400,7 @@ func OpenAIDalle2(gr *Graph, size COMBO, image IMAGE, mask MASK, prompt string, 
 }
 
 // OpenAIDalle3 - OpenAI DALL·E 3
-func OpenAIDalle3(gr *Graph, quality COMBO, style COMBO, size COMBO, prompt string, seed int) (_ *Node, image IMAGE) {
+func OpenAIDalle3(gr *Graph, prompt string, seed int, quality, style, size string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "OpenAIDalle3",
 		Inputs: map[string]Value{
@@ -5412,7 +5412,7 @@ func OpenAIDalle3(gr *Graph, quality COMBO, style COMBO, size COMBO, prompt stri
 }
 
 // OpenAIGPTImage1 - OpenAI GPT Image 1
-func OpenAIGPTImage1(gr *Graph, quality COMBO, background COMBO, size COMBO, image IMAGE, mask MASK, model COMBO, prompt string, seed int, n int) (_ *Node, out_image IMAGE) {
+func OpenAIGPTImage1(gr *Graph, image IMAGE, mask MASK, prompt string, seed int, quality, background, size string, n int, model string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "OpenAIGPTImage1",
 		Inputs: map[string]Value{
@@ -5424,11 +5424,11 @@ func OpenAIGPTImage1(gr *Graph, quality COMBO, background COMBO, size COMBO, ima
 }
 
 // OpenAIInputFiles - OpenAI ChatGPT Input Files
-func OpenAIInputFiles(gr *Graph, file COMBO, openai_input_files OPENAI_INPUT_FILES) (_ *Node, out_openai_input_files OPENAI_INPUT_FILES) {
+func OpenAIInputFiles(gr *Graph, openai_input_files OPENAI_INPUT_FILES, file string) (_ *Node, out_openai_input_files OPENAI_INPUT_FILES) {
 	nd := &Node{
 		Class: "OpenAIInputFiles",
 		Inputs: map[string]Value{
-			"file": Link(file),
+			"file": String(file),
 		},
 	}
 	id := gr.Add(nd)
@@ -5436,25 +5436,25 @@ func OpenAIInputFiles(gr *Graph, file COMBO, openai_input_files OPENAI_INPUT_FIL
 }
 
 // OpenAIVideoSora2 - OpenAI Sora - Video
-func OpenAIVideoSora2(gr *Graph, model COMBO, size COMBO, duration COMBO, image IMAGE, prompt string, seed int) (_ *Node, video VIDEO) {
+func OpenAIVideoSora2(gr *Graph, image IMAGE, model string, prompt string, size, duration string, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "OpenAIVideoSora2",
 		Inputs: map[string]Value{
-			"model":    Link(model),
+			"model":    String(model),
 			"prompt":   String(prompt),
-			"size":     Link(size),
-			"duration": Link(duration),
+			"size":     String(size),
+			"duration": String(duration),
 		},
 	}
 	id := gr.Add(nd)
 	return nd, VIDEO{NodeID: id, OutPort: 0}
 }
 
-func OptimalStepsScheduler(gr *Graph, model_type COMBO, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
+func OptimalStepsScheduler(gr *Graph, model_type string, steps int, denoise float64) (_ *Node, sigmas SIGMAS) {
 	nd := &Node{
 		Class: "OptimalStepsScheduler",
 		Inputs: map[string]Value{
-			"model_type": Link(model_type),
+			"model_type": String(model_type),
 			"steps":      Int(steps),
 			"denoise":    Float(denoise),
 		},
@@ -5526,7 +5526,7 @@ func PairConditioningSetPropertiesAndCombine(gr *Graph, positive CONDITIONING, n
 }
 
 // PatchModelAddDownscale - PatchModelAddDownscale (Kohya Deep Shrink)
-func PatchModelAddDownscale(gr *Graph, model MODEL, downscale_method COMBO, upscale_method COMBO, block_number int, downscale_factor, start_percent, end_percent float64, downscale_after_skip bool) (_ *Node, out_model MODEL) {
+func PatchModelAddDownscale(gr *Graph, model MODEL, block_number int, downscale_factor, start_percent, end_percent float64, downscale_after_skip bool, downscale_method, upscale_method string) (_ *Node, out_model MODEL) {
 	nd := &Node{
 		Class: "PatchModelAddDownscale",
 		Inputs: map[string]Value{
@@ -5536,8 +5536,8 @@ func PatchModelAddDownscale(gr *Graph, model MODEL, downscale_method COMBO, upsc
 			"start_percent":        Float(start_percent),
 			"end_percent":          Float(end_percent),
 			"downscale_after_skip": Bool(downscale_after_skip),
-			"downscale_method":     Link(downscale_method),
-			"upscale_method":       Link(upscale_method),
+			"downscale_method":     String(downscale_method),
+			"upscale_method":       String(upscale_method),
 		},
 	}
 	id := gr.Add(nd)
@@ -5600,11 +5600,11 @@ func PhotoMakerEncode(gr *Graph, photomaker PHOTOMAKER, image IMAGE, clip CLIP, 
 	return nd, CONDITIONING{NodeID: id, OutPort: 0}
 }
 
-func PhotoMakerLoader(gr *Graph, photomaker_model_name COMBO) (_ *Node, photomaker PHOTOMAKER) {
+func PhotoMakerLoader(gr *Graph, photomaker_model_name string) (_ *Node, photomaker PHOTOMAKER) {
 	nd := &Node{
 		Class: "PhotoMakerLoader",
 		Inputs: map[string]Value{
-			"photomaker_model_name": Link(photomaker_model_name),
+			"photomaker_model_name": String(photomaker_model_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -5612,15 +5612,15 @@ func PhotoMakerLoader(gr *Graph, photomaker_model_name COMBO) (_ *Node, photomak
 }
 
 // PixverseImageToVideoNode - PixVerse Image to Video
-func PixverseImageToVideoNode(gr *Graph, image IMAGE, quality COMBO, duration_seconds COMBO, motion_mode COMBO, pixverse_template PIXVERSE_TEMPLATE, prompt string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
+func PixverseImageToVideoNode(gr *Graph, image IMAGE, pixverse_template PIXVERSE_TEMPLATE, prompt string, quality, duration_seconds, motion_mode string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "PixverseImageToVideoNode",
 		Inputs: map[string]Value{
 			"image":            Link(image),
 			"prompt":           String(prompt),
-			"quality":          Link(quality),
-			"duration_seconds": Link(duration_seconds),
-			"motion_mode":      Link(motion_mode),
+			"quality":          String(quality),
+			"duration_seconds": String(duration_seconds),
+			"motion_mode":      String(motion_mode),
 			"seed":             Int(seed),
 		},
 	}
@@ -5629,11 +5629,11 @@ func PixverseImageToVideoNode(gr *Graph, image IMAGE, quality COMBO, duration_se
 }
 
 // PixverseTemplateNode - PixVerse Template
-func PixverseTemplateNode(gr *Graph, template COMBO) (_ *Node, pixverse_template PIXVERSE_TEMPLATE) {
+func PixverseTemplateNode(gr *Graph, template string) (_ *Node, pixverse_template PIXVERSE_TEMPLATE) {
 	nd := &Node{
 		Class: "PixverseTemplateNode",
 		Inputs: map[string]Value{
-			"template": Link(template),
+			"template": String(template),
 		},
 	}
 	id := gr.Add(nd)
@@ -5641,15 +5641,15 @@ func PixverseTemplateNode(gr *Graph, template COMBO) (_ *Node, pixverse_template
 }
 
 // PixverseTextToVideoNode - PixVerse Text to Video
-func PixverseTextToVideoNode(gr *Graph, aspect_ratio COMBO, quality COMBO, duration_seconds COMBO, motion_mode COMBO, pixverse_template PIXVERSE_TEMPLATE, prompt string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
+func PixverseTextToVideoNode(gr *Graph, pixverse_template PIXVERSE_TEMPLATE, prompt string, aspect_ratio, quality, duration_seconds, motion_mode string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "PixverseTextToVideoNode",
 		Inputs: map[string]Value{
 			"prompt":           String(prompt),
-			"aspect_ratio":     Link(aspect_ratio),
-			"quality":          Link(quality),
-			"duration_seconds": Link(duration_seconds),
-			"motion_mode":      Link(motion_mode),
+			"aspect_ratio":     String(aspect_ratio),
+			"quality":          String(quality),
+			"duration_seconds": String(duration_seconds),
+			"motion_mode":      String(motion_mode),
 			"seed":             Int(seed),
 		},
 	}
@@ -5658,16 +5658,16 @@ func PixverseTextToVideoNode(gr *Graph, aspect_ratio COMBO, quality COMBO, durat
 }
 
 // PixverseTransitionVideoNode - PixVerse Transition Video
-func PixverseTransitionVideoNode(gr *Graph, first_frame IMAGE, last_frame IMAGE, quality COMBO, duration_seconds COMBO, motion_mode COMBO, prompt string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
+func PixverseTransitionVideoNode(gr *Graph, first_frame IMAGE, last_frame IMAGE, prompt string, quality, duration_seconds, motion_mode string, seed int, negative_prompt string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "PixverseTransitionVideoNode",
 		Inputs: map[string]Value{
 			"first_frame":      Link(first_frame),
 			"last_frame":       Link(last_frame),
 			"prompt":           String(prompt),
-			"quality":          Link(quality),
-			"duration_seconds": Link(duration_seconds),
-			"motion_mode":      Link(motion_mode),
+			"quality":          String(quality),
+			"duration_seconds": String(duration_seconds),
+			"motion_mode":      String(motion_mode),
 			"seed":             Int(seed),
 		},
 	}
@@ -5690,7 +5690,7 @@ func PolyexponentialScheduler(gr *Graph, steps int, sigma_max, sigma_min, rho fl
 }
 
 // PorterDuffImageComposite - Porter-Duff Image Composite
-func PorterDuffImageComposite(gr *Graph, source IMAGE, source_alpha MASK, destination IMAGE, destination_alpha MASK, mode COMBO) (_ *Node, image IMAGE, mask MASK) {
+func PorterDuffImageComposite(gr *Graph, source IMAGE, source_alpha MASK, destination IMAGE, destination_alpha MASK, mode string) (_ *Node, image IMAGE, mask MASK) {
 	nd := &Node{
 		Class: "PorterDuffImageComposite",
 		Inputs: map[string]Value{
@@ -5698,7 +5698,7 @@ func PorterDuffImageComposite(gr *Graph, source IMAGE, source_alpha MASK, destin
 			"source_alpha":      Link(source_alpha),
 			"destination":       Link(destination),
 			"destination_alpha": Link(destination_alpha),
-			"mode":              Link(mode),
+			"mode":              String(mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -5813,14 +5813,14 @@ func PrimitiveStringMultiline(gr *Graph, value string) (_ *Node, str STRING) {
 	return nd, STRING{NodeID: id, OutPort: 0}
 }
 
-func QuadrupleCLIPLoader(gr *Graph, clip_name1 COMBO, clip_name2 COMBO, clip_name3 COMBO, clip_name4 COMBO) (_ *Node, clip CLIP) {
+func QuadrupleCLIPLoader(gr *Graph, clip_name1, clip_name2, clip_name3, clip_name4 string) (_ *Node, clip CLIP) {
 	nd := &Node{
 		Class: "QuadrupleCLIPLoader",
 		Inputs: map[string]Value{
-			"clip_name1": Link(clip_name1),
-			"clip_name2": Link(clip_name2),
-			"clip_name3": Link(clip_name3),
-			"clip_name4": Link(clip_name4),
+			"clip_name1": String(clip_name1),
+			"clip_name2": String(clip_name2),
+			"clip_name3": String(clip_name3),
+			"clip_name4": String(clip_name4),
 		},
 	}
 	id := gr.Add(nd)
@@ -6014,11 +6014,11 @@ func RecraftReplaceBackgroundNode(gr *Graph, image IMAGE, recraft_style RECRAFT_
 }
 
 // RecraftStyleV3DigitalIllustration - Recraft Style - Digital Illustration
-func RecraftStyleV3DigitalIllustration(gr *Graph, substyle COMBO) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+func RecraftStyleV3DigitalIllustration(gr *Graph, substyle string) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
 	nd := &Node{
 		Class: "RecraftStyleV3DigitalIllustration",
 		Inputs: map[string]Value{
-			"substyle": Link(substyle),
+			"substyle": String(substyle),
 		},
 	}
 	id := gr.Add(nd)
@@ -6038,11 +6038,11 @@ func RecraftStyleV3InfiniteStyleLibrary(gr *Graph, style_id string) (_ *Node, re
 }
 
 // RecraftStyleV3LogoRaster - Recraft Style - Logo Raster
-func RecraftStyleV3LogoRaster(gr *Graph, substyle COMBO) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+func RecraftStyleV3LogoRaster(gr *Graph, substyle string) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
 	nd := &Node{
 		Class: "RecraftStyleV3LogoRaster",
 		Inputs: map[string]Value{
-			"substyle": Link(substyle),
+			"substyle": String(substyle),
 		},
 	}
 	id := gr.Add(nd)
@@ -6050,11 +6050,11 @@ func RecraftStyleV3LogoRaster(gr *Graph, substyle COMBO) (_ *Node, recraft_style
 }
 
 // RecraftStyleV3RealisticImage - Recraft Style - Realistic Image
-func RecraftStyleV3RealisticImage(gr *Graph, substyle COMBO) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
+func RecraftStyleV3RealisticImage(gr *Graph, substyle string) (_ *Node, recraft_style RECRAFT_V3_STYLE) {
 	nd := &Node{
 		Class: "RecraftStyleV3RealisticImage",
 		Inputs: map[string]Value{
-			"substyle": Link(substyle),
+			"substyle": String(substyle),
 		},
 	}
 	id := gr.Add(nd)
@@ -6062,12 +6062,12 @@ func RecraftStyleV3RealisticImage(gr *Graph, substyle COMBO) (_ *Node, recraft_s
 }
 
 // RecraftTextToImageNode - Recraft Text to Image
-func RecraftTextToImageNode(gr *Graph, size COMBO, recraft_style RECRAFT_V3_STYLE, recraft_controls RECRAFT_CONTROLS, prompt string, n, seed int, negative_prompt string) (_ *Node, image IMAGE) {
+func RecraftTextToImageNode(gr *Graph, recraft_style RECRAFT_V3_STYLE, recraft_controls RECRAFT_CONTROLS, prompt string, size string, n, seed int, negative_prompt string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "RecraftTextToImageNode",
 		Inputs: map[string]Value{
 			"prompt": String(prompt),
-			"size":   Link(size),
+			"size":   String(size),
 			"n":      Int(n),
 			"seed":   Int(seed),
 		},
@@ -6077,13 +6077,13 @@ func RecraftTextToImageNode(gr *Graph, size COMBO, recraft_style RECRAFT_V3_STYL
 }
 
 // RecraftTextToVectorNode - Recraft Text to Vector
-func RecraftTextToVectorNode(gr *Graph, substyle COMBO, size COMBO, recraft_controls RECRAFT_CONTROLS, prompt string, n, seed int, negative_prompt string) (_ *Node, svg SVG) {
+func RecraftTextToVectorNode(gr *Graph, recraft_controls RECRAFT_CONTROLS, prompt string, substyle, size string, n, seed int, negative_prompt string) (_ *Node, svg SVG) {
 	nd := &Node{
 		Class: "RecraftTextToVectorNode",
 		Inputs: map[string]Value{
 			"prompt":   String(prompt),
-			"substyle": Link(substyle),
-			"size":     Link(size),
+			"substyle": String(substyle),
+			"size":     String(size),
 			"n":        Int(n),
 			"seed":     Int(seed),
 		},
@@ -6116,13 +6116,13 @@ func ReferenceLatent(gr *Graph, conditioning CONDITIONING, latent LATENT) (_ *No
 }
 
 // RegexExtract - Regex Extract
-func RegexExtract(gr *Graph, mode COMBO, str, regex_pattern string, case_insensitive, multiline, dotall bool, group_index int) (_ *Node, out_str STRING) {
+func RegexExtract(gr *Graph, str, regex_pattern string, mode string, case_insensitive, multiline, dotall bool, group_index int) (_ *Node, out_str STRING) {
 	nd := &Node{
 		Class: "RegexExtract",
 		Inputs: map[string]Value{
 			"string":           String(str),
 			"regex_pattern":    String(regex_pattern),
-			"mode":             Link(mode),
+			"mode":             String(mode),
 			"case_insensitive": Bool(case_insensitive),
 			"multiline":        Bool(multiline),
 			"dotall":           Bool(dotall),
@@ -6239,15 +6239,15 @@ func RescaleCFG(gr *Graph, model MODEL, multiplier float64) (_ *Node, out_model 
 	return nd, MODEL{NodeID: id, OutPort: 0}
 }
 
-func ResizeAndPadImage(gr *Graph, image IMAGE, padding_color COMBO, interpolation COMBO, target_width, target_height int) (_ *Node, out_image IMAGE) {
+func ResizeAndPadImage(gr *Graph, image IMAGE, target_width, target_height int, padding_color, interpolation string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "ResizeAndPadImage",
 		Inputs: map[string]Value{
 			"image":         Link(image),
 			"target_width":  Int(target_width),
 			"target_height": Int(target_height),
-			"padding_color": Link(padding_color),
-			"interpolation": Link(interpolation),
+			"padding_color": String(padding_color),
+			"interpolation": String(interpolation),
 		},
 	}
 	id := gr.Add(nd)
@@ -6255,13 +6255,13 @@ func ResizeAndPadImage(gr *Graph, image IMAGE, padding_color COMBO, interpolatio
 }
 
 // ResizeImageMaskNode - Resize Image/Mask
-func ResizeImageMaskNode(gr *Graph, input COMFY_MATCHTYPE_V3, resize_type COMFY_DYNAMICCOMBO_V3, scale_method COMBO) (_ *Node, resized COMFY_MATCHTYPE_V3) {
+func ResizeImageMaskNode(gr *Graph, input COMFY_MATCHTYPE_V3, resize_type COMFY_DYNAMICCOMBO_V3, scale_method string) (_ *Node, resized COMFY_MATCHTYPE_V3) {
 	nd := &Node{
 		Class: "ResizeImageMaskNode",
 		Inputs: map[string]Value{
 			"input":        Link(input),
 			"resize_type":  Link(resize_type),
-			"scale_method": Link(scale_method),
+			"scale_method": String(scale_method),
 		},
 	}
 	id := gr.Add(nd)
@@ -6308,7 +6308,7 @@ func ResolutionBucket(gr *Graph, latents LATENT, conditioning CONDITIONING) (_ *
 }
 
 // Rodin3D_Detail - Rodin 3D Generate - Detail Generate
-func Rodin3D_Detail(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, seed int) (_ *Node, _3d_model_path STRING) {
+func Rodin3D_Detail(gr *Graph, images IMAGE, seed int, material_type, polygon_count string) (_ *Node, _3d_model_path STRING) {
 	nd := &Node{
 		Class: "Rodin3D_Detail",
 		Inputs: map[string]Value{
@@ -6320,7 +6320,7 @@ func Rodin3D_Detail(gr *Graph, images IMAGE, material_type COMBO, polygon_count 
 }
 
 // Rodin3D_Gen2 - Rodin 3D Generate - Gen-2 Generate
-func Rodin3D_Gen2(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, tapose bool, seed int) (_ *Node, _3d_model_path STRING) {
+func Rodin3D_Gen2(gr *Graph, images IMAGE, tapose bool, seed int, material_type, polygon_count string) (_ *Node, _3d_model_path STRING) {
 	nd := &Node{
 		Class: "Rodin3D_Gen2",
 		Inputs: map[string]Value{
@@ -6333,7 +6333,7 @@ func Rodin3D_Gen2(gr *Graph, images IMAGE, material_type COMBO, polygon_count CO
 }
 
 // Rodin3D_Regular - Rodin 3D Generate - Regular Generate
-func Rodin3D_Regular(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, seed int) (_ *Node, _3d_model_path STRING) {
+func Rodin3D_Regular(gr *Graph, images IMAGE, seed int, material_type, polygon_count string) (_ *Node, _3d_model_path STRING) {
 	nd := &Node{
 		Class: "Rodin3D_Regular",
 		Inputs: map[string]Value{
@@ -6357,7 +6357,7 @@ func Rodin3D_Sketch(gr *Graph, images IMAGE, seed int) (_ *Node, _3d_model_path 
 }
 
 // Rodin3D_Smooth - Rodin 3D Generate - Smooth Generate
-func Rodin3D_Smooth(gr *Graph, images IMAGE, material_type COMBO, polygon_count COMBO, seed int) (_ *Node, _3d_model_path STRING) {
+func Rodin3D_Smooth(gr *Graph, images IMAGE, seed int, material_type, polygon_count string) (_ *Node, _3d_model_path STRING) {
 	nd := &Node{
 		Class: "Rodin3D_Smooth",
 		Inputs: map[string]Value{
@@ -6369,15 +6369,15 @@ func Rodin3D_Smooth(gr *Graph, images IMAGE, material_type COMBO, polygon_count 
 }
 
 // RunwayFirstLastFrameNode - Runway First-Last-Frame to Video
-func RunwayFirstLastFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, duration COMBO, ratio COMBO, prompt string, seed int) (_ *Node, video VIDEO) {
+func RunwayFirstLastFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, prompt string, duration, ratio string, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "RunwayFirstLastFrameNode",
 		Inputs: map[string]Value{
 			"prompt":      String(prompt),
 			"start_frame": Link(start_frame),
 			"end_frame":   Link(end_frame),
-			"duration":    Link(duration),
-			"ratio":       Link(ratio),
+			"duration":    String(duration),
+			"ratio":       String(ratio),
 			"seed":        Int(seed),
 		},
 	}
@@ -6386,14 +6386,14 @@ func RunwayFirstLastFrameNode(gr *Graph, start_frame IMAGE, end_frame IMAGE, dur
 }
 
 // RunwayImageToVideoNodeGen3a - Runway Image to Video (Gen3a Turbo)
-func RunwayImageToVideoNodeGen3a(gr *Graph, start_frame IMAGE, duration COMBO, ratio COMBO, prompt string, seed int) (_ *Node, video VIDEO) {
+func RunwayImageToVideoNodeGen3a(gr *Graph, start_frame IMAGE, prompt string, duration, ratio string, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "RunwayImageToVideoNodeGen3a",
 		Inputs: map[string]Value{
 			"prompt":      String(prompt),
 			"start_frame": Link(start_frame),
-			"duration":    Link(duration),
-			"ratio":       Link(ratio),
+			"duration":    String(duration),
+			"ratio":       String(ratio),
 			"seed":        Int(seed),
 		},
 	}
@@ -6402,14 +6402,14 @@ func RunwayImageToVideoNodeGen3a(gr *Graph, start_frame IMAGE, duration COMBO, r
 }
 
 // RunwayImageToVideoNodeGen4 - Runway Image to Video (Gen4 Turbo)
-func RunwayImageToVideoNodeGen4(gr *Graph, start_frame IMAGE, duration COMBO, ratio COMBO, prompt string, seed int) (_ *Node, video VIDEO) {
+func RunwayImageToVideoNodeGen4(gr *Graph, start_frame IMAGE, prompt string, duration, ratio string, seed int) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "RunwayImageToVideoNodeGen4",
 		Inputs: map[string]Value{
 			"prompt":      String(prompt),
 			"start_frame": Link(start_frame),
-			"duration":    Link(duration),
-			"ratio":       Link(ratio),
+			"duration":    String(duration),
+			"ratio":       String(ratio),
 			"seed":        Int(seed),
 		},
 	}
@@ -6418,12 +6418,12 @@ func RunwayImageToVideoNodeGen4(gr *Graph, start_frame IMAGE, duration COMBO, ra
 }
 
 // RunwayTextToImageNode - Runway Text to Image
-func RunwayTextToImageNode(gr *Graph, ratio COMBO, reference_image IMAGE, prompt string) (_ *Node, image IMAGE) {
+func RunwayTextToImageNode(gr *Graph, reference_image IMAGE, prompt string, ratio string) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "RunwayTextToImageNode",
 		Inputs: map[string]Value{
 			"prompt": String(prompt),
-			"ratio":  Link(ratio),
+			"ratio":  String(ratio),
 		},
 	}
 	id := gr.Add(nd)
@@ -6548,14 +6548,14 @@ func SamplerDPMAdaptative(gr *Graph, order int, rtol, atol, h_init, pcoeff, icoe
 	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerDPMPP_2M_SDE(gr *Graph, solver_type COMBO, noise_device COMBO, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+func SamplerDPMPP_2M_SDE(gr *Graph, solver_type string, eta, s_noise float64, noise_device string) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerDPMPP_2M_SDE",
 		Inputs: map[string]Value{
-			"solver_type":  Link(solver_type),
+			"solver_type":  String(solver_type),
 			"eta":          Float(eta),
 			"s_noise":      Float(s_noise),
-			"noise_device": Link(noise_device),
+			"noise_device": String(noise_device),
 		},
 	}
 	id := gr.Add(nd)
@@ -6574,38 +6574,38 @@ func SamplerDPMPP_2S_Ancestral(gr *Graph, eta, s_noise float64) (_ *Node, sample
 	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerDPMPP_3M_SDE(gr *Graph, noise_device COMBO, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+func SamplerDPMPP_3M_SDE(gr *Graph, eta, s_noise float64, noise_device string) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerDPMPP_3M_SDE",
 		Inputs: map[string]Value{
 			"eta":          Float(eta),
 			"s_noise":      Float(s_noise),
-			"noise_device": Link(noise_device),
+			"noise_device": String(noise_device),
 		},
 	}
 	id := gr.Add(nd)
 	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerDPMPP_SDE(gr *Graph, noise_device COMBO, eta, s_noise, r float64) (_ *Node, sampler SAMPLER) {
+func SamplerDPMPP_SDE(gr *Graph, eta, s_noise, r float64, noise_device string) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerDPMPP_SDE",
 		Inputs: map[string]Value{
 			"eta":          Float(eta),
 			"s_noise":      Float(s_noise),
 			"r":            Float(r),
-			"noise_device": Link(noise_device),
+			"noise_device": String(noise_device),
 		},
 	}
 	id := gr.Add(nd)
 	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerER_SDE(gr *Graph, solver_type COMBO, max_stage int, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
+func SamplerER_SDE(gr *Graph, solver_type string, max_stage int, eta, s_noise float64) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerER_SDE",
 		Inputs: map[string]Value{
-			"solver_type": Link(solver_type),
+			"solver_type": String(solver_type),
 			"max_stage":   Int(max_stage),
 			"eta":         Float(eta),
 			"s_noise":     Float(s_noise),
@@ -6641,24 +6641,24 @@ func SamplerEulerAncestralCFGPP(gr *Graph, eta, s_noise float64) (_ *Node, sampl
 }
 
 // SamplerEulerCFGpp - SamplerEulerCFG++
-func SamplerEulerCFGpp(gr *Graph, version COMBO) (_ *Node, sampler SAMPLER) {
+func SamplerEulerCFGpp(gr *Graph, version string) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerEulerCFGpp",
 		Inputs: map[string]Value{
-			"version": Link(version),
+			"version": String(version),
 		},
 	}
 	id := gr.Add(nd)
 	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerLCMUpscale(gr *Graph, upscale_method COMBO, scale_ratio float64, scale_steps int) (_ *Node, sampler SAMPLER) {
+func SamplerLCMUpscale(gr *Graph, scale_ratio float64, scale_steps int, upscale_method string) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerLCMUpscale",
 		Inputs: map[string]Value{
 			"scale_ratio":    Float(scale_ratio),
 			"scale_steps":    Int(scale_steps),
-			"upscale_method": Link(upscale_method),
+			"upscale_method": String(upscale_method),
 		},
 	}
 	id := gr.Add(nd)
@@ -6695,11 +6695,11 @@ func SamplerSASolver(gr *Graph, model MODEL, eta, sde_start_percent, sde_end_per
 	return nd, SAMPLER{NodeID: id, OutPort: 0}
 }
 
-func SamplerSEEDS2(gr *Graph, solver_type COMBO, eta, s_noise, r float64) (_ *Node, sampler SAMPLER) {
+func SamplerSEEDS2(gr *Graph, solver_type string, eta, s_noise, r float64) (_ *Node, sampler SAMPLER) {
 	nd := &Node{
 		Class: "SamplerSEEDS2",
 		Inputs: map[string]Value{
-			"solver_type": Link(solver_type),
+			"solver_type": String(solver_type),
 			"eta":         Float(eta),
 			"s_noise":     Float(s_noise),
 			"r":           Float(r),
@@ -6736,7 +6736,7 @@ func SaveAnimatedPNG(gr *Graph, images IMAGE, filename_prefix string, fps float6
 	return nd
 }
 
-func SaveAnimatedWEBP(gr *Graph, images IMAGE, method COMBO, filename_prefix string, fps float64, lossless bool, quality int) (_ *Node) {
+func SaveAnimatedWEBP(gr *Graph, images IMAGE, filename_prefix string, fps float64, lossless bool, quality int, method string) (_ *Node) {
 	nd := &Node{
 		Class: "SaveAnimatedWEBP",
 		Inputs: map[string]Value{
@@ -6745,7 +6745,7 @@ func SaveAnimatedWEBP(gr *Graph, images IMAGE, method COMBO, filename_prefix str
 			"fps":             Float(fps),
 			"lossless":        Bool(lossless),
 			"quality":         Int(quality),
-			"method":          Link(method),
+			"method":          String(method),
 		},
 	}
 	gr.Add(nd)
@@ -6766,13 +6766,13 @@ func SaveAudio(gr *Graph, audio AUDIO, filename_prefix string) (_ *Node) {
 }
 
 // SaveAudioMP3 - Save Audio (MP3)
-func SaveAudioMP3(gr *Graph, audio AUDIO, quality COMBO, filename_prefix string) (_ *Node) {
+func SaveAudioMP3(gr *Graph, audio AUDIO, filename_prefix string, quality string) (_ *Node) {
 	nd := &Node{
 		Class: "SaveAudioMP3",
 		Inputs: map[string]Value{
 			"audio":           Link(audio),
 			"filename_prefix": String(filename_prefix),
-			"quality":         Link(quality),
+			"quality":         String(quality),
 		},
 	}
 	gr.Add(nd)
@@ -6780,13 +6780,13 @@ func SaveAudioMP3(gr *Graph, audio AUDIO, quality COMBO, filename_prefix string)
 }
 
 // SaveAudioOpus - Save Audio (Opus)
-func SaveAudioOpus(gr *Graph, audio AUDIO, quality COMBO, filename_prefix string) (_ *Node) {
+func SaveAudioOpus(gr *Graph, audio AUDIO, filename_prefix string, quality string) (_ *Node) {
 	nd := &Node{
 		Class: "SaveAudioOpus",
 		Inputs: map[string]Value{
 			"audio":           Link(audio),
 			"filename_prefix": String(filename_prefix),
-			"quality":         Link(quality),
+			"quality":         String(quality),
 		},
 	}
 	gr.Add(nd)
@@ -6911,27 +6911,27 @@ func SaveTrainingDataset(gr *Graph, latents LATENT, conditioning CONDITIONING, f
 }
 
 // SaveVideo - Save Video
-func SaveVideo(gr *Graph, video VIDEO, format COMBO, codec COMBO, filename_prefix string) (_ *Node) {
+func SaveVideo(gr *Graph, video VIDEO, filename_prefix string, format, codec string) (_ *Node) {
 	nd := &Node{
 		Class: "SaveVideo",
 		Inputs: map[string]Value{
 			"video":           Link(video),
 			"filename_prefix": String(filename_prefix),
-			"format":          Link(format),
-			"codec":           Link(codec),
+			"format":          String(format),
+			"codec":           String(codec),
 		},
 	}
 	gr.Add(nd)
 	return nd
 }
 
-func SaveWEBM(gr *Graph, images IMAGE, codec COMBO, filename_prefix string, fps, crf float64) (_ *Node) {
+func SaveWEBM(gr *Graph, images IMAGE, filename_prefix string, codec string, fps, crf float64) (_ *Node) {
 	nd := &Node{
 		Class: "SaveWEBM",
 		Inputs: map[string]Value{
 			"images":          Link(images),
 			"filename_prefix": String(filename_prefix),
-			"codec":           Link(codec),
+			"codec":           String(codec),
 			"fps":             Float(fps),
 			"crf":             Float(crf),
 		},
@@ -7022,12 +7022,12 @@ func SetLatentNoiseMask(gr *Graph, samples LATENT, mask MASK) (_ *Node, latent L
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func SetUnionControlNetType(gr *Graph, control_net CONTROL_NET, typ COMBO) (_ *Node, out_control_net CONTROL_NET) {
+func SetUnionControlNetType(gr *Graph, control_net CONTROL_NET, typ string) (_ *Node, out_control_net CONTROL_NET) {
 	nd := &Node{
 		Class: "SetUnionControlNetType",
 		Inputs: map[string]Value{
 			"control_net": Link(control_net),
-			"type":        Link(typ),
+			"type":        String(typ),
 		},
 	}
 	id := gr.Add(nd)
@@ -7170,11 +7170,11 @@ func SplitSigmasDenoise(gr *Graph, sigmas SIGMAS, denoise float64) (_ *Node, hig
 }
 
 // StabilityAudioInpaint - Stability AI Audio Inpaint
-func StabilityAudioInpaint(gr *Graph, model COMBO, audio AUDIO, prompt string, duration, seed, steps, mask_start, mask_end int) (_ *Node, out_audio AUDIO) {
+func StabilityAudioInpaint(gr *Graph, audio AUDIO, model string, prompt string, duration, seed, steps, mask_start, mask_end int) (_ *Node, out_audio AUDIO) {
 	nd := &Node{
 		Class: "StabilityAudioInpaint",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"prompt": String(prompt),
 			"audio":  Link(audio),
 		},
@@ -7184,11 +7184,11 @@ func StabilityAudioInpaint(gr *Graph, model COMBO, audio AUDIO, prompt string, d
 }
 
 // StabilityAudioToAudio - Stability AI Audio To Audio
-func StabilityAudioToAudio(gr *Graph, model COMBO, audio AUDIO, prompt string, duration, seed, steps int, strength float64) (_ *Node, out_audio AUDIO) {
+func StabilityAudioToAudio(gr *Graph, audio AUDIO, model string, prompt string, duration, seed, steps int, strength float64) (_ *Node, out_audio AUDIO) {
 	nd := &Node{
 		Class: "StabilityAudioToAudio",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"prompt": String(prompt),
 			"audio":  Link(audio),
 		},
@@ -7198,14 +7198,14 @@ func StabilityAudioToAudio(gr *Graph, model COMBO, audio AUDIO, prompt string, d
 }
 
 // StabilityStableImageSD_3_5Node - Stability AI Stable Diffusion 3.5 Image
-func StabilityStableImageSD_3_5Node(gr *Graph, model COMBO, aspect_ratio COMBO, style_preset COMBO, image IMAGE, prompt string, cfg_scale float64, seed int, negative_prompt string, image_denoise float64) (_ *Node, out_image IMAGE) {
+func StabilityStableImageSD_3_5Node(gr *Graph, image IMAGE, prompt string, model, aspect_ratio, style_preset string, cfg_scale float64, seed int, negative_prompt string, image_denoise float64) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "StabilityStableImageSD_3_5Node",
 		Inputs: map[string]Value{
 			"prompt":       String(prompt),
-			"model":        Link(model),
-			"aspect_ratio": Link(aspect_ratio),
-			"style_preset": Link(style_preset),
+			"model":        String(model),
+			"aspect_ratio": String(aspect_ratio),
+			"style_preset": String(style_preset),
 			"cfg_scale":    Float(cfg_scale),
 			"seed":         Int(seed),
 		},
@@ -7215,13 +7215,13 @@ func StabilityStableImageSD_3_5Node(gr *Graph, model COMBO, aspect_ratio COMBO, 
 }
 
 // StabilityStableImageUltraNode - Stability AI Stable Image Ultra
-func StabilityStableImageUltraNode(gr *Graph, aspect_ratio COMBO, style_preset COMBO, image IMAGE, prompt string, seed int, negative_prompt string, image_denoise float64) (_ *Node, out_image IMAGE) {
+func StabilityStableImageUltraNode(gr *Graph, image IMAGE, prompt string, aspect_ratio, style_preset string, seed int, negative_prompt string, image_denoise float64) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "StabilityStableImageUltraNode",
 		Inputs: map[string]Value{
 			"prompt":       String(prompt),
-			"aspect_ratio": Link(aspect_ratio),
-			"style_preset": Link(style_preset),
+			"aspect_ratio": String(aspect_ratio),
+			"style_preset": String(style_preset),
 			"seed":         Int(seed),
 		},
 	}
@@ -7230,11 +7230,11 @@ func StabilityStableImageUltraNode(gr *Graph, aspect_ratio COMBO, style_preset C
 }
 
 // StabilityTextToAudio - Stability AI Text To Audio
-func StabilityTextToAudio(gr *Graph, model COMBO, prompt string, duration, seed, steps int) (_ *Node, audio AUDIO) {
+func StabilityTextToAudio(gr *Graph, model string, prompt string, duration, seed, steps int) (_ *Node, audio AUDIO) {
 	nd := &Node{
 		Class: "StabilityTextToAudio",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"prompt": String(prompt),
 		},
 	}
@@ -7258,14 +7258,14 @@ func StabilityUpscaleConservativeNode(gr *Graph, image IMAGE, prompt string, cre
 }
 
 // StabilityUpscaleCreativeNode - Stability AI Upscale Creative
-func StabilityUpscaleCreativeNode(gr *Graph, image IMAGE, style_preset COMBO, prompt string, creativity float64, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
+func StabilityUpscaleCreativeNode(gr *Graph, image IMAGE, prompt string, creativity float64, style_preset string, seed int, negative_prompt string) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "StabilityUpscaleCreativeNode",
 		Inputs: map[string]Value{
 			"image":        Link(image),
 			"prompt":       String(prompt),
 			"creativity":   Float(creativity),
-			"style_preset": Link(style_preset),
+			"style_preset": String(style_preset),
 			"seed":         Int(seed),
 		},
 	}
@@ -7375,13 +7375,13 @@ func StableZero123_Conditioning_Batched(gr *Graph, clip_vision CLIP_VISION, init
 }
 
 // StringCompare - Compare
-func StringCompare(gr *Graph, mode COMBO, string_a, string_b string, case_sensitive bool) (_ *Node, boolean BOOLEAN) {
+func StringCompare(gr *Graph, string_a, string_b string, mode string, case_sensitive bool) (_ *Node, boolean BOOLEAN) {
 	nd := &Node{
 		Class: "StringCompare",
 		Inputs: map[string]Value{
 			"string_a":       String(string_a),
 			"string_b":       String(string_b),
-			"mode":           Link(mode),
+			"mode":           String(mode),
 			"case_sensitive": Bool(case_sensitive),
 		},
 	}
@@ -7458,12 +7458,12 @@ func StringSubstring(gr *Graph, str string, start, end int) (_ *Node, out_str ST
 }
 
 // StringTrim - Trim
-func StringTrim(gr *Graph, mode COMBO, str string) (_ *Node, out_str STRING) {
+func StringTrim(gr *Graph, str string, mode string) (_ *Node, out_str STRING) {
 	nd := &Node{
 		Class: "StringTrim",
 		Inputs: map[string]Value{
 			"string": String(str),
-			"mode":   Link(mode),
+			"mode":   String(mode),
 		},
 	}
 	id := gr.Add(nd)
@@ -7650,11 +7650,11 @@ func TomePatchModel(gr *Graph, model MODEL, ratio float64) (_ *Node, out_model M
 }
 
 // TopazImageEnhance - Topaz Image Enhance
-func TopazImageEnhance(gr *Graph, model COMBO, image IMAGE, subject_detection COMBO, prompt string, face_enhancement bool, face_enhancement_creativity, face_enhancement_strength float64, crop_to_fill bool, output_width, output_height, creativity int, face_preservation, color_preservation bool) (_ *Node, out_image IMAGE) {
+func TopazImageEnhance(gr *Graph, image IMAGE, model string, prompt string, subject_detection string, face_enhancement bool, face_enhancement_creativity, face_enhancement_strength float64, crop_to_fill bool, output_width, output_height, creativity int, face_preservation, color_preservation bool) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "TopazImageEnhance",
 		Inputs: map[string]Value{
-			"model": Link(model),
+			"model": String(model),
 			"image": Link(image),
 		},
 	}
@@ -7663,26 +7663,26 @@ func TopazImageEnhance(gr *Graph, model COMBO, image IMAGE, subject_detection CO
 }
 
 // TopazVideoEnhance - Topaz Video Enhance
-func TopazVideoEnhance(gr *Graph, video VIDEO, upscaler_model COMBO, upscaler_resolution COMBO, upscaler_creativity COMBO, interpolation_model COMBO, dynamic_compression_level COMBO, upscaler_enabled bool, interpolation_enabled bool, interpolation_slowmo, interpolation_frame_rate int, interpolation_duplicate bool, interpolation_duplicate_threshold float64) (_ *Node, out_video VIDEO) {
+func TopazVideoEnhance(gr *Graph, video VIDEO, upscaler_enabled bool, upscaler_model, upscaler_resolution, upscaler_creativity string, interpolation_enabled bool, interpolation_model string, interpolation_slowmo, interpolation_frame_rate int, interpolation_duplicate bool, interpolation_duplicate_threshold float64, dynamic_compression_level string) (_ *Node, out_video VIDEO) {
 	nd := &Node{
 		Class: "TopazVideoEnhance",
 		Inputs: map[string]Value{
 			"video":               Link(video),
 			"upscaler_enabled":    Bool(upscaler_enabled),
-			"upscaler_model":      Link(upscaler_model),
-			"upscaler_resolution": Link(upscaler_resolution),
+			"upscaler_model":      String(upscaler_model),
+			"upscaler_resolution": String(upscaler_resolution),
 		},
 	}
 	id := gr.Add(nd)
 	return nd, VIDEO{NodeID: id, OutPort: 0}
 }
 
-func TorchCompileModel(gr *Graph, model MODEL, backend COMBO) (_ *Node, out_model MODEL) {
+func TorchCompileModel(gr *Graph, model MODEL, backend string) (_ *Node, out_model MODEL) {
 	nd := &Node{
 		Class: "TorchCompileModel",
 		Inputs: map[string]Value{
 			"model":   Link(model),
-			"backend": Link(backend),
+			"backend": String(backend),
 		},
 	}
 	id := gr.Add(nd)
@@ -7690,7 +7690,7 @@ func TorchCompileModel(gr *Graph, model MODEL, backend COMBO) (_ *Node, out_mode
 }
 
 // TrainLoraNode - Train LoRA
-func TrainLoraNode(gr *Graph, model MODEL, latents LATENT, positive CONDITIONING, optimizer COMBO, loss_function COMBO, training_dtype COMBO, lora_dtype COMBO, algorithm COMBO, existing_lora COMBO, batch_size, grad_accumulation_steps, steps int, learning_rate float64, rank int, seed int, gradient_checkpointing bool, bucket_mode bool) (_ *Node, out_model MODEL, lora LORA_MODEL, loss_map LOSS_MAP, out_steps INT) {
+func TrainLoraNode(gr *Graph, model MODEL, latents LATENT, positive CONDITIONING, batch_size, grad_accumulation_steps, steps int, learning_rate float64, rank int, optimizer, loss_function string, seed int, training_dtype, lora_dtype, algorithm string, gradient_checkpointing bool, existing_lora string, bucket_mode bool) (_ *Node, out_model MODEL, lora LORA_MODEL, loss_map LOSS_MAP, out_steps INT) {
 	nd := &Node{
 		Class: "TrainLoraNode",
 		Inputs: map[string]Value{
@@ -7702,14 +7702,14 @@ func TrainLoraNode(gr *Graph, model MODEL, latents LATENT, positive CONDITIONING
 			"steps":                   Int(steps),
 			"learning_rate":           Float(learning_rate),
 			"rank":                    Int(rank),
-			"optimizer":               Link(optimizer),
-			"loss_function":           Link(loss_function),
+			"optimizer":               String(optimizer),
+			"loss_function":           String(loss_function),
 			"seed":                    Int(seed),
-			"training_dtype":          Link(training_dtype),
-			"lora_dtype":              Link(lora_dtype),
-			"algorithm":               Link(algorithm),
+			"training_dtype":          String(training_dtype),
+			"lora_dtype":              String(lora_dtype),
+			"algorithm":               String(algorithm),
 			"gradient_checkpointing":  Bool(gradient_checkpointing),
-			"existing_lora":           Link(existing_lora),
+			"existing_lora":           String(existing_lora),
 			"bucket_mode":             Bool(bucket_mode),
 		},
 	}
@@ -7743,13 +7743,13 @@ func TrimVideoLatent(gr *Graph, samples LATENT, trim_amount int) (_ *Node, laten
 	return nd, LATENT{NodeID: id, OutPort: 0}
 }
 
-func TripleCLIPLoader(gr *Graph, clip_name1 COMBO, clip_name2 COMBO, clip_name3 COMBO) (_ *Node, clip CLIP) {
+func TripleCLIPLoader(gr *Graph, clip_name1, clip_name2, clip_name3 string) (_ *Node, clip CLIP) {
 	nd := &Node{
 		Class: "TripleCLIPLoader",
 		Inputs: map[string]Value{
-			"clip_name1": Link(clip_name1),
-			"clip_name2": Link(clip_name2),
-			"clip_name3": Link(clip_name3),
+			"clip_name1": String(clip_name1),
+			"clip_name2": String(clip_name2),
+			"clip_name3": String(clip_name3),
 		},
 	}
 	id := gr.Add(nd)
@@ -7757,12 +7757,12 @@ func TripleCLIPLoader(gr *Graph, clip_name1 COMBO, clip_name2 COMBO, clip_name3 
 }
 
 // TripoConversionNode - Tripo: Convert model
-func TripoConversionNode(gr *Graph, original_model_task_id MODEL_TASK_ID, RIG_TASK_ID, RETARGET_TASK_ID, format COMBO, texture_format COMBO, fbx_preset COMBO, export_orientation COMBO, quad bool, face_limit, texture_size int, force_symmetry, flatten_bottom bool, flatten_bottom_threshold float64, pivot_to_center_bottom bool, scale_factor float64, with_animation, pack_uv, bake bool, part_names string, export_vertex_colors bool, animate_in_place bool) (_ *Node) {
+func TripoConversionNode(gr *Graph, original_model_task_id MODEL_TASK_ID, RIG_TASK_ID, RETARGET_TASK_ID, format string, quad bool, face_limit, texture_size int, texture_format string, force_symmetry, flatten_bottom bool, flatten_bottom_threshold float64, pivot_to_center_bottom bool, scale_factor float64, with_animation, pack_uv, bake bool, part_names string, fbx_preset string, export_vertex_colors bool, export_orientation string, animate_in_place bool) (_ *Node) {
 	nd := &Node{
 		Class: "TripoConversionNode",
 		Inputs: map[string]Value{
 			"original_model_task_id": Link(original_model_task_id),
-			"format":                 Link(format),
+			"format":                 String(format),
 		},
 	}
 	gr.Add(nd)
@@ -7770,7 +7770,7 @@ func TripoConversionNode(gr *Graph, original_model_task_id MODEL_TASK_ID, RIG_TA
 }
 
 // TripoImageToModelNode - Tripo: Image to Model
-func TripoImageToModelNode(gr *Graph, image IMAGE, model_version COMBO, style COMBO, orientation COMBO, texture_quality COMBO, texture_alignment COMBO, geometry_quality COMBO, texture, pbr bool, model_seed int, texture_seed int, face_limit int, quad bool) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
+func TripoImageToModelNode(gr *Graph, image IMAGE, model_version, style string, texture, pbr bool, model_seed int, orientation string, texture_seed int, texture_quality, texture_alignment string, face_limit int, quad bool, geometry_quality string) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
 	nd := &Node{
 		Class: "TripoImageToModelNode",
 		Inputs: map[string]Value{
@@ -7782,7 +7782,7 @@ func TripoImageToModelNode(gr *Graph, image IMAGE, model_version COMBO, style CO
 }
 
 // TripoMultiviewToModelNode - Tripo: Multiview to Model
-func TripoMultiviewToModelNode(gr *Graph, image IMAGE, image_left IMAGE, image_back IMAGE, image_right IMAGE, model_version COMBO, orientation COMBO, texture_quality COMBO, texture_alignment COMBO, geometry_quality COMBO, texture, pbr bool, model_seed, texture_seed int, face_limit int, quad bool) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
+func TripoMultiviewToModelNode(gr *Graph, image IMAGE, image_left IMAGE, image_back IMAGE, image_right IMAGE, model_version, orientation string, texture, pbr bool, model_seed, texture_seed int, texture_quality, texture_alignment string, face_limit int, quad bool, geometry_quality string) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
 	nd := &Node{
 		Class: "TripoMultiviewToModelNode",
 		Inputs: map[string]Value{
@@ -7806,12 +7806,12 @@ func TripoRefineNode(gr *Graph, model_task_id MODEL_TASK_ID) (_ *Node, model_fil
 }
 
 // TripoRetargetNode - Tripo: Retarget rigged model
-func TripoRetargetNode(gr *Graph, original_model_task_id RIG_TASK_ID, animation COMBO) (_ *Node, model_file STRING, retarget_task_id RETARGET_TASK_ID) {
+func TripoRetargetNode(gr *Graph, original_model_task_id RIG_TASK_ID, animation string) (_ *Node, model_file STRING, retarget_task_id RETARGET_TASK_ID) {
 	nd := &Node{
 		Class: "TripoRetargetNode",
 		Inputs: map[string]Value{
 			"original_model_task_id": Link(original_model_task_id),
-			"animation":              Link(animation),
+			"animation":              String(animation),
 		},
 	}
 	id := gr.Add(nd)
@@ -7831,7 +7831,7 @@ func TripoRigNode(gr *Graph, original_model_task_id MODEL_TASK_ID) (_ *Node, mod
 }
 
 // TripoTextToModelNode - Tripo: Text to Model
-func TripoTextToModelNode(gr *Graph, model_version COMBO, style COMBO, texture_quality COMBO, geometry_quality COMBO, prompt, negative_prompt string, texture, pbr bool, image_seed, model_seed, texture_seed int, face_limit int, quad bool) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
+func TripoTextToModelNode(gr *Graph, prompt, negative_prompt string, model_version, style string, texture, pbr bool, image_seed, model_seed, texture_seed int, texture_quality string, face_limit int, quad bool, geometry_quality string) (_ *Node, model_file STRING, model_task_id MODEL_TASK_ID) {
 	nd := &Node{
 		Class: "TripoTextToModelNode",
 		Inputs: map[string]Value{
@@ -7843,7 +7843,7 @@ func TripoTextToModelNode(gr *Graph, model_version COMBO, style COMBO, texture_q
 }
 
 // TripoTextureNode - Tripo: Texture model
-func TripoTextureNode(gr *Graph, model_task_id MODEL_TASK_ID, texture_quality COMBO, texture_alignment COMBO, texture, pbr bool, texture_seed int) (_ *Node, model_file STRING, out_model_task_id MODEL_TASK_ID) {
+func TripoTextureNode(gr *Graph, model_task_id MODEL_TASK_ID, texture, pbr bool, texture_seed int, texture_quality, texture_alignment string) (_ *Node, model_file STRING, out_model_task_id MODEL_TASK_ID) {
 	nd := &Node{
 		Class: "TripoTextureNode",
 		Inputs: map[string]Value{
@@ -7939,11 +7939,11 @@ func USOStyleReference(gr *Graph, model MODEL, model_patch MODEL_PATCH, clip_vis
 }
 
 // UpscaleModelLoader - Load Upscale Model
-func UpscaleModelLoader(gr *Graph, model_name COMBO) (_ *Node, upscale_model UPSCALE_MODEL) {
+func UpscaleModelLoader(gr *Graph, model_name string) (_ *Node, upscale_model UPSCALE_MODEL) {
 	nd := &Node{
 		Class: "UpscaleModelLoader",
 		Inputs: map[string]Value{
-			"model_name": Link(model_name),
+			"model_name": String(model_name),
 		},
 	}
 	id := gr.Add(nd)
@@ -8104,19 +8104,19 @@ func VPScheduler(gr *Graph, steps int, beta_d, beta_min, eps_s float64) (_ *Node
 }
 
 // Veo3FirstLastFrameNode - Google Veo 3 First-Last-Frame to Video
-func Veo3FirstLastFrameNode(gr *Graph, resolution COMBO, aspect_ratio COMBO, first_frame IMAGE, last_frame IMAGE, model COMBO, prompt, negative_prompt string, duration, seed int, generate_audio bool) (_ *Node, video VIDEO) {
+func Veo3FirstLastFrameNode(gr *Graph, first_frame IMAGE, last_frame IMAGE, prompt, negative_prompt string, resolution, aspect_ratio string, duration, seed int, model string, generate_audio bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "Veo3FirstLastFrameNode",
 		Inputs: map[string]Value{
 			"prompt":          String(prompt),
 			"negative_prompt": String(negative_prompt),
-			"resolution":      Link(resolution),
-			"aspect_ratio":    Link(aspect_ratio),
+			"resolution":      String(resolution),
+			"aspect_ratio":    String(aspect_ratio),
 			"duration":        Int(duration),
 			"seed":            Int(seed),
 			"first_frame":     Link(first_frame),
 			"last_frame":      Link(last_frame),
-			"model":           Link(model),
+			"model":           String(model),
 			"generate_audio":  Bool(generate_audio),
 		},
 	}
@@ -8125,12 +8125,12 @@ func Veo3FirstLastFrameNode(gr *Graph, resolution COMBO, aspect_ratio COMBO, fir
 }
 
 // Veo3VideoGenerationNode - Google Veo 3 Video Generation
-func Veo3VideoGenerationNode(gr *Graph, aspect_ratio COMBO, person_generation COMBO, image IMAGE, model COMBO, prompt string, negative_prompt string, duration_seconds int, enhance_prompt bool, seed int, generate_audio bool) (_ *Node, video VIDEO) {
+func Veo3VideoGenerationNode(gr *Graph, image IMAGE, prompt string, aspect_ratio string, negative_prompt string, duration_seconds int, enhance_prompt bool, person_generation string, seed int, model string, generate_audio bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "Veo3VideoGenerationNode",
 		Inputs: map[string]Value{
 			"prompt":       String(prompt),
-			"aspect_ratio": Link(aspect_ratio),
+			"aspect_ratio": String(aspect_ratio),
 		},
 	}
 	id := gr.Add(nd)
@@ -8138,12 +8138,12 @@ func Veo3VideoGenerationNode(gr *Graph, aspect_ratio COMBO, person_generation CO
 }
 
 // VeoVideoGenerationNode - Google Veo 2 Video Generation
-func VeoVideoGenerationNode(gr *Graph, aspect_ratio COMBO, person_generation COMBO, image IMAGE, model COMBO, prompt string, negative_prompt string, duration_seconds int, enhance_prompt bool, seed int) (_ *Node, video VIDEO) {
+func VeoVideoGenerationNode(gr *Graph, image IMAGE, prompt string, aspect_ratio string, negative_prompt string, duration_seconds int, enhance_prompt bool, person_generation string, seed int, model string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "VeoVideoGenerationNode",
 		Inputs: map[string]Value{
 			"prompt":       String(prompt),
-			"aspect_ratio": Link(aspect_ratio),
+			"aspect_ratio": String(aspect_ratio),
 		},
 	}
 	id := gr.Add(nd)
@@ -8175,17 +8175,17 @@ func VideoTriangleCFGGuidance(gr *Graph, model MODEL, min_cfg float64) (_ *Node,
 }
 
 // Vidu2ImageToVideoNode - Vidu2 Image-to-Video Generation
-func Vidu2ImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+func Vidu2ImageToVideoNode(gr *Graph, image IMAGE, model string, prompt string, duration, seed int, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "Vidu2ImageToVideoNode",
 		Inputs: map[string]Value{
-			"model":              Link(model),
+			"model":              String(model),
 			"image":              Link(image),
 			"prompt":             String(prompt),
 			"duration":           Int(duration),
 			"seed":               Int(seed),
-			"resolution":         Link(resolution),
-			"movement_amplitude": Link(movement_amplitude),
+			"resolution":         String(resolution),
+			"movement_amplitude": String(movement_amplitude),
 		},
 	}
 	id := gr.Add(nd)
@@ -8193,19 +8193,19 @@ func Vidu2ImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO
 }
 
 // Vidu2ReferenceVideoNode - Vidu2 Reference-to-Video Generation
-func Vidu2ReferenceVideoNode(gr *Graph, model COMBO, subjects COMFY_AUTOGROW_V3, aspect_ratio COMBO, resolution COMBO, movement_amplitude COMBO, prompt string, audio bool, duration, seed int) (_ *Node, video VIDEO) {
+func Vidu2ReferenceVideoNode(gr *Graph, subjects COMFY_AUTOGROW_V3, model string, prompt string, audio bool, duration, seed int, aspect_ratio, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "Vidu2ReferenceVideoNode",
 		Inputs: map[string]Value{
-			"model":              Link(model),
+			"model":              String(model),
 			"subjects":           Link(subjects),
 			"prompt":             String(prompt),
 			"audio":              Bool(audio),
 			"duration":           Int(duration),
 			"seed":               Int(seed),
-			"aspect_ratio":       Link(aspect_ratio),
-			"resolution":         Link(resolution),
-			"movement_amplitude": Link(movement_amplitude),
+			"aspect_ratio":       String(aspect_ratio),
+			"resolution":         String(resolution),
+			"movement_amplitude": String(movement_amplitude),
 		},
 	}
 	id := gr.Add(nd)
@@ -8213,18 +8213,18 @@ func Vidu2ReferenceVideoNode(gr *Graph, model COMBO, subjects COMFY_AUTOGROW_V3,
 }
 
 // Vidu2StartEndToVideoNode - Vidu2 Start/End Frame-to-Video Generation
-func Vidu2StartEndToVideoNode(gr *Graph, model COMBO, first_frame IMAGE, end_frame IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+func Vidu2StartEndToVideoNode(gr *Graph, first_frame IMAGE, end_frame IMAGE, model string, prompt string, duration, seed int, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "Vidu2StartEndToVideoNode",
 		Inputs: map[string]Value{
-			"model":              Link(model),
+			"model":              String(model),
 			"first_frame":        Link(first_frame),
 			"end_frame":          Link(end_frame),
 			"prompt":             String(prompt),
 			"duration":           Int(duration),
 			"seed":               Int(seed),
-			"resolution":         Link(resolution),
-			"movement_amplitude": Link(movement_amplitude),
+			"resolution":         String(resolution),
+			"movement_amplitude": String(movement_amplitude),
 		},
 	}
 	id := gr.Add(nd)
@@ -8232,16 +8232,16 @@ func Vidu2StartEndToVideoNode(gr *Graph, model COMBO, first_frame IMAGE, end_fra
 }
 
 // Vidu2TextToVideoNode - Vidu2 Text-to-Video Generation
-func Vidu2TextToVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, prompt string, duration, seed int, background_music bool) (_ *Node, video VIDEO) {
+func Vidu2TextToVideoNode(gr *Graph, model string, prompt string, duration, seed int, aspect_ratio, resolution string, background_music bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "Vidu2TextToVideoNode",
 		Inputs: map[string]Value{
-			"model":            Link(model),
+			"model":            String(model),
 			"prompt":           String(prompt),
 			"duration":         Int(duration),
 			"seed":             Int(seed),
-			"aspect_ratio":     Link(aspect_ratio),
-			"resolution":       Link(resolution),
+			"aspect_ratio":     String(aspect_ratio),
+			"resolution":       String(resolution),
 			"background_music": Bool(background_music),
 		},
 	}
@@ -8250,11 +8250,11 @@ func Vidu2TextToVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution
 }
 
 // ViduImageToVideoNode - Vidu Image To Video Generation
-func ViduImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+func ViduImageToVideoNode(gr *Graph, image IMAGE, model string, prompt string, duration, seed int, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ViduImageToVideoNode",
 		Inputs: map[string]Value{
-			"model": Link(model),
+			"model": String(model),
 			"image": Link(image),
 		},
 	}
@@ -8263,11 +8263,11 @@ func ViduImageToVideoNode(gr *Graph, model COMBO, image IMAGE, resolution COMBO,
 }
 
 // ViduReferenceVideoNode - Vidu Reference To Video Generation
-func ViduReferenceVideoNode(gr *Graph, model COMBO, images IMAGE, aspect_ratio COMBO, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+func ViduReferenceVideoNode(gr *Graph, images IMAGE, model string, prompt string, duration, seed int, aspect_ratio, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ViduReferenceVideoNode",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"images": Link(images),
 			"prompt": String(prompt),
 		},
@@ -8277,11 +8277,11 @@ func ViduReferenceVideoNode(gr *Graph, model COMBO, images IMAGE, aspect_ratio C
 }
 
 // ViduStartEndToVideoNode - Vidu Start End To Video Generation
-func ViduStartEndToVideoNode(gr *Graph, model COMBO, first_frame IMAGE, end_frame IMAGE, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+func ViduStartEndToVideoNode(gr *Graph, first_frame IMAGE, end_frame IMAGE, model string, prompt string, duration, seed int, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ViduStartEndToVideoNode",
 		Inputs: map[string]Value{
-			"model":       Link(model),
+			"model":       String(model),
 			"first_frame": Link(first_frame),
 			"end_frame":   Link(end_frame),
 		},
@@ -8291,11 +8291,11 @@ func ViduStartEndToVideoNode(gr *Graph, model COMBO, first_frame IMAGE, end_fram
 }
 
 // ViduTextToVideoNode - Vidu Text To Video Generation
-func ViduTextToVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution COMBO, movement_amplitude COMBO, prompt string, duration, seed int) (_ *Node, video VIDEO) {
+func ViduTextToVideoNode(gr *Graph, model string, prompt string, duration, seed int, aspect_ratio, resolution, movement_amplitude string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "ViduTextToVideoNode",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"prompt": String(prompt),
 		},
 	}
@@ -8303,12 +8303,12 @@ func ViduTextToVideoNode(gr *Graph, model COMBO, aspect_ratio COMBO, resolution 
 	return nd, VIDEO{NodeID: id, OutPort: 0}
 }
 
-func VoxelToMesh(gr *Graph, voxel VOXEL, algorithm COMBO, threshold float64) (_ *Node, mesh MESH) {
+func VoxelToMesh(gr *Graph, voxel VOXEL, algorithm string, threshold float64) (_ *Node, mesh MESH) {
 	nd := &Node{
 		Class: "VoxelToMesh",
 		Inputs: map[string]Value{
 			"voxel":     Link(voxel),
-			"algorithm": Link(algorithm),
+			"algorithm": String(algorithm),
 			"threshold": Float(threshold),
 		},
 	}
@@ -8379,11 +8379,11 @@ func WanAnimateToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, 
 	return nd, CONDITIONING{NodeID: id, OutPort: 0}, CONDITIONING{NodeID: id, OutPort: 1}, LATENT{NodeID: id, OutPort: 2}, INT{NodeID: id, OutPort: 3}, INT{NodeID: id, OutPort: 4}, INT{NodeID: id, OutPort: 5}
 }
 
-func WanCameraEmbedding(gr *Graph, camera_pose COMBO, width, height, length int, speed, fx, fy, cx, cy float64) (_ *Node, camera_embedding WAN_CAMERA_EMBEDDING, out_width INT, out_height INT, out_length INT) {
+func WanCameraEmbedding(gr *Graph, camera_pose string, width, height, length int, speed, fx, fy, cx, cy float64) (_ *Node, camera_embedding WAN_CAMERA_EMBEDDING, out_width INT, out_height INT, out_length INT) {
 	nd := &Node{
 		Class: "WanCameraEmbedding",
 		Inputs: map[string]Value{
-			"camera_pose": Link(camera_pose),
+			"camera_pose": String(camera_pose),
 			"width":       Int(width),
 			"height":      Int(height),
 			"length":      Int(length),
@@ -8411,17 +8411,17 @@ func WanCameraImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONI
 }
 
 // WanContextWindowsManual - WAN Context Windows (Manual)
-func WanContextWindowsManual(gr *Graph, model MODEL, context_schedule COMBO, fuse_method COMBO, context_length, context_overlap int, context_stride int, closed_loop bool, freenoise bool) (_ *Node, out_model MODEL) {
+func WanContextWindowsManual(gr *Graph, model MODEL, context_length, context_overlap int, context_schedule string, context_stride int, closed_loop bool, fuse_method string, freenoise bool) (_ *Node, out_model MODEL) {
 	nd := &Node{
 		Class: "WanContextWindowsManual",
 		Inputs: map[string]Value{
 			"model":            Link(model),
 			"context_length":   Int(context_length),
 			"context_overlap":  Int(context_overlap),
-			"context_schedule": Link(context_schedule),
+			"context_schedule": String(context_schedule),
 			"context_stride":   Int(context_stride),
 			"closed_loop":      Bool(closed_loop),
-			"fuse_method":      Link(fuse_method),
+			"fuse_method":      String(fuse_method),
 			"freenoise":        Bool(freenoise),
 		},
 	}
@@ -8498,11 +8498,11 @@ func WanHuMoImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING
 }
 
 // WanImageToImageApi - Wan Image to Image
-func WanImageToImageApi(gr *Graph, model COMBO, image IMAGE, prompt, negative_prompt string, seed int, watermark bool) (_ *Node, out_image IMAGE) {
+func WanImageToImageApi(gr *Graph, image IMAGE, model string, prompt, negative_prompt string, seed int, watermark bool) (_ *Node, out_image IMAGE) {
 	nd := &Node{
 		Class: "WanImageToImageApi",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"image":  Link(image),
 			"prompt": String(prompt),
 		},
@@ -8529,11 +8529,11 @@ func WanImageToVideo(gr *Graph, positive CONDITIONING, negative CONDITIONING, va
 }
 
 // WanImageToVideoApi - Wan Image to Video
-func WanImageToVideoApi(gr *Graph, model COMBO, image IMAGE, resolution COMBO, audio AUDIO, shot_type COMBO, prompt, negative_prompt string, duration int, seed int, generate_audio, prompt_extend, watermark bool) (_ *Node, video VIDEO) {
+func WanImageToVideoApi(gr *Graph, image IMAGE, audio AUDIO, model string, prompt, negative_prompt string, resolution string, duration int, seed int, generate_audio, prompt_extend, watermark bool, shot_type string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "WanImageToVideoApi",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"image":  Link(image),
 			"prompt": String(prompt),
 		},
@@ -8614,18 +8614,18 @@ func WanPhantomSubjectToVideo(gr *Graph, positive CONDITIONING, negative CONDITI
 }
 
 // WanReferenceVideoApi - Wan Reference to Video
-func WanReferenceVideoApi(gr *Graph, model COMBO, reference_videos COMFY_AUTOGROW_V3, size COMBO, shot_type COMBO, prompt, negative_prompt string, duration, seed int, watermark bool) (_ *Node, video VIDEO) {
+func WanReferenceVideoApi(gr *Graph, reference_videos COMFY_AUTOGROW_V3, model string, prompt, negative_prompt string, size string, duration, seed int, shot_type string, watermark bool) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "WanReferenceVideoApi",
 		Inputs: map[string]Value{
-			"model":            Link(model),
+			"model":            String(model),
 			"prompt":           String(prompt),
 			"negative_prompt":  String(negative_prompt),
 			"reference_videos": Link(reference_videos),
-			"size":             Link(size),
+			"size":             String(size),
 			"duration":         Int(duration),
 			"seed":             Int(seed),
-			"shot_type":        Link(shot_type),
+			"shot_type":        String(shot_type),
 			"watermark":        Bool(watermark),
 		},
 	}
@@ -8666,11 +8666,11 @@ func WanSoundImageToVideoExtend(gr *Graph, positive CONDITIONING, negative CONDI
 }
 
 // WanTextToImageApi - Wan Text to Image
-func WanTextToImageApi(gr *Graph, model COMBO, prompt, negative_prompt string, width, height, seed int, prompt_extend, watermark bool) (_ *Node, image IMAGE) {
+func WanTextToImageApi(gr *Graph, model string, prompt, negative_prompt string, width, height, seed int, prompt_extend, watermark bool) (_ *Node, image IMAGE) {
 	nd := &Node{
 		Class: "WanTextToImageApi",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"prompt": String(prompt),
 		},
 	}
@@ -8679,11 +8679,11 @@ func WanTextToImageApi(gr *Graph, model COMBO, prompt, negative_prompt string, w
 }
 
 // WanTextToVideoApi - Wan Text to Video
-func WanTextToVideoApi(gr *Graph, model COMBO, size COMBO, audio AUDIO, shot_type COMBO, prompt, negative_prompt string, duration int, seed int, generate_audio, prompt_extend, watermark bool) (_ *Node, video VIDEO) {
+func WanTextToVideoApi(gr *Graph, audio AUDIO, model string, prompt, negative_prompt string, size string, duration int, seed int, generate_audio, prompt_extend, watermark bool, shot_type string) (_ *Node, video VIDEO) {
 	nd := &Node{
 		Class: "WanTextToVideoApi",
 		Inputs: map[string]Value{
-			"model":  Link(model),
+			"model":  String(model),
 			"prompt": String(prompt),
 		},
 	}

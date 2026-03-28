@@ -313,7 +313,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 			buf.WriteString("int")
 		case types.FloatType:
 			buf.WriteString("float64")
-		case types.StringType:
+		case types.StringType, types.ComboType:
 			buf.WriteString("string")
 		case types.BoolType:
 			buf.WriteString("bool")
@@ -364,7 +364,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 			buf.WriteString("Int")
 		case types.FloatType:
 			buf.WriteString("Float")
-		case types.StringType:
+		case types.StringType, types.ComboType:
 			buf.WriteString("String")
 		case types.BoolType:
 			buf.WriteString("Bool")
