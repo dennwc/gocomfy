@@ -15,7 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/ory/dockertest/v3"
 	"golang.org/x/exp/maps"
@@ -163,9 +162,15 @@ func generate(classByName classes.Classes) error {
 	anodes.WriteString(generatedHeader)
 	anodes.WriteString(`package apinodes
 
+import (
+	"github.com/dennwc/gocomfy/graph/types"
+	"github.com/dennwc/gocomfy/graph/classes"
+)
+
 `)
 	names := maps.Keys(classByName)
 	slices.Sort(names)
+	generateClassMap(&anodes, names, classByName)
 	generateGraphLinks(&anodes, classByName)
 	for _, name := range names {
 		c := classByName[name]
@@ -177,53 +182,119 @@ func generate(classByName classes.Classes) error {
 	return nil
 }
 
-func exportedName(name string) string {
-	r := rune(name[0])
-	if unicode.IsUpper(r) {
-		return name
+func generateClassMap(w *bytes.Buffer, names []types.NodeClass, classByName map[types.NodeClass]*classes.Class) {
+	w.WriteString("var ClassByName = map[types.NodeClass]*classes.Class{\n")
+	defer w.WriteString("}\n\n")
+	for _, name := range names {
+		c := classByName[name]
+		w.WriteString("\t")
+		w.WriteString(strconv.Quote(string(c.Name)))
+		w.WriteString(": {\n")
+		writeClass(w, c)
+		w.WriteString("\t},\n")
 	}
-	return string(unicode.ToUpper(r)) + name[1:]
 }
 
-var nameReplacer = strings.NewReplacer(
-	".", "_",
-	":", "_",
-	" ", "_",
-	"(", "",
-	")", "",
-	"+", "Plus",
-)
+func writeClass(w *bytes.Buffer, c *classes.Class) {
+	const tab = "\t\t"
+	w.WriteString(tab + "Name: ")
+	w.WriteString(strconv.Quote(string(c.Name)))
+	w.WriteString(",\n")
+	defer w.WriteString("")
+	if c.Title != "" {
+		w.WriteString(tab + "Title: ")
+		w.WriteString(strconv.Quote(c.Title))
+		w.WriteString(",\n")
+	}
+	if c.Desc != "" {
+		w.WriteString(tab + "Desc: ")
+		w.WriteString(strconv.Quote(c.Desc))
+		w.WriteString(",\n")
+	}
+	if c.Category != "" {
+		w.WriteString(tab + "Category: ")
+		w.WriteString(strconv.Quote(c.Category))
+		w.WriteString(",\n")
+	}
+	if len(c.Inputs) != 0 {
+		w.WriteString(tab + "Inputs: []classes.Input{\n")
+		for _, p := range c.Inputs {
+			w.WriteString(tab + "\t")
+			writeInput(w, &p)
+			w.WriteString(",\n")
+		}
+		w.WriteString(tab + "},\n")
+	}
+	if len(c.Outputs) != 0 {
+		w.WriteString(tab + "Outputs: []classes.Output{\n")
+		for _, p := range c.Outputs {
+			w.WriteString(tab + "\t")
+			writeOutput(w, &p)
+			w.WriteString(",\n")
+		}
+		w.WriteString(tab + "},\n")
+	}
+	if c.IsOutput {
+		w.WriteString(tab + "IsOutput: true,\n")
+	}
+}
 
-func formatName(name string) string {
-	name = nameReplacer.Replace(name)
-	if len(name) != 0 {
-		if unicode.IsDigit(rune(name[0])) {
-			name = "_" + name
+func writeInput(w *bytes.Buffer, p *classes.Input) {
+	w.WriteString("{")
+	defer w.WriteString("}")
+	w.WriteString("Name: ")
+	w.WriteString(strconv.Quote(p.Name))
+	w.WriteString(", ")
+	w.WriteString("Kind: ")
+	switch p.Kind {
+	case classes.InputRequired:
+		w.WriteString("classes.InputRequired")
+	case classes.InputOptional:
+		w.WriteString("classes.InputOptional")
+	case classes.InputHidden:
+		w.WriteString("classes.InputHidden")
+	default:
+		w.WriteString(strconv.Itoa(int(p.Kind)))
+	}
+	if p.Type != "" {
+		w.WriteString(", ")
+		w.WriteString("Type: ")
+		w.WriteString(strconv.Quote(string(p.Type)))
+	}
+	if p.IsSelect {
+		w.WriteString(", ")
+		w.WriteString("IsSelect: true")
+	}
+	if len(p.Config) != 0 {
+		if data, err := json.Marshal(p.Config); err == nil {
+			w.WriteString(", ")
+			w.WriteString("Config: []byte(")
+			if bytes.IndexByte(data, '`') < 0 {
+				w.WriteString("`")
+				w.Write(data)
+				w.WriteString("`")
+			} else {
+				fmt.Fprintf(w, "%q", string(data))
+			}
+			w.WriteString(")")
 		}
 	}
-	return name
 }
 
-func argName(name string) string {
-	name = strings.ToLower(name)
-	switch name {
-	case "type":
-		return "typ"
-	case "switch":
-		return "sw"
-	case "string":
-		return "str"
+func writeOutput(w *bytes.Buffer, p *classes.Output) {
+	w.WriteString("{")
+	defer w.WriteString("}")
+	w.WriteString("Name: ")
+	w.WriteString(strconv.Quote(p.Name))
+	if p.Type != "" {
+		w.WriteString(", ")
+		w.WriteString("Type: ")
+		w.WriteString(strconv.Quote(string(p.Type)))
 	}
-	name = formatName(name)
-	return name
-}
-
-func nodeType(name string) string {
-	return formatName(name)
-}
-
-func linkType(name string) string {
-	return formatName(name)
+	if p.IsList {
+		w.WriteString(", ")
+		w.WriteString("IsList: true")
+	}
 }
 
 func generateGraphLinks(buf *bytes.Buffer, all map[types.NodeClass]*classes.Class) {
@@ -254,7 +325,7 @@ func generateGraphLinks(buf *bytes.Buffer, all map[types.NodeClass]*classes.Clas
 			}
 			seenLinks[name] = struct{}{}
 			buf.WriteString("type ")
-			buf.WriteString(linkType(name))
+			buf.WriteString(classes.GoLinkType(name))
 			buf.WriteString(" Link\n")
 		}
 	}
@@ -262,7 +333,7 @@ func generateGraphLinks(buf *bytes.Buffer, all map[types.NodeClass]*classes.Clas
 }
 
 func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
-	cname := exportedName(nodeType(string(c.Name)))
+	cname := classes.GoNodeType(string(c.Name))
 	if c.Title != "" && c.Title != cname {
 		buf.WriteString("// ")
 		buf.WriteString(cname)
@@ -280,7 +351,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		if p.Kind == classes.InputHidden || p.Type.IsScalar() {
 			continue
 		}
-		name := argName(p.Name)
+		name := classes.GoArgName(p.Name)
 		argNames[name] = struct{}{}
 		buf.WriteString(", ")
 		buf.WriteString(name)
@@ -289,7 +360,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		case "", "*":
 			buf.WriteString("Link")
 		default:
-			buf.WriteString(linkType(string(p.Type)))
+			buf.WriteString(classes.GoLinkType(string(p.Type)))
 		}
 	}
 	// input scalars
@@ -297,7 +368,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		if p.Kind == classes.InputHidden || !p.Type.IsScalar() {
 			continue
 		}
-		name := argName(p.Name)
+		name := classes.GoArgName(p.Name)
 		argNames[name] = struct{}{}
 		buf.WriteString(", ")
 		buf.WriteString(name)
@@ -326,7 +397,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 	buf.WriteString("(_ *Node")
 	for _, p := range c.Outputs {
 		buf.WriteString(", ")
-		name := argName(p.Name)
+		name := classes.GoArgName(p.Name)
 		if _, ok := argNames[name]; ok {
 			name = "out_" + name
 		}
@@ -340,7 +411,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		case "", "*":
 			buf.WriteString("Link")
 		default:
-			buf.WriteString(linkType(string(p.Type)))
+			buf.WriteString(classes.GoLinkType(string(p.Type)))
 		}
 	}
 	buf.WriteString(") ")
@@ -372,7 +443,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 			buf.WriteString("Link")
 		}
 		buf.WriteString("(")
-		buf.WriteString(argName(p.Name))
+		buf.WriteString(classes.GoArgName(p.Name))
 		buf.WriteString(")")
 		buf.WriteString(",\n")
 	}
@@ -390,7 +461,7 @@ func generateGraphNodes(buf *bytes.Buffer, c *classes.Class) {
 		case "", "*":
 			buf.WriteString("Link")
 		default:
-			buf.WriteString(linkType(string(p.Type)))
+			buf.WriteString(classes.GoLinkType(string(p.Type)))
 		}
 		fmt.Fprintf(buf, "{NodeID: id, OutPort: %d}", i)
 	}

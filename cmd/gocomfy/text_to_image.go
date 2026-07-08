@@ -119,7 +119,7 @@ func init() {
 			}
 			outRes := res[out.ID]
 
-			rc, err := c.GetImageFile(ctx, outRes.Images[0])
+			rc, _, err := c.GetImageFile(ctx, outRes.Images[0])
 			if err != nil {
 				return err
 			}

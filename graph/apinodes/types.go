@@ -1,6 +1,8 @@
 package apinodes
 
-import "github.com/dennwc/gocomfy/graph/apigraph"
+import (
+	"github.com/dennwc/gocomfy/graph/apigraph"
+)
 
 func New() *Graph {
 	return apigraph.New()
